@@ -399,7 +399,7 @@ pub fn show(
     hubs: &[Hub],
     artwork: &mut images::Artwork,
     playable: bool,
-    server: &str,
+    servers: crate::source::Servers<'_>,
 ) -> Option<Resume> {
     if hubs.is_empty() {
         ui.label(theme::secondary("Your server gave no home shelves yet."));
@@ -414,7 +414,7 @@ pub fn show(
         .show(ui, |ui| {
             let pool = hero_pool(hubs);
             if !pool.is_empty() {
-                if let Some(resume) = hero::show(ui, &pool, artwork, playable, server) {
+                if let Some(resume) = hero::show(ui, &pool, artwork, playable, servers) {
                     play = Some(resume);
                 }
                 ui.add_space(ROW_GAP);

@@ -4,6 +4,35 @@ All notable changes to Chewvy are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-11-12
+
+### Added
+
+- The first start asks whether to add a Plex account or a Jellyfin server,
+  instead of going straight to a Plex sign-in code. A Jellyfin server on its
+  own is enough to use the app.
+- A source switcher at the top of the sidebar: every Plex and Jellyfin server,
+  switching between a Plex account's servers, and adding a source.
+- Sources can add a Plex account as well as a Jellyfin server.
+- Search covers Jellyfin servers as well as the Plex server.
+- The Plex and Jellyfin marks identify each source on the first-start screen,
+  the switcher, Sources and the home cards, in place of lettered squares.
+
+### Changed
+
+- Signing out of Plex no longer starts a new Plex sign-in by itself, and a
+  Plex sign-in code can be left with Back.
+
+### Fixed
+
+- The hero and the detail page named the connected Plex server, with the
+  Plex mark, for an item that came from a Jellyfin server.
+- The Sources screen scrolls, and Settings and Sources show a scroll bar when
+  they are taller than the window.
+- The AppImage crashed at start in an X11 session, including under Xwayland,
+  on systems whose libxkbcommon is a different version from the bundled one.
+  Its X11 companion library is now bundled with it.
+
 ## [0.1.2] - 2026-11-12
 
 ### Added

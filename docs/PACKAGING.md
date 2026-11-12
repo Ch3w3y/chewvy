@@ -40,6 +40,12 @@ a default Ubuntu desktop does not install it, so the script passes it to
 linuxdeploy with `--library`. The copy only matters for JACK output; mpv
 picks PipeWire, PulseAudio or ALSA first.
 
+**Bundled although nothing links it: `libxkbcommon-x11`.** In an X11 session
+the window library opens it at run time, so linuxdeploy does not see it. With
+libxkbcommon bundled and its X11 companion taken from the host, two different
+versions met and the app crashed at start, so the script ships the matching
+pair. It needs the `libxkbcommon-x11-0` package at build time.
+
 **Not bundled, on purpose: the graphics stack.** The AppImage
 [excludelist](https://github.com/AppImageCommunity/pkg2appimage/blob/master/excludelist),
 which linuxdeploy applies by default, already leaves out `libEGL`, `libGL`,

@@ -29,7 +29,10 @@ impl Ui {
             &mut page,
             &mut self.artwork,
             player::is_active(),
-            &self.server,
+            crate::source::Servers {
+                plex: &self.server,
+                jellyfin: &self.sources.jellyfin,
+            },
         );
         self.detail = Some(page);
         match action {

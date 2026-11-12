@@ -19,8 +19,11 @@ use crate::watch::{Ask, Cmd, Ev};
 
 /// The screens before a connected server, then the connected shell itself.
 enum Screen {
-    /// Signed out, or signed in and reading the account.
+    /// Reading what is on file, or signed in and reading the account.
     Starting,
+    /// Nothing is on file: the choice between a Plex account and a Jellyfin
+    /// server, and the Jellyfin sign-in when that is what was chosen.
+    Welcome,
     Pairing {
         code: String,
         url: String,
@@ -149,6 +152,8 @@ pub struct Ui {
     sources: crate::sources::Sources,
     /// The panel adding a Jellyfin server, while one is open.
     add: Option<crate::add_source::AddFlow>,
+    /// The Sources screen is asking which kind of source to add.
+    choosing: bool,
 }
 
 impl Ui {
@@ -196,6 +201,7 @@ impl Ui {
             artwork: images::Artwork::default(),
             sources: crate::sources::load(),
             add: None,
+            choosing: false,
         }
     }
 
@@ -241,6 +247,9 @@ impl Ui {
                 self.history = History::default();
                 self.current = None;
                 self.screen = Screen::Connected;
+                // The switcher lists the account's other servers, so they are
+                // asked for once here rather than on its first click.
+                self.send(Cmd::Servers);
                 // A connected server opens on the rail's Home entry; browsing a
                 // library stays the user's click, as it was before the rail.
                 self.go(Entry::Home);
@@ -280,14 +289,17 @@ impl Ui {
             Ev::PlayReady(request) => self.pending_play = Some(request),
             // The registry is the worker's, read from its file; the panel only
             // hears which step answered.
-            Ev::Sources(sources) => self.sources = sources,
-            Ev::Jf(answer) => self.apply_jellyfin(answer),
-            Ev::SignedOut => {
-                self.sections.clear();
-                self.current = None;
-                self.history = History::default();
-                self.screen = Screen::Starting;
+            Ev::Sources(sources) => {
+                self.sources = sources;
+                // The last source was removed from inside the shell: there is
+                // nothing left to browse, so the choice comes back.
+                let browsing = matches!(self.screen, Screen::Connected);
+                if browsing && !self.sources.has_sign_in() {
+                    self.open_without_plex();
+                }
             }
+            Ev::Jf(answer) => self.apply_jellyfin(answer),
+            Ev::SignedOut | Ev::NoPlex => self.open_without_plex(),
         }
     }
 
@@ -542,7 +554,7 @@ impl Ui {
         }
 
         match &self.screen {
-            Screen::Starting | Screen::Pairing { .. } | Screen::Servers(_) => {
+            Screen::Starting | Screen::Welcome | Screen::Pairing { .. } | Screen::Servers(_) => {
                 egui::CentralPanel::default()
                     .frame(egui::Frame::NONE)
                     .show(root, |ui| self.sign_in(ui));
@@ -551,6 +563,23 @@ impl Ui {
                 crate::ui::backdrop::release_sharp();
                 let libraries = self.libraries();
                 let entries = rail::entries(&libraries);
+                let held: Vec<rail::SwitcherServer> = self
+                    .sources
+                    .jellyfin
+                    .iter()
+                    .map(|server| rail::SwitcherServer {
+                        id: server.server_id.clone(),
+                        name: server.name.clone(),
+                        answering: self.jellyfin.iter().any(|library| {
+                            library.origin.server_id() == Some(server.server_id.as_str())
+                        }),
+                    })
+                    .collect();
+                let switcher = rail::Switcher {
+                    plex: &self.server_choices,
+                    connected: &self.server,
+                    jellyfin: &held,
+                };
                 let mut field = rail::Field {
                     query: &mut self.query,
                     reported: &mut self.rail_query,
@@ -567,6 +596,7 @@ impl Ui {
                     },
                     &libraries,
                     &self.jellyfin_notes,
+                    &switcher,
                     &mut field,
                 );
                 // The field reports its own focus, which is what gates this
@@ -574,6 +604,24 @@ impl Ui {
                 self.typing |= field.typed;
                 match selection {
                     Some(rail::Choice::Go(entry)) => self.go(entry),
+                    Some(rail::Choice::Connect(index)) => {
+                        if let Some(name) = self.server_choices.get(index) {
+                            self.status = format!("Connecting to {name}…");
+                        }
+                        self.send(Cmd::Connect(index));
+                    }
+                    Some(rail::Choice::Server(id)) => {
+                        let first = libraries
+                            .iter()
+                            .find(|library| library.origin.server_id() == Some(id.as_str()));
+                        if let Some(library) = first {
+                            self.go(Entry::Section {
+                                id: library.id.clone(),
+                                title: library.title.clone(),
+                            });
+                        }
+                    }
+                    Some(rail::Choice::AddSource) => self.add_source(),
                     Some(rail::Choice::Search { query, submitted }) => {
                         if submitted {
                             self.ask_search(&query);
@@ -623,7 +671,11 @@ impl Ui {
                 // The shelves are taken out so a card can ask the artwork
                 // loader while the drawing loop still borrows them.
                 let hubs = std::mem::take(&mut self.hubs);
-                let resume = home::show(ui, &hubs, &mut self.artwork, idle, &self.server);
+                let servers = crate::source::Servers {
+                    plex: &self.server,
+                    jellyfin: &self.sources.jellyfin,
+                };
+                let resume = home::show(ui, &hubs, &mut self.artwork, idle, servers);
                 self.hubs = hubs;
                 if let Some(resume) = resume.as_ref().filter(|r| r.overview) {
                     let to = Entry::Detail {
@@ -759,6 +811,7 @@ impl Ui {
                 url: url.clone(),
             },
             Screen::Servers(names) => Screen::Servers(names.clone()),
+            Screen::Welcome => Screen::Welcome,
             _ => Screen::Starting,
         };
         let error = self.error.clone();
@@ -779,6 +832,11 @@ impl Ui {
                 if splash::secondary(ui, "Get a new code") {
                     self.send(Cmd::Pair);
                 }
+                ui.add_space(8.0);
+                if splash::secondary(ui, "Back") {
+                    self.send(Cmd::CancelPair);
+                    self.open_without_plex();
+                }
                 ui.add_space(16.0);
                 ui.horizontal(|ui| {
                     ui.spinner();
@@ -787,6 +845,7 @@ impl Ui {
                     );
                 });
             }
+            Screen::Welcome => self.welcome(ui, &status),
             Screen::Servers(names) => {
                 let subtitle = if names.is_empty() {
                     "No servers found on this account"

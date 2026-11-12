@@ -322,6 +322,40 @@ fn the_detail_resume_nextup_search_and_playback_queries_match_the_capture() {
 }
 
 #[test]
+fn an_item_search_asks_for_titles_as_full_rows() {
+    let server = mock::MockJfServer::start();
+    server.route("GET /Items", mock::Answer::json(204, ""));
+    let http = http_with(&server);
+    let device = device();
+    let token = token();
+    let client = Client::new(&http, &device, &token, USER_ID).expect("a usable user id");
+
+    let _ = client.search_items("Starlight", 20);
+
+    let recorded: Vec<String> = server
+        .requests()
+        .into_iter()
+        .map(|request| request.path_and_query)
+        .collect();
+    assert_eq!(
+        recorded,
+        vec![format!(
+            "/Items?{}",
+            expected_query(&[
+                ("userId", USER_ID),
+                ("searchTerm", "Starlight"),
+                ("recursive", "true"),
+                ("includeItemTypes", "Movie,Series,Episode"),
+                ("limit", "20"),
+                ("fields", CAPTURED_FIELDS),
+                ("enableImageTypes", "Primary,Backdrop,Logo,Thumb"),
+            ])
+        )],
+        "the rows a library page answers, filtered by the term"
+    );
+}
+
+#[test]
 fn a_posted_playback_info_requests_a_read_and_not_a_playback() {
     let server = mock::MockJfServer::start();
     server.route("POST /Items/PlaybackInfo", mock::Answer::json(204, ""));

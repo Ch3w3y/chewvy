@@ -9,7 +9,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 # See docs/DEPENDENCIES.md, "License notes", before changing this.
 license = "GPL-3.0-or-later"
@@ -22,10 +22,10 @@ publish = false
 # Builds are offline + locked: `cargo build --offline --locked --all-targets`.
 [workspace.dependencies]
 # workspace-internal
-plex-core = { path = "crates/plex-core", version = "0.1.2" }
-jellyfin-core = { path = "crates/jellyfin-core", version = "0.1.2" }
-plex-player = { path = "crates/plex-player", version = "0.1.2" }
-plex-app = { path = "crates/plex-app", version = "0.1.2" }
+plex-core = { path = "crates/plex-core", version = "0.1.3" }
+jellyfin-core = { path = "crates/jellyfin-core", version = "0.1.3" }
+plex-player = { path = "crates/plex-player", version = "0.1.3" }
+plex-app = { path = "crates/plex-app", version = "0.1.3" }
 
 # HTTP + JSON + auth plumbing (crates/plex-core, milestones M2+)
 ureq = "3.3.0"

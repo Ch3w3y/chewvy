@@ -140,10 +140,28 @@ jack=$(ldd "$APPDIR/usr/bin/chewvy" | awk '$1 == "libjack.so.0" { print $3 }')
 if [[ -n $jack ]]; then
     cmd+=(--library "$jack")
 fi
+# In an X11 session the window library opens libxkbcommon-x11 at run time, so
+# ldd never lists it and it would come from the host. libxkbcommon itself is
+# bundled, and the two share private structures: a host copy of another
+# version crashes the app on its first keymap. Ship the matching pair.
+xkb=$(ldd "$APPDIR/usr/bin/chewvy" | awk '$1 == "libxkbcommon.so.0" { print $3 }')
+xkb_x11=
+if [[ -n $xkb ]]; then
+    xkb_x11=$(dirname -- "$xkb")/libxkbcommon-x11.so.0
+    if [[ ! -e $xkb_x11 ]]; then
+        echo "build-appimage.sh: $xkb_x11 is missing (Debian: libxkbcommon-x11-0)" >&2
+        exit 1
+    fi
+    cmd+=(--library "$xkb_x11")
+fi
 # linuxdeploy writes the AppImage into the working directory.
 (cd -- "$OUT" && "${cmd[@]}")
 if [[ -n $jack && ! -e "$APPDIR/usr/lib/libjack.so.0" ]]; then
     echo "build-appimage.sh: linuxdeploy did not bundle $jack" >&2
+    exit 1
+fi
+if [[ -n $xkb_x11 && ! -e "$APPDIR/usr/lib/libxkbcommon-x11.so.0" ]]; then
+    echo "build-appimage.sh: linuxdeploy did not bundle $xkb_x11" >&2
     exit 1
 fi
 

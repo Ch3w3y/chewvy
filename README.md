@@ -26,6 +26,8 @@ video is rendered to.
 
 - **Two kinds of server, one library.** A Plex account and any number of
   Jellyfin servers appear together: one home screen, one sidebar, one search.
+  Either kind is enough on its own: the first start asks which you have, and
+  the switcher at the top of the sidebar lists every server and adds more.
 - **Sign in without typing a password into the app.** Plex uses the
   `plex.tv/link` code; Jellyfin uses Quick Connect, with a password sign-in to
   your own server as the fallback. Passwords are never stored.

@@ -5,7 +5,7 @@
 
 use egui::epaint::Shadow;
 use egui::text::LayoutJob;
-use egui::{pos2, vec2, Align2, Color32, CornerRadius, Direction, Rect, Sense, Shape};
+use egui::{pos2, vec2, Color32, CornerRadius, Direction, Rect, Sense, Shape};
 use plex_core::library::Item;
 
 use super::{
@@ -13,7 +13,6 @@ use super::{
     progress_fraction, resume_start, wide_subtitle, Resume, RowShape, CAPTION_HEIGHT,
     PROGRESS_HEIGHT,
 };
-use crate::source::Origin;
 use crate::ui::{cards, images, marks, theme};
 
 /// The shadow every card's art casts on the page.
@@ -29,8 +28,8 @@ const SHADE: Color32 = Color32::from_rgba_premultiplied(0, 0, 0, 178);
 const TRACK: Color32 = Color32::from_rgba_premultiplied(51, 51, 51, 51);
 /// The service chip's fill.
 const CHIP: Color32 = Color32::from_rgba_premultiplied(5, 7, 19, 140);
-/// The colour Jellyfin uses for itself, where this app ships no mark of its own.
-const JELLYFIN_BLUE: Color32 = Color32::from_rgb(0x12, 0x99, 0xb8);
+/// The Plex wordmark's height on a card's service chip.
+const MARK: f32 = 9.0;
 /// The title art's box on a wide card: a share of its width, and a height.
 const LOGO_BOX: [f32; 2] = [0.46, 30.0];
 /// A title art request's size.
@@ -73,15 +72,16 @@ pub fn show(
                 artwork_box(ui, artwork, item, shape, rect, (art_w, art_h));
                 // A poster names its source only when that is not Plex, which is
                 // what a card with no mark on it means.
-                if crate::source::origin_of(item).is_jellyfin() {
-                    let chip = Rect::from_min_size(rect.min + vec2(8.0, 8.0), vec2(18.0, 18.0));
-                    ui.painter().rect_filled(chip, CornerRadius::same(5), CHIP);
-                    ui.painter().text(
-                        chip.center(),
-                        Align2::CENTER_CENTER,
-                        "J",
-                        theme::semibold(10.0),
-                        JELLYFIN_BLUE,
+                let origin = crate::source::origin_of(item);
+                if origin.is_jellyfin() {
+                    let chip = Rect::from_min_size(rect.min + vec2(8.0, 8.0), vec2(22.0, 22.0));
+                    ui.painter().rect_filled(chip, CornerRadius::same(6), CHIP);
+                    marks::paint_source(
+                        ui.painter(),
+                        &origin,
+                        chip.min.x + 4.0,
+                        chip.center().y,
+                        MARK,
                     );
                 }
                 if fresh {
@@ -173,34 +173,15 @@ fn wide_overlays(ui: &mut egui::Ui, artwork: &mut images::Artwork, item: &Item, 
             .image(texture, logo, cards::FULL_UV, Color32::WHITE);
     }
     let painter = ui.painter();
+    let origin = crate::source::origin_of(item);
+    // The square icon sits closer to the chip's edge than the wordmark does.
+    let pad = if origin.is_jellyfin() { 4.0 } else { 8.0 };
     let chip = Rect::from_min_size(
         rect.min + vec2(8.0, 8.0),
-        vec2(marks::width_at(marks::PLEX, 9.0) + 16.0, 22.0),
+        vec2(marks::source_width(&origin, MARK) + 2.0 * pad, 22.0),
     );
     painter.rect_filled(chip, CornerRadius::same(6), CHIP);
-    match crate::source::origin_of(item) {
-        Origin::Plex => {
-            marks::paint_tinted(
-                painter,
-                marks::PLEX,
-                chip.min.x + 8.0,
-                chip.center().y,
-                9.0,
-                Color32::WHITE,
-            );
-        }
-        // A source this app has no mark for is named by its letter, in the
-        // colour it uses for itself.
-        Origin::Jellyfin(_) => {
-            painter.text(
-                chip.center(),
-                Align2::CENTER_CENTER,
-                "J",
-                theme::semibold(11.0),
-                JELLYFIN_BLUE,
-            );
-        }
-    }
+    marks::paint_source(painter, &origin, chip.min.x + pad, chip.center().y, MARK);
     if let Some(fraction) = progress_fraction(item.view_offset, item.duration) {
         let track = Rect::from_min_max(pos2(rect.min.x, rect.max.y - PROGRESS_HEIGHT), rect.max);
         let bottom = CornerRadius {

@@ -44,7 +44,7 @@ pub fn show(
     page: &mut Page,
     artwork: &mut images::Artwork,
     playing: bool,
-    server: &str,
+    servers: crate::source::Servers<'_>,
 ) -> Option<Action> {
     let mut action = None;
     // The head scrolls with the page: a pinned one would cover the episodes a
@@ -53,7 +53,7 @@ pub fn show(
         .auto_shrink([false; 2])
         .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden)
         .show(ui, |ui| {
-            action = super::head::show(ui, page, artwork, playing, server);
+            action = super::head::show(ui, page, artwork, playing, servers);
             // A show's season pills sit right above the episodes they pick, so
             // choosing a season unfolds its episodes under the pill.
             if let Some(key) = season_chips(ui, page) {

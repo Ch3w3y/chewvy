@@ -121,6 +121,8 @@ the measured shapes above, and the server's answer to that profile decides.
 | Resume position and progress reports | yes (`/Sessions/Playing`, `Progress`, `Stopped`); can be switched off |
 | Items with several versions | the first version the server calls direct-playable is used; there is no picker |
 | Quick Connect and password sign-in, LAN discovery, several servers | yes |
+| Used on its own, with no Plex account | yes: the app opens on the server's libraries. Sign-in from the first-start screen was run with Quick Connect against a Jellyfin 12.4.0 test server; the password path from that screen was not. |
+| Search | yes: films, shows and episodes by title (`GET /Items?searchTerm=`), shown as one group per server after the Plex server's groups. People are not searched. |
 | Live TV, music, SyncPlay | **not implemented** |
 
 ## Unverified behaviour

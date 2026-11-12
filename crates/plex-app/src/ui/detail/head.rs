@@ -11,6 +11,7 @@ use super::{
     backdrop, episode_heading, logo, pill_text, play_target, runtime, version_badges, Action, Page,
     Target,
 };
+use crate::source::Origin;
 use crate::ui::overlay::{self, Heading, BUTTON};
 use crate::ui::{bleed, glass, glass_tints, images, marks, theme};
 
@@ -42,7 +43,7 @@ pub fn show(
     page: &Page,
     artwork: &mut images::Artwork,
     playing: bool,
-    server: &str,
+    servers: crate::source::Servers<'_>,
 ) -> Option<Action> {
     let item = &page.item;
     let window = ui.ctx().content_rect();
@@ -81,7 +82,7 @@ pub fn show(
             panel_origin,
             PANEL[0].min(width),
             item,
-            server,
+            servers.of(item),
         );
         height = height.max(panel_origin.y - origin.y + panel_height);
     }
@@ -216,7 +217,13 @@ pub fn clock(seconds: f64) -> String {
 
 /// The frosted "Play from" panel listing the item's versions; answers its
 /// height. The first version is the one the play buttons open.
-fn versions(painter: &Painter, origin: Pos2, width: f32, item: &Item, server: &str) -> f32 {
+fn versions(
+    painter: &Painter,
+    origin: Pos2,
+    width: f32,
+    item: &Item,
+    source: (Origin, &str),
+) -> f32 {
     let count = item.media.len();
     let note = if count > 1 {
         "The ticked version plays. Choose a quality in the player to have the server convert it."
@@ -256,7 +263,7 @@ fn versions(painter: &Painter, origin: Pos2, width: f32, item: &Item, server: &s
     let mut y = inner.min.y + 30.0;
     for (index, media) in item.media.iter().enumerate() {
         let row = Rect::from_min_size(pos2(inner.min.x, y), vec2(inner.width(), VERSION_ROW));
-        version_row(painter, row, media, index == 0, server);
+        version_row(painter, row, media, index == 0, &source.0, source.1);
         y += VERSION_ROW + 6.0;
     }
     painter.galley(pos2(inner.min.x + 4.0, y + 8.0), note, theme::SECONDARY);
@@ -265,7 +272,14 @@ fn versions(painter: &Painter, origin: Pos2, width: f32, item: &Item, server: &s
 
 /// One version: a tick on the one that plays, the service and server, then
 /// what the version is.
-fn version_row(painter: &Painter, row: Rect, media: &Media, chosen: bool, server: &str) {
+fn version_row(
+    painter: &Painter,
+    row: Rect,
+    media: &Media,
+    chosen: bool,
+    service: &Origin,
+    server: &str,
+) {
     if chosen {
         painter.rect_filled(row, CornerRadius::same(8), ROW_FILL);
         marks::paint_tinted(
@@ -279,8 +293,7 @@ fn version_row(painter: &Painter, row: Rect, media: &Media, chosen: bool, server
     }
     let x = row.min.x + 46.0;
     let line = row.min.y + 20.0;
-    let mut name_x =
-        x + marks::paint_tinted(painter, marks::PLEX, x, line, 10.0, Color32::WHITE) + 8.0;
+    let mut name_x = x + marks::paint_source(painter, service, x, line, 10.0) + 8.0;
     if server.is_empty() {
         name_x = x;
     }

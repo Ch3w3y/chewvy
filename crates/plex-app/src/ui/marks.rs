@@ -75,6 +75,43 @@ const BBFC: [(&str, Logo); 6] = [
 /// library or server belongs to.
 pub const PLEX: Logo = logo!("plex_wordmark", Ink::Colour, 12.0);
 
+/// The Jellyfin icon in its own colours, naming the same thing for a Jellyfin
+/// server.
+pub const JELLYFIN: Logo = logo!("jellyfin_icon", Ink::Colour, 14.0);
+
+/// How much taller than the Plex wordmark the square Jellyfin icon is drawn, so
+/// the two read as one size.
+const ICON_OVER_WORDMARK: f32 = 1.5;
+
+/// The mark of the service `origin` names: the Plex wordmark `height` tall, or
+/// the Jellyfin icon to match.
+#[must_use]
+pub fn source(origin: &crate::source::Origin, height: f32) -> (Logo, f32) {
+    match origin {
+        crate::source::Origin::Plex => (PLEX, height),
+        crate::source::Origin::Jellyfin(_) => (JELLYFIN, height * ICON_OVER_WORDMARK),
+    }
+}
+
+/// Paint [`source`] from `left`, centred on `center_y`. Answers the width it took.
+pub fn paint_source(
+    painter: &egui::Painter,
+    origin: &crate::source::Origin,
+    left: f32,
+    center_y: f32,
+    height: f32,
+) -> f32 {
+    let (logo, height) = source(origin, height);
+    paint_tinted(painter, logo, left, center_y, height, Color32::WHITE)
+}
+
+/// The width [`paint_source`] takes.
+#[must_use]
+pub fn source_width(origin: &crate::source::Origin, height: f32) -> f32 {
+    let (logo, height) = source(origin, height);
+    width_at(logo, height)
+}
+
 macro_rules! icon {
     ($name:literal) => {
         Logo {

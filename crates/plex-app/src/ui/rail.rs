@@ -3,15 +3,15 @@
 //!
 //! The sidebar, not a per-screen button, is what changes the visible screen,
 //! so [`entries`] builds the entry list once from every library this install can
-//! browse and [`show`] paints it: Home at the top, each source's libraries
-//! grouped under one header naming that server, Settings at the foot. Search is
-//! a field under the wordmark, not an entry: its text is the query the Search
-//! screen answers.
+//! browse and [`show`] paints it: the source switcher and Home at the top, each
+//! source's libraries grouped under one header naming that server, Settings at
+//! the foot. Search is a field under the wordmark, not an entry: its text is
+//! the query the Search screen answers.
 
 use egui::{pos2, vec2, Align2, Color32, FontId, Rect, Sense, Ui};
 
 use crate::source::{Library, Origin};
-use crate::ui::{brand, glass, glass_tints, marks, theme};
+use crate::ui::{brand, chips, glass, glass_tints, marks, theme};
 
 /// Sidebar width the shell reserves.
 pub const WIDTH: f32 = 248.0;
@@ -37,9 +37,8 @@ const SELECTED: Color32 = Color32::from_rgba_premultiplied(23, 23, 23, 23);
 const HOVER: Color32 = Color32::from_rgba_premultiplied(13, 13, 13, 13);
 /// A library row's label colour.
 const SUB_TEXT: Color32 = Color32::from_rgb(0xa9, 0xae, 0xd0);
-/// A source this app has no mark for gets a letter badge in the colour it uses
-/// for itself.
-const JELLYFIN_BLUE: Color32 = Color32::from_rgb(0x12, 0x99, 0xb8);
+/// The switcher's label when no single server is in front.
+pub const ALL_SOURCES: &str = "All sources";
 
 /// One navigation destination in the rail.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -126,6 +125,51 @@ pub struct Field<'a> {
     pub typed: bool,
 }
 
+/// One Jellyfin server as the switcher lists it.
+pub struct SwitcherServer {
+    /// The server's id, which its libraries carry.
+    pub id: String,
+    /// The name the server gave itself.
+    pub name: String,
+    /// Whether it listed its libraries this session.
+    pub answering: bool,
+}
+
+/// What the source switcher at the top of the rail lists.
+pub struct Switcher<'a> {
+    /// The Plex account's servers by name, in the order
+    /// [`Choice::Connect`] indexes; empty until the account listed them.
+    pub plex: &'a [String],
+    /// The connected Plex server's name; empty with none connected.
+    pub connected: &'a str,
+    /// The Jellyfin servers on file.
+    pub jellyfin: &'a [SwitcherServer],
+}
+
+impl Switcher<'_> {
+    /// The row's label: the one server in front, or [`ALL_SOURCES`] when the
+    /// rail lists more than one.
+    #[must_use]
+    pub fn label(&self) -> &str {
+        match (self.connected.is_empty(), self.jellyfin) {
+            (false, []) => self.connected,
+            (true, [only]) => &only.name,
+            _ => ALL_SOURCES,
+        }
+    }
+
+    /// The kind of the one server in front, whose mark the row carries; `None`
+    /// when the row stands for several.
+    #[must_use]
+    pub fn front(&self) -> Option<Origin> {
+        match (self.connected.is_empty(), self.jellyfin) {
+            (false, []) => Some(Origin::Plex),
+            (true, [only]) => Some(Origin::Jellyfin(only.id.clone())),
+            _ => None,
+        }
+    }
+}
+
 /// What the user asked the rail for.
 pub enum Choice {
     /// Show this entry.
@@ -133,6 +177,12 @@ pub enum Choice {
     /// Search for `query` (`submitted` says Enter committed it rather than a
     /// keystroke that the Search screen's own debounce will ask for).
     Search { query: String, submitted: bool },
+    /// Connect to the Plex server at this index of [`Switcher::plex`].
+    Connect(usize),
+    /// Show this Jellyfin server's first library.
+    Server(String),
+    /// Open the Sources screen with its add panel up.
+    AddSource,
 }
 
 /// Draw the sidebar as a fixed-width left panel. Answers with what the user
@@ -142,6 +192,7 @@ pub enum Choice {
 /// `section` is the row to light up, which for a drill-in is the library or
 /// home screen it was reached from. `libraries` groups the library rows by
 /// source, and `notes` names a source that has libraries this frame cannot list.
+#[allow(clippy::too_many_arguments)]
 pub fn show(
     root: &mut Ui,
     entries: &[Entry],
@@ -149,6 +200,7 @@ pub fn show(
     section: Option<&Entry>,
     libraries: &[Library],
     notes: &[String],
+    switcher: &Switcher<'_>,
     field: &mut Field<'_>,
 ) -> Option<Choice> {
     let mut choice = None;
@@ -177,13 +229,14 @@ pub fn show(
                     .layout(egui::Layout::top_down(egui::Align::Min)),
             );
             choice = contents(
-                &mut child, entries, current, section, libraries, notes, field,
+                &mut child, entries, current, section, libraries, notes, switcher, field,
             );
         });
     choice
 }
 
 /// The sidebar's rows, top to bottom, inside its padding.
+#[allow(clippy::too_many_arguments)]
 fn contents(
     ui: &mut Ui,
     entries: &[Entry],
@@ -191,12 +244,17 @@ fn contents(
     section: Option<&Entry>,
     libraries: &[Library],
     notes: &[String],
+    switcher: &Switcher<'_>,
     field: &mut Field<'_>,
 ) -> Option<Choice> {
     let mut choice = None;
     ui.spacing_mut().item_spacing.y = ROW_GAP;
     let (logo, _) = ui.allocate_exact_size(vec2(ui.available_width(), 46.0), Sense::hover());
     brand::wordmark(ui.painter(), pos2(logo.min.x + 8.0, logo.min.y), 28.0, 20.0);
+    if let Some(asked) = switch_row(ui, switcher) {
+        choice = Some(asked);
+    }
+    ui.add_space(6.0);
     if let Some((query, submitted)) = search_field(ui, field) {
         choice = Some(Choice::Search { query, submitted });
     }
@@ -251,6 +309,137 @@ fn contents(
         );
     }
     choice
+}
+
+/// The source switcher: one row naming the server in front, which opens the
+/// list of every source grouped by kind. A Plex server in the list connects to
+/// it, a Jellyfin server shows its first library, and the last two rows lead to
+/// the Sources screen.
+fn switch_row(ui: &mut Ui, switcher: &Switcher<'_>) -> Option<Choice> {
+    let response = ui
+        .allocate_response(vec2(ui.available_width(), ROW_HEIGHT), Sense::click())
+        .on_hover_text("Servers and accounts");
+    let slot = chips::Slot {
+        rect: response.rect,
+        response: crate::ui::cards::pointer(response),
+    };
+    let mut choice = None;
+    let rect = slot.rect;
+    let open = chips::menu(ui, &slot, |ui| {
+        // The list is as wide as the row it hangs from, not as the window.
+        ui.set_width(rect.width() - 8.0);
+        choice = switcher_menu(ui, switcher);
+    });
+    let fill = if open {
+        SELECTED
+    } else if slot.response.hovered() {
+        HOVER
+    } else {
+        Color32::from_white_alpha(10)
+    };
+    ui.painter().rect_filled(rect, theme::CARD_RADIUS, fill);
+    ui.painter().rect_stroke(
+        rect,
+        theme::CARD_RADIUS,
+        egui::Stroke::new(theme::HAIRLINE, theme::RULE),
+        egui::StrokeKind::Inside,
+    );
+    let left = rect.min.x + INSET;
+    let mark = match switcher.front() {
+        Some(origin) => marks::paint_source(ui.painter(), &origin, left, rect.center().y, 10.0),
+        // Several sources: a plain dot rather than one service's mark.
+        None => {
+            ui.painter()
+                .circle_filled(pos2(left + 4.0, rect.center().y), 4.0, theme::ACCENT);
+            8.0
+        }
+    };
+    let label = Rect::from_min_max(rect.min, pos2(rect.max.x - 26.0, rect.max.y));
+    draw_label(
+        ui,
+        label,
+        left + mark + 8.0,
+        switcher.label(),
+        theme::medium(14.0),
+        theme::TEXT,
+    );
+    // The chevron that says the row opens a list.
+    let tip = pos2(rect.max.x - 16.0, rect.center().y + 2.5);
+    let stroke = egui::Stroke::new(1.5, theme::MUTED);
+    ui.painter()
+        .line_segment([tip + vec2(-4.0, -4.5), tip], stroke);
+    ui.painter()
+        .line_segment([tip, tip + vec2(4.0, -4.5)], stroke);
+    choice
+}
+
+/// The switcher's list: Plex servers, then Jellyfin servers, then the two rows
+/// that manage them.
+fn switcher_menu(ui: &mut Ui, switcher: &Switcher<'_>) -> Option<Choice> {
+    let mut choice = None;
+    ui.spacing_mut().item_spacing.y = ROW_GAP;
+    if !switcher.plex.is_empty() || !switcher.connected.is_empty() {
+        menu_caption(ui, &Origin::Plex);
+        if switcher.plex.is_empty() {
+            // The account has not listed its servers yet: the connected one
+            // is still shown as where the app is.
+            chips::menu_row(ui, switcher.connected, true);
+        }
+        for (index, name) in switcher.plex.iter().enumerate() {
+            let here = name == switcher.connected;
+            if chips::menu_row(ui, name, here) && !here {
+                choice = Some(Choice::Connect(index));
+            }
+        }
+    }
+    if !switcher.jellyfin.is_empty() {
+        menu_caption(ui, &Origin::Jellyfin(String::new()));
+        for server in switcher.jellyfin {
+            let label = if server.answering {
+                server.name.clone()
+            } else {
+                format!("{} (not answering)", server.name)
+            };
+            if chips::menu_row(ui, &label, false) && server.answering {
+                choice = Some(Choice::Server(server.id.clone()));
+            }
+        }
+    }
+    ui.add_space(4.0);
+    let (rule, _) = ui.allocate_exact_size(vec2(ui.available_width(), 5.0), Sense::hover());
+    ui.painter().hline(
+        rule.x_range(),
+        rule.center().y,
+        egui::Stroke::new(1.0, theme::RULE),
+    );
+    if chips::menu_row(ui, "Manage sources", false) {
+        choice = Some(Choice::Go(Entry::Sources));
+    }
+    if chips::menu_row(ui, "+ Add a source", false) {
+        choice = Some(Choice::AddSource);
+    }
+    choice
+}
+
+/// A service's mark over its servers in the switcher's list. The Plex wordmark
+/// names itself; the Jellyfin icon is followed by its name.
+fn menu_caption(ui: &mut Ui, origin: &Origin) {
+    let width = ui
+        .available_width()
+        .max(chips::MENU_WIDTH + chips::CHECK_COLUMN);
+    let (rect, _) = ui.allocate_exact_size(vec2(width, 26.0), Sense::hover());
+    let left = rect.min.x + theme::SPACING_BASE;
+    let y = rect.max.y - 10.0;
+    let mark = marks::paint_source(ui.painter(), origin, left, y, 9.0);
+    if origin.is_jellyfin() {
+        ui.painter().text(
+            pos2(left + mark + 6.0, y),
+            Align2::LEFT_CENTER,
+            origin.label().to_uppercase(),
+            theme::semibold(11.0),
+            theme::MUTED,
+        );
+    }
 }
 
 /// The search field: a rounded well with a magnifier, its own text being
@@ -382,17 +571,7 @@ fn sub_row(ui: &mut Ui, label: &str, selected: bool) -> bool {
 fn caption(ui: &mut Ui, origin: &Origin, server: &str) {
     let (rect, _) = ui.allocate_exact_size(vec2(ui.available_width(), 36.0), Sense::hover());
     let y = rect.max.y - 10.0;
-    let logo = match origin {
-        Origin::Plex => marks::paint_tinted(
-            ui.painter(),
-            marks::PLEX,
-            rect.min.x + INSET,
-            y,
-            10.0,
-            Color32::WHITE,
-        ),
-        Origin::Jellyfin(_) => letter_badge(ui, rect, y, "J", JELLYFIN_BLUE),
-    };
+    let logo = marks::paint_source(ui.painter(), origin, rect.min.x + INSET, y, 10.0);
     let name = if server.is_empty() {
         origin.label()
     } else {
@@ -410,26 +589,6 @@ fn caption(ui: &mut Ui, origin: &Origin, server: &str) {
         font,
         theme::MUTED,
     );
-}
-
-/// A source's mark, where this app ships no artwork for it: a small rounded
-/// square in the colour it uses for itself, its letter centred. Answers with the
-/// width it took, as [`marks::paint_tinted`] does.
-fn letter_badge(ui: &Ui, rect: Rect, y: f32, letter: &str, tint: Color32) -> f32 {
-    let size = 16.0;
-    let box_rect = Rect::from_min_size(
-        pos2(rect.min.x + INSET - 2.0, y - size / 2.0),
-        vec2(size, size),
-    );
-    ui.painter().rect_filled(box_rect, 4.0, tint);
-    ui.painter().text(
-        box_rect.center(),
-        Align2::CENTER_CENTER,
-        letter,
-        theme::semibold(10.0),
-        Color32::WHITE,
-    );
-    size
 }
 
 /// A row that leads nowhere: what a source answered when its libraries did not
@@ -618,6 +777,50 @@ mod tests {
 
     /// Search is the rail's field, not one of its rows: a rail entry the user
     /// could click would be a second way to the same screen.
+    fn held(name: &str) -> SwitcherServer {
+        SwitcherServer {
+            id: name.to_lowercase(),
+            name: name.to_owned(),
+            answering: true,
+        }
+    }
+
+    #[test]
+    fn the_switcher_names_the_one_server_in_front_or_says_there_are_several() {
+        let label = |connected: &str, jellyfin: &[SwitcherServer]| {
+            Switcher {
+                plex: &[],
+                connected,
+                jellyfin,
+            }
+            .label()
+            .to_owned()
+        };
+        assert_eq!(label("Attic", &[]), "Attic");
+        assert_eq!(label("", &[held("Loft")]), "Loft");
+        assert_eq!(label("Attic", &[held("Loft")]), ALL_SOURCES);
+        assert_eq!(label("", &[held("Loft"), held("Barn")]), ALL_SOURCES);
+        assert_eq!(label("", &[]), ALL_SOURCES);
+    }
+
+    #[test]
+    fn the_switcher_carries_a_mark_only_for_one_server_in_front() {
+        let front = |connected: &str, jellyfin: &[SwitcherServer]| {
+            Switcher {
+                plex: &[],
+                connected,
+                jellyfin,
+            }
+            .front()
+        };
+        assert_eq!(front("Attic", &[]), Some(Origin::Plex));
+        assert_eq!(
+            front("", &[held("Loft")]),
+            Some(Origin::Jellyfin("loft".to_owned()))
+        );
+        assert_eq!(front("Attic", &[held("Loft")]), None);
+    }
+
     #[test]
     fn search_is_no_rail_entry() {
         assert!(!entries(&libraries()).contains(&Entry::Search));

@@ -439,6 +439,31 @@ impl<'a> Client<'a> {
         self.get_json(SEARCH_HINTS_PATH, &query)
     }
 
+    /// The titles that match `search_term`, as the full rows a library page
+    /// answers: `GET /Items?userId=…&searchTerm=…&recursive=true
+    /// &includeItemTypes=Movie,Series,Episode&limit=…&fields=…&enableImageTypes=…`.
+    ///
+    /// # Errors
+    ///
+    /// As [`Client::me`].
+    pub fn search_items(
+        &self,
+        search_term: &str,
+        limit: u32,
+    ) -> Result<QueryResult<Item>, JfError> {
+        let limit = limit.to_string();
+        let query = [
+            ("userId", self.user_id),
+            ("searchTerm", search_term),
+            ("recursive", "true"),
+            ("includeItemTypes", "Movie,Series,Episode"),
+            ("limit", &limit),
+            ("fields", ITEM_FIELDS),
+            ("enableImageTypes", ENABLE_IMAGE_TYPES),
+        ];
+        self.get_json(ITEMS_PATH, &query)
+    }
+
     /// Ask the server which sources an item has *for this client*:
     /// `POST /Items/{id}/PlaybackInfo?userId=…`.
     ///

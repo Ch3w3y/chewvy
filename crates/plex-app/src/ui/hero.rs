@@ -126,7 +126,7 @@ pub fn show(
     pool: &[&Item],
     artwork: &mut images::Artwork,
     playable: bool,
-    server: &str,
+    servers: crate::source::Servers<'_>,
 ) -> Option<home::Resume> {
     let items: Vec<&Item> = pool
         .iter()
@@ -153,7 +153,7 @@ pub fn show(
         art_rect.height() as u32,
     );
     bleed::paint(ui.ctx(), art_rect, texture, bleed::Mask::Hero);
-    let pressed = block::show(ui, hero, id, item, artwork, playable, server);
+    let pressed = block::show(ui, hero, id, item, artwork, playable, servers.of(item));
     if count > 1 {
         paint_dots(ui, hero, count, index);
     }

@@ -9,7 +9,7 @@
 //! `http-header-fields`; it is never shown, logged or put in a URL.
 
 use std::error::Error;
-use std::sync::mpsc::{self, Receiver, Sender};
+use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use plex_core::client_info::default_identity_path;
@@ -45,9 +45,14 @@ const HUB_ROWS: usize = 8;
 const SEARCH_ROWS: usize = 20;
 /// How long a pairing code is polled before asking the user to retry.
 const PAIRING_BUDGET: Duration = Duration::from_secs(15 * 60);
+/// How often plex.tv is asked whether the code on screen has been entered.
+const PAIRING_POLL: Duration = Duration::from_secs(2);
 
 pub(crate) enum Cmd {
+    /// Ask plex.tv for a sign-in code and wait for it to be entered.
     Pair,
+    /// Stop waiting for the code on screen.
+    CancelPair,
     Connect(usize),
     /// (Re)read the home shelves: shown first after connect and from the rail.
     Home,
@@ -340,6 +345,9 @@ pub(crate) enum Ev {
     /// What one of the Sources screen's own steps answered with.
     Jf(JfEv),
     SignedOut,
+    /// No Plex account is linked and none is being linked: the window decides
+    /// between the first-run choice and the Jellyfin servers already on file.
+    NoPlex,
 }
 
 /// The window's context, once its first frame has run.
@@ -508,6 +516,11 @@ fn worker(cmds: &Receiver<Cmd>, ev: &Sender<Ev>, out: &Sender<Cmd>) {
     // Jellyfin browse opens from the registry the Settings screen keeps, before
     // anything blocks: a server that does not answer is named, not waited on.
     let mut jellyfin = open_jellyfin(&desk, store.as_deref(), ev);
+    // Whether a Plex server is connected. Without one, Home and Search are
+    // the Jellyfin servers' alone.
+    let mut plex = false;
+    // When the sign-in code on screen was issued, while one is waiting.
+    let mut pairing: Option<Instant> = None;
     match stored {
         Some(token) => {
             // Resolve the account id once so a pre-keying token migrates into
@@ -515,28 +528,60 @@ fn worker(cmds: &Receiver<Cmd>, ev: &Sender<Ev>, out: &Sender<Cmd>) {
             resolve_plex_token_key(&client);
             client.set_account(token);
             send(Ev::Status("Signed in. Finding your servers…".into()));
-            list_servers(&mut client, ev, &mut servers);
+            plex = list_servers(&mut client, ev, &mut servers);
         }
-        None => pair(&mut client, store.as_deref(), ev, &mut servers),
+        // Signing in to Plex is the user's choice, not the app's first move.
+        None => send(Ev::NoPlex),
     }
 
-    while let Ok(cmd) = cmds.recv() {
-        match cmd {
-            Cmd::Pair => {
-                pair(&mut client, store.as_deref(), ev, &mut servers);
-                desk.sync_plex(store.as_deref(), plex_account_id(), ev);
-            }
-            Cmd::Connect(i) => connect(&mut client, ev, &servers, i),
-            Cmd::Home => match client.hubs(HUB_ROWS) {
-                Ok(mut hubs) => {
-                    // Jellyfin's shelves join Plex's at the end of Home; a server
-                    // that answers nothing adds no row and says nothing.
-                    let (shelves, _notes) = jellyfin.shelves(HUB_ROWS);
-                    hubs.extend(shelves);
-                    send(Ev::Hubs(hubs));
-                }
-                Err(e) => send(Ev::Error(format!("could not load the home shelves: {e}"))),
+    loop {
+        // A code on screen is asked about between commands, so the window
+        // stays answerable while it waits: the wait can be left, and a
+        // Jellyfin server can be added during it.
+        let cmd = match pairing {
+            None => match cmds.recv() {
+                Ok(cmd) => cmd,
+                Err(_) => break,
             },
+            Some(started) => match cmds.recv_timeout(PAIRING_POLL) {
+                Ok(cmd) => cmd,
+                Err(RecvTimeoutError::Disconnected) => break,
+                Err(RecvTimeoutError::Timeout) => {
+                    match poll_pairing(&mut client, store.as_deref(), ev, started) {
+                        Pairing::Waiting => {}
+                        Pairing::Over => pairing = None,
+                        Pairing::SignedIn => {
+                            pairing = None;
+                            desk.sync_plex(store.as_deref(), plex_account_id(), ev);
+                            servers.clear();
+                            plex = list_servers(&mut client, ev, &mut servers);
+                        }
+                    }
+                    continue;
+                }
+            },
+        };
+        match cmd {
+            Cmd::Pair => pairing = start_pairing(&mut client, ev),
+            Cmd::CancelPair => pairing = None,
+            Cmd::Connect(i) => plex |= connect(&mut client, ev, &servers, i),
+            Cmd::Home => {
+                let mut hubs = Vec::new();
+                if plex {
+                    match client.hubs(HUB_ROWS) {
+                        Ok(shelves) => hubs = shelves,
+                        Err(e) => {
+                            send(Ev::Error(format!("could not load the home shelves: {e}")));
+                            continue;
+                        }
+                    }
+                }
+                // Jellyfin's shelves join Plex's at the end of Home; a server
+                // that answers nothing adds no row and says nothing.
+                let (shelves, _notes) = jellyfin.shelves(HUB_ROWS);
+                hubs.extend(shelves);
+                send(Ev::Hubs(hubs));
+            }
             Cmd::Browse {
                 section,
                 start,
@@ -606,13 +651,22 @@ fn worker(cmds: &Receiver<Cmd>, ev: &Sender<Ev>, out: &Sender<Cmd>) {
                     }
                 },
             },
-            Cmd::SearchHubs(q) => match client.search_hubs(&q, SEARCH_ROWS) {
-                Ok(hubs) => send(Ev::SearchHubs {
-                    hubs,
-                    query: q.clone(),
-                }),
-                Err(e) => send(Ev::Error(format!("search failed: {e}"))),
-            },
+            // One search asks every source: the Plex server's own groups
+            // first, then one group per Jellyfin server that found something.
+            Cmd::SearchHubs(q) => {
+                let mut hubs = Vec::new();
+                if plex {
+                    match client.search_hubs(&q, SEARCH_ROWS) {
+                        Ok(found) => hubs = found,
+                        Err(e) => {
+                            send(Ev::Error(format!("search failed: {e}")));
+                            continue;
+                        }
+                    }
+                }
+                hubs.extend(jellyfin.search(&q, SEARCH_ROWS));
+                send(Ev::SearchHubs { hubs, query: q });
+            }
             // Settings' server switch: the account's servers as names the
             // Settings panel offers, without connecting to the remembered one
             // again. `servers` keeps the order `Cmd::Connect(index)` indexes.
@@ -740,8 +794,9 @@ fn worker(cmds: &Receiver<Cmd>, ev: &Sender<Ev>, out: &Sender<Cmd>) {
                 desk.sync_plex(store.as_deref(), None, ev);
                 servers.clear();
                 playing = None;
+                plex = false;
+                pairing = None;
                 send(Ev::SignedOut);
-                pair(&mut client, store.as_deref(), ev, &mut servers);
             }
             Cmd::Jf(step) => {
                 let held = desk.jellyfin().len();
@@ -957,48 +1012,71 @@ fn resolve_plex_token_key(client: &LiveClient) -> Option<TokenKey> {
     TokenKey::plex(&uuid).ok()
 }
 
-fn pair(
+/// Where a sign-in code on screen stands after one more look.
+enum Pairing {
+    /// Not entered yet.
+    Waiting,
+    /// Entered: the account's token is set on the client and kept.
+    SignedIn,
+    /// The wait is finished without a sign-in, and the window has been told why.
+    Over,
+}
+
+/// Ask plex.tv for a sign-in code and put it on screen. Answers when the code
+/// was issued, or `None` when plex.tv gave none.
+fn start_pairing(client: &mut LiveClient, ev: &Sender<Ev>) -> Option<Instant> {
+    // A 4-character code is entered at plex.tv/link; the claim URL is for strong pins.
+    match client.start_pairing() {
+        Ok((code, _claim)) => {
+            let url = crate::shell::live::LINK_URL.to_owned();
+            let _ = ev.send(Ev::Pairing { code, url });
+            Some(Instant::now())
+        }
+        Err(e) => {
+            let _ = ev.send(Ev::Error(format!("could not start sign-in: {e}")));
+            None
+        }
+    }
+}
+
+/// Ask plex.tv once whether the code issued at `started` has been entered, and
+/// keep the token it answers with.
+fn poll_pairing(
     client: &mut LiveClient,
     store: Option<&dyn TokenStore>,
     ev: &Sender<Ev>,
-    servers: &mut Vec<ServerResource>,
-) {
+    started: Instant,
+) -> Pairing {
     let send = |e: Ev| {
         let _ = ev.send(e);
     };
-    // A 4-character code is entered at plex.tv/link; the claim URL is for strong pins.
-    let (code, url) = match client.start_pairing() {
-        Ok((code, _claim)) => (code, crate::shell::live::LINK_URL.to_owned()),
-        Err(e) => return send(Ev::Error(format!("could not start sign-in: {e}"))),
-    };
-    send(Ev::Pairing { code, url });
-    let started = Instant::now();
-    while started.elapsed() < PAIRING_BUDGET {
-        std::thread::sleep(Duration::from_secs(2));
-        match client.poll_pairing() {
-            Ok(Some(token)) => {
-                if let Some(s) = store {
-                    // Prefer the keyed slot; the pre-keying slot is only used
-                    // when plex.tv cannot tell us the account id right now.
-                    let key = resolve_plex_token_key(client);
-                    if let Err(e) = save_plex_token(s, key.as_ref(), &token) {
-                        send(Ev::Status(format!(
-                            "signed in, but the token was not saved: {e}"
-                        )));
-                    }
+    if started.elapsed() >= PAIRING_BUDGET {
+        send(Ev::Error(
+            "The sign-in code expired. Get a new code to try again.".into(),
+        ));
+        return Pairing::Over;
+    }
+    match client.poll_pairing() {
+        Ok(Some(token)) => {
+            if let Some(s) = store {
+                // Prefer the keyed slot; the pre-keying slot is only used
+                // when plex.tv cannot tell us the account id right now.
+                let key = resolve_plex_token_key(client);
+                if let Err(e) = save_plex_token(s, key.as_ref(), &token) {
+                    send(Ev::Status(format!(
+                        "signed in, but the token was not saved: {e}"
+                    )));
                 }
-                send(Ev::Status("Signed in. Finding your servers…".into()));
-                *servers = Vec::new();
-                list_servers(client, ev, servers);
-                return;
             }
-            Ok(None) => {}
-            Err(e) => return send(Ev::Error(format!("sign-in failed: {e}"))),
+            send(Ev::Status("Signed in. Finding your servers…".into()));
+            Pairing::SignedIn
+        }
+        Ok(None) => Pairing::Waiting,
+        Err(e) => {
+            send(Ev::Error(format!("sign-in failed: {e}")));
+            Pairing::Over
         }
     }
-    send(Ev::Error(
-        "The sign-in code expired. Press “Sign in” to get a new one.".into(),
-    ));
 }
 
 /// Ask the account which servers it has and file them in `servers`, in the
@@ -1022,10 +1100,15 @@ fn account_servers(
 }
 
 /// List the account's servers, then connect to the remembered or only one, or
-/// hand the picker to the UI when the user has to choose.
-fn list_servers(client: &mut LiveClient, ev: &Sender<Ev>, servers: &mut Vec<ServerResource>) {
+/// hand the picker to the UI when the user has to choose. Answers whether a
+/// server is connected.
+fn list_servers(
+    client: &mut LiveClient,
+    ev: &Sender<Ev>,
+    servers: &mut Vec<ServerResource>,
+) -> bool {
     let Some(names) = account_servers(client, ev, servers) else {
-        return;
+        return false;
     };
     let remembered = StorePaths::resolve()
         .ok()
@@ -1034,18 +1117,24 @@ fn list_servers(client: &mut LiveClient, ev: &Sender<Ev>, servers: &mut Vec<Serv
         Some(index) => connect(client, ev, servers, index),
         None => {
             let _ = ev.send(Ev::Servers(names));
+            false
         }
     }
 }
 
 /// Connect to `servers[index]`, remember it as the server to reconnect to, and
-/// report its libraries.
-fn connect(client: &mut LiveClient, ev: &Sender<Ev>, servers: &[ServerResource], index: usize) {
+/// report its libraries. Answers whether the server is connected.
+fn connect(
+    client: &mut LiveClient,
+    ev: &Sender<Ev>,
+    servers: &[ServerResource],
+    index: usize,
+) -> bool {
     let send = |e: Ev| {
         let _ = ev.send(e);
     };
     let Some(resource) = servers.get(index) else {
-        return;
+        return false;
     };
     send(Ev::Status(format!(
         "Connecting to {}…",
@@ -1075,8 +1164,12 @@ fn connect(client: &mut LiveClient, ev: &Sender<Ev>, servers: &[ServerResource],
                 }),
                 Err(e) => send(Ev::Error(format!("could not list libraries: {e}"))),
             }
+            true
         }
-        Err(e) => send(Ev::Error(format!("could not connect: {e}"))),
+        Err(e) => {
+            send(Ev::Error(format!("could not connect: {e}")));
+            false
+        }
     }
 }
 

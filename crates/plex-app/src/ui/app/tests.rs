@@ -121,3 +121,92 @@ fn a_connected_server_lists_the_account_servers_without_leaving_its_shell() {
     assert!(matches!(ui.screen, Screen::Connected));
     assert_eq!(ui.server_choices, vec!["Family Plex", "Study Plex"]);
 }
+
+/// A registry holding one Jellyfin server and, when asked, a Plex account.
+fn sources(plex: bool) -> crate::sources::Sources {
+    let mut held = crate::sources::Sources::default();
+    held.set_jellyfin(crate::sources::JellyfinServer {
+        server_id: "loft".to_owned(),
+        name: "Loft".to_owned(),
+        ..Default::default()
+    });
+    if plex {
+        held.record_plex(None);
+    }
+    held
+}
+
+#[test]
+fn with_nothing_on_file_the_first_run_choice_opens() {
+    let mut ui = ui_without_worker();
+    ui.sources = crate::sources::Sources::default();
+    ui.apply(Ev::NoPlex);
+    assert!(matches!(ui.screen, Screen::Welcome));
+}
+
+#[test]
+fn a_jellyfin_server_on_file_opens_the_shell_without_a_plex_account() {
+    let mut ui = ui_without_worker();
+    ui.sources = sources(false);
+    ui.apply(Ev::NoPlex);
+    assert!(matches!(ui.screen, Screen::Connected));
+    assert_eq!(ui.current, Some(Entry::Home));
+}
+
+#[test]
+fn signing_out_of_plex_keeps_browsing_what_is_left() {
+    let mut ui = ui_without_worker();
+    ui.sources = sources(false);
+    ui.apply(Ev::Sections {
+        server: "Attic".to_owned(),
+        sections: vec![("1".to_owned(), "Films".to_owned())],
+    });
+    ui.apply(Ev::SignedOut);
+    assert!(matches!(ui.screen, Screen::Connected));
+    assert!(ui.sections.is_empty(), "the Plex libraries leave the rail");
+    assert!(ui.server.is_empty());
+
+    ui.sources = crate::sources::Sources::default();
+    ui.apply(Ev::SignedOut);
+    assert!(matches!(ui.screen, Screen::Welcome));
+}
+
+#[test]
+fn removing_the_last_source_brings_the_choice_back() {
+    let mut ui = ui_without_worker();
+    ui.sources = sources(false);
+    ui.apply(Ev::NoPlex);
+    ui.apply(Ev::Sources(crate::sources::Sources::default()));
+    assert!(matches!(ui.screen, Screen::Welcome));
+}
+
+#[test]
+fn adding_a_source_asks_which_kind_only_while_no_plex_account_is_linked() {
+    let mut ui = ui_without_worker();
+    ui.sources = sources(false);
+    ui.apply(Ev::NoPlex);
+    ui.add_source();
+    assert_eq!(ui.current, Some(Entry::Sources));
+    assert!(ui.choosing && ui.add.is_none());
+
+    let mut ui = ui_without_worker();
+    ui.sources = sources(true);
+    ui.apply(Ev::NoPlex);
+    ui.add_source();
+    assert!(!ui.choosing, "one Plex account is all the sign-in holds");
+    assert!(ui.add.is_some(), "so the Jellyfin panel opens directly");
+}
+
+#[test]
+fn a_sign_in_code_takes_the_window_and_back_leaves_it() {
+    let mut ui = ui_without_worker();
+    ui.sources = crate::sources::Sources::default();
+    ui.apply(Ev::NoPlex);
+    ui.apply(Ev::Pairing {
+        code: "K7QF".to_owned(),
+        url: "https://plex.tv/link".to_owned(),
+    });
+    assert!(matches!(ui.screen, Screen::Pairing { .. }));
+    ui.open_without_plex();
+    assert!(matches!(ui.screen, Screen::Welcome));
+}

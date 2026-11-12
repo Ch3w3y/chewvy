@@ -120,6 +120,9 @@ pub(crate) const RESUME_ID: &str = "home.continue";
 pub(crate) const RESUME_TITLE: &str = "Continue Watching";
 pub(crate) const NEXTUP_ID: &str = "home.onDeck";
 pub(crate) const NEXTUP_TITLE: &str = "Next Up";
+/// The group a server's search results arrive in.
+const SEARCH_ID: &str = "search";
+const SEARCH_TITLE: &str = "Results";
 
 /// Every Jellyfin server this install can browse, as its registry row left it.
 ///
@@ -199,6 +202,23 @@ impl Jellyfin {
             }
         }
         (shelves, notes)
+    }
+
+    /// What every server has for `query`: one group per server that found
+    /// something. A server that will not answer is left out, so the search
+    /// still shows what the others found.
+    pub(crate) fn search(&self, query: &str, rows: usize) -> Vec<Hub> {
+        let mut found = Vec::new();
+        for server in self.servers.iter() {
+            let Ok(mut answer) = server.search(query, rows) else {
+                continue;
+            };
+            answer.items.truncate(rows);
+            if !answer.items.is_empty() {
+                found.push(shelf(server, SEARCH_ID, SEARCH_TITLE, &answer));
+            }
+        }
+        found
     }
 
     /// One server, if this install has it.
@@ -490,6 +510,13 @@ impl Server {
 
     fn next_up(&self) -> Result<QueryResult<JfItem>, String> {
         self.client()?.next_up().map_err(|error| error.to_string())
+    }
+
+    fn search(&self, query: &str, rows: usize) -> Result<QueryResult<JfItem>, String> {
+        let rows = u32::try_from(rows).unwrap_or(u32::MAX);
+        self.client()?
+            .search_items(query, rows)
+            .map_err(|error| error.to_string())
     }
 
     fn view_rows_of(

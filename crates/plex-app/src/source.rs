@@ -105,6 +105,34 @@ pub fn split_artwork(value: &str) -> Option<(&str, &str)> {
     (!server.is_empty() && route.starts_with("/Items/")).then_some((server, route))
 }
 
+/// The names the screens show for where an item comes from.
+#[derive(Clone, Copy)]
+pub struct Servers<'a> {
+    /// The connected Plex server's name; empty with none connected.
+    pub plex: &'a str,
+    /// The Jellyfin servers on file.
+    pub jellyfin: &'a [crate::sources::JellyfinServer],
+}
+
+impl<'a> Servers<'a> {
+    /// The service `item` comes from and its server's name, which is empty
+    /// when this install holds no such server.
+    #[must_use]
+    pub fn of(&self, item: &Item) -> (Origin, &'a str) {
+        match origin_of(item) {
+            Origin::Plex => (Origin::Plex, self.plex),
+            Origin::Jellyfin(id) => {
+                let name = self
+                    .jellyfin
+                    .iter()
+                    .find(|held| held.server_id == id)
+                    .map_or("", |held| held.name.as_str());
+                (Origin::Jellyfin(id), name)
+            }
+        }
+    }
+}
+
 /// One library of the rail: what it is called, the id it is asked with, and the
 /// source whose header it sits under.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -119,6 +147,44 @@ pub struct Library {
     pub id: String,
     /// The library's title, as the source named it.
     pub title: String,
+}
+
+#[cfg(test)]
+mod server_names {
+    use super::{jellyfin_id, Origin, Servers};
+    use crate::sources::JellyfinServer;
+    use plex_core::library::Item;
+
+    #[test]
+    fn an_item_is_named_after_its_own_server_not_the_connected_plex_one() {
+        let held = [JellyfinServer {
+            server_id: "loft".to_owned(),
+            name: "Loft".to_owned(),
+            ..Default::default()
+        }];
+        let servers = Servers {
+            plex: "Attic",
+            jellyfin: &held,
+        };
+        let plex = Item {
+            rating_key: Some("42".to_owned()),
+            ..Item::default()
+        };
+        let jellyfin = Item {
+            rating_key: Some(jellyfin_id("loft", "abc")),
+            ..Item::default()
+        };
+        let gone = Item {
+            rating_key: Some(jellyfin_id("barn", "abc")),
+            ..Item::default()
+        };
+        assert_eq!(servers.of(&plex), (Origin::Plex, "Attic"));
+        assert_eq!(
+            servers.of(&jellyfin),
+            (Origin::Jellyfin("loft".to_owned()), "Loft")
+        );
+        assert_eq!(servers.of(&gone).1, "", "a server no longer on file");
+    }
 }
 
 #[cfg(test)]

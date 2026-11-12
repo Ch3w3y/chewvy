@@ -24,7 +24,9 @@ impl Ui {
     /// Draw the Settings entry.
     pub(super) fn draw_settings(&mut self, ui: &mut egui::Ui) {
         ui.heading("Settings");
-        // The sections are taller than a default-sized window.
+        // The sections are taller than a default-sized window, and a bar that
+        // is always drawn says so.
+        ui.spacing_mut().scroll = egui::style::ScrollStyle::solid();
         egui::ScrollArea::vertical()
             .auto_shrink([false, false])
             .show(ui, |ui| {

@@ -10,6 +10,7 @@ use egui::text::LayoutJob;
 use egui::{pos2, Color32, Id, Painter, Pos2, Rect};
 use plex_core::library::Item;
 
+use crate::source::Origin;
 use crate::ui::overlay::{self, Heading, Progress, BUTTON, META_HEIGHT};
 use crate::ui::{detail, home, images, marks, theme};
 
@@ -42,7 +43,7 @@ pub fn show(
     item: &Item,
     artwork: &mut images::Artwork,
     playable: bool,
-    server: &str,
+    source: (Origin, &str),
 ) -> Pressed {
     let painter = ui.painter().clone();
     let left = hero.min.x;
@@ -97,7 +98,7 @@ pub fn show(
     top += 6.0;
     let pressed = buttons(ui, pos2(left, top), id, item, playable);
     top += BUTTON[0] + ROW_GAP - 4.0;
-    source_line(&painter, pos2(left, top), server);
+    source_line(&painter, pos2(left, top), &source.0, source.1);
     pressed
 }
 
@@ -146,8 +147,8 @@ fn buttons(ui: &mut egui::Ui, origin: Pos2, id: Id, item: &Item, playable: bool)
     }
 }
 
-/// `From [Plex] Living Room NAS`.
-fn source_line(painter: &Painter, origin: Pos2, server: &str) {
+/// `From [Plex] Living Room NAS`, with the mark of the service the item is on.
+fn source_line(painter: &Painter, origin: Pos2, service: &Origin, server: &str) {
     if server.is_empty() {
         return;
     }
@@ -156,7 +157,7 @@ fn source_line(painter: &Painter, origin: Pos2, server: &str) {
     let from = painter.layout_no_wrap("From".to_owned(), font.clone(), SOURCE_TEXT);
     let mut x = origin.x + from.rect.width() + 8.0;
     overlay::shadowed(painter, pos2(origin.x, cy - from.rect.height() / 2.0), from);
-    x += marks::paint_tinted(painter, marks::PLEX, x, cy, 10.0, Color32::WHITE) + 8.0;
+    x += marks::paint_source(painter, service, x, cy, 10.0) + 8.0;
     let name = painter.layout_no_wrap(server.to_owned(), font, SOURCE_TEXT);
     overlay::shadowed(painter, pos2(x, cy - name.rect.height() / 2.0), name);
 }
