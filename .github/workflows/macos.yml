@@ -1,0 +1,86 @@
+name: macos
+
+# Builds the macOS disk image and adds it to an existing release.
+#
+# This is the one job that runs on a GitHub-hosted runner, because the project
+# has no Mac of its own. It is opt-in: nothing runs unless the repository
+# variable CHEWVY_MACOS_BUILD is "true". Start it by hand for a tag whose
+# release already exists.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to build (for example v0.1.1)
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-${{ inputs.tag }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  TAG: ${{ inputs.tag }}
+
+jobs:
+  dmg:
+    name: macOS disk image
+    if: vars.CHEWVY_MACOS_BUILD == 'true'
+    # Current standard Apple Silicon label in GitHub's runner reference.
+    runs-on: macos-15
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Install Homebrew dependencies
+        run: brew install mpv pkgconf dylibbundler librsvg
+      - name: Point pkg-config at Homebrew
+        run: |
+          prefix=$(brew --prefix)
+          echo "PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$prefix/share/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
+      - name: Install Rust
+        # rust-toolchain.toml names the version.
+        run: rustup show active-toolchain || rustup toolchain install
+      - name: Build
+        run: cargo build --release --locked -p plex-app
+      - name: Package the app bundle and disk image
+        run: packaging/macos/build-app.sh
+      - name: Check the bundle starts and carries its own libraries
+        run: |
+          app=target/macos/Chewvy.app
+          "$app/Contents/MacOS/chewvy" --help | head -n 1
+          # Nothing in the bundle may still point into Homebrew.
+          if otool -L "$app/Contents/MacOS/chewvy" "$app"/Contents/Frameworks/*.dylib |
+              grep -E '^\s+(/opt/homebrew|/usr/local)'; then
+            echo "a bundled file still loads from Homebrew" >&2
+            exit 1
+          fi
+          hdiutil verify target/macos/Chewvy-*-macos-arm64.dmg
+      - name: Open a window and draw 60 frames
+        # A hosted runner has a display but only software OpenGL, so this
+        # reports what happened without deciding the build. The video smoke
+        # mode is Linux-only, so playback is not exercised here.
+        continue-on-error: true
+        run: target/macos/Chewvy.app/Contents/MacOS/chewvy --smoke-label-frames 60
+      - name: Add the disk image to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=${TAG#v}
+          dmg=target/macos/Chewvy-$version-macos-arm64.dmg
+          sources=target/macos/Chewvy-$version-macos-bundled-sources.txt
+          packaging/macos/bundled-sources.sh target/macos/Chewvy.app > "$sources"
+          gh release download "$TAG" --pattern SHA256SUMS --dir "$RUNNER_TEMP"
+          grep -v -- '-macos-' "$RUNNER_TEMP/SHA256SUMS" > "$RUNNER_TEMP/sums"
+          (cd target/macos && shasum -a 256 "$(basename "$dmg")" "$(basename "$sources")") >> "$RUNNER_TEMP/sums"
+          sort -k 2 "$RUNNER_TEMP/sums" > "$RUNNER_TEMP/SHA256SUMS"
+          gh release upload "$TAG" "$dmg" "$sources" "$RUNNER_TEMP/SHA256SUMS" --clobber

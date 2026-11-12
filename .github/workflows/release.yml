@@ -7,8 +7,8 @@ name: release
 # Linux and Windows are built on the project's own self-hosted runners. There
 # is deliberately no pull_request trigger: see ci.yml.
 #
-# macOS needs a GitHub-hosted runner, so it is opt-in: the job runs only when
-# the repository variable CHEWVY_MACOS_BUILD is "true".
+# The macOS disk image is built separately by macos.yml, on a GitHub-hosted
+# runner, and added to the release afterwards.
 
 on:
   push:
@@ -139,37 +139,3 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           gh release create "$TAG" dist/* --draft --verify-tag --title "Chewvy $VERSION" \
             --notes "See CHANGELOG.md. The packages are not code-signed: verify them against SHA256SUMS."
-
-  macos:
-    name: macOS disk image (opt-in)
-    needs: packages
-    if: vars.CHEWVY_MACOS_BUILD == 'true'
-    # Current standard Apple Silicon label in GitHub's runner reference.
-    runs-on: macos-15
-    timeout-minutes: 45
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ env.TAG }}
-      - name: Install Homebrew dependencies
-        run: brew install mpv pkgconf dylibbundler librsvg
-      - name: Point pkg-config at Homebrew
-        run: |
-          prefix=$(brew --prefix)
-          echo "PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$prefix/share/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
-      - name: Install Rust
-        run: rustup toolchain install "$RUST_VERSION" --profile minimal && rustup default "$RUST_VERSION"
-      - name: Build
-        run: cargo build --release --locked -p plex-app
-      - name: Package the app bundle and disk image
-        run: packaging/macos/build-app.sh
-      - name: Add the disk image to the draft release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          dmg=$(ls target/macos/Chewvy-*-macos-arm64.dmg)
-          gh release download "$TAG" --pattern SHA256SUMS --dir "$RUNNER_TEMP"
-          (cd target/macos && shasum -a 256 "$(basename "$dmg")") >> "$RUNNER_TEMP/SHA256SUMS"
-          gh release upload "$TAG" "$dmg" "$RUNNER_TEMP/SHA256SUMS" --clobber

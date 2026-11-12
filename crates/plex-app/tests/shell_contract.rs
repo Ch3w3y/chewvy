@@ -178,6 +178,6 @@ fn native_dependency_tree_resolves_no_forbidden_crates() {
 
 #[test]
 fn version_and_license_stay_pinned() {
-    assert_eq!(env!("CARGO_PKG_VERSION"), "0.1.1");
+    assert_eq!(env!("CARGO_PKG_VERSION"), "0.1.2");
     assert_eq!(env!("CARGO_PKG_LICENSE"), "GPL-3.0-or-later");
 }

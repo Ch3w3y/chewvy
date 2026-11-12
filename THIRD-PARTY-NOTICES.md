@@ -85,9 +85,16 @@ libraries linked into it are the upstream sources listed in that repository's
 
 ### macOS disk image
 
-No macOS package has been published. The packaging script copies libmpv and
-its dependencies from Homebrew, whose `mpv` formula is GPL-2.0-or-later and
-whose `ffmpeg` formula is GPL-3.0-or-later.
+The packaging script copies libmpv and what it needs from Homebrew, whose
+`mpv` formula is GPL-2.0-or-later and whose `ffmpeg` formula is
+GPL-3.0-or-later; the other libraries are under their own licences, as
+recorded in each Homebrew formula.
+
+Corresponding source: each release carries
+`Chewvy-<version>-macos-bundled-sources.txt`, which names the Homebrew formula
+and version behind every bundled library. The formula files in
+<https://github.com/Homebrew/homebrew-core> give the source address and
+checksum for that version.
 
 ## Rust crates
 

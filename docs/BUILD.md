@@ -37,9 +37,9 @@ brew install mpv pkgconf
 cargo build --release --locked -p plex-app
 ```
 
-Homebrew's formula ships `mpv.pc`, so pkg-config finds it. The macOS build has
-not been produced or run by the project yet: treat this as the intended recipe,
-not a tested one.
+Homebrew's formula ships `mpv.pc`, so pkg-config finds it. This recipe is what
+the project's macOS workflow runs on a GitHub-hosted Apple Silicon runner; the
+result has not been run on a physical Mac.
 
 ### Windows
 

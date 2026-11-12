@@ -103,9 +103,18 @@ graphics driver must be installed (the bundled mpv needs `vulkan-1.dll`).
 
 ### macOS
 
-Not available yet. The packaging script and workflow exist
-(`packaging/macos/`), but no build has been produced or run. See the support
-table below.
+Download `Chewvy-<version>-macos-arm64.dmg`, open it and drag Chewvy to
+Applications. It needs an Apple Silicon Mac running macOS 15 or newer.
+
+The app is **not notarised by Apple**, so macOS will refuse to open it the
+first time. Either allow it under *System Settings > Privacy & Security >
+Open Anyway*, or clear the download flag yourself:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/Chewvy.app
+```
+
+This build is experimental: see the support table below.
 
 ## What works where
 
@@ -113,7 +122,7 @@ table below.
 |---|---|---|
 | Linux x86_64 | AppImage, `install.sh` | Developed and used on KDE Plasma (Wayland) with AMD graphics and Mesa. Other desktops, X11 sessions, Intel and NVIDIA graphics are expected to work but have not been measured. |
 | Windows 10/11 x86_64 | Installer, zip | Cross-built from Linux. The zip has been started in a Windows 11 virtual machine using software OpenGL, and the installer has only been exercised under Wine; neither has been run on a real GPU, and playback on Windows is untested. The sign-in screen's "Open plex.tv/link" button does nothing on Windows yet: open the address yourself. |
-| macOS (Apple Silicon) | DMG | **Not built, not tested.** |
+| macOS 15+ (Apple Silicon) | DMG | Experimental. Built on a GitHub-hosted runner, where the app started and drew its window with software OpenGL. **Nobody has run it on a physical Mac**: sign-in, playback and hardware decoding are untested, and "Open plex.tv/link" does nothing there yet. |
 | Android, iOS | none | A porting plan only (`docs/MOBILE_PORT.md`). |
 
 ### Playback

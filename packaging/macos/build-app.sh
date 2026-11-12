@@ -54,7 +54,10 @@ cp "$BIN" "$EXE"
 ICON_SRC="$REPO_ROOT/packaging/linux/io.github.ch3w3y.chewvy.svg"
 ICON_FILE="__none__"
 if [[ -f "$ICON_SRC" ]] && command -v rsvg-convert >/dev/null && command -v iconutil >/dev/null; then
-    iconset=$(mktemp -d)
+    # iconutil only accepts a folder whose name ends in .iconset.
+    icon_tmp=$(mktemp -d)
+    iconset=$icon_tmp/chewvy.iconset
+    mkdir "$iconset"
     for spec in "16x16:16" "16x16@2x:32" "32x32:32" "32x32@2x:64" \
         "128x128:128" "128x128@2x:256" "256x256:256" "256x256@2x:512" \
         "512x512:512" "512x512@2x:1024"; do
@@ -62,7 +65,7 @@ if [[ -f "$ICON_SRC" ]] && command -v rsvg-convert >/dev/null && command -v icon
             -o "$iconset/icon_${spec%%:*}.png" "$ICON_SRC"
     done
     iconutil -c icns -o "$APP/Contents/Resources/chewvy.icns" "$iconset"
-    rm -rf "$iconset"
+    rm -rf "$icon_tmp"
     ICON_FILE="chewvy"
 else
     echo "build-app.sh: warning: skipping icon (need $ICON_SRC, rsvg-convert and iconutil)" >&2
@@ -81,6 +84,17 @@ fi
 # Copy libmpv and friends into Frameworks and rewrite load commands so the
 # binary finds them relative to itself instead of the Homebrew prefix.
 dylibbundler -od -b -x "$EXE" -d "$APP/Contents/Frameworks/" -p '@executable_path/../Frameworks/'
+
+# dylibbundler rewrites every rpath of a library to the Frameworks path, so a
+# library that had two (libmpv has two for Swift) ends up with the same
+# LC_RPATH twice, and dyld refuses to load a file with a duplicate.
+for file in "$EXE" "$APP"/Contents/Frameworks/*.dylib; do
+    count=$(otool -l "$file" | grep -c 'path @executable_path/../Frameworks/ (offset' || true)
+    while ((count > 1)); do
+        install_name_tool -delete_rpath '@executable_path/../Frameworks/' "$file"
+        count=$((count - 1))
+    done
+done
 
 codesign --force --deep --sign - "$APP"
 codesign --verify --deep --strict "$APP"

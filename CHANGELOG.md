@@ -4,6 +4,17 @@ All notable changes to Chewvy are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-11-12
+
+### Added
+
+- An experimental macOS disk image for Apple Silicon (macOS 15 or newer),
+  built on a GitHub-hosted runner. It has not been run on a physical Mac.
+
+### Changed
+
+- The Plex test fixtures hold invented titles, people and identifiers.
+
 ## [0.1.1] - 2026-11-12
 
 ### Fixed

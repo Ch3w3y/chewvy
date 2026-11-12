@@ -17,7 +17,8 @@ bundled in the package and, for hardware decoding, on the GPU and its driver.
 | Linux, Intel or NVIDIA graphics | yes | not tried | not tried |
 | Windows 11 x86_64, virtual machine, Mesa llvmpipe software OpenGL | yes, cross-built | yes: the window process stays up | not tried |
 | Windows on a real GPU | yes, cross-built | **not tried** | **not tried** |
-| macOS arm64 | **no build has been produced** | not tried | not tried |
+| macOS 15 arm64, GitHub-hosted runner, software OpenGL | yes | yes: the window opened and drew 60 frames | **not tried** |
+| macOS on a physical Mac | yes, on the runner | **not tried** | **not tried** |
 
 The Windows virtual-machine run proves that every DLL the executables import
 resolves and that the app survives start-up. It does not prove that the window

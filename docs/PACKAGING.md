@@ -6,7 +6,7 @@
 | Linux x86_64 | `install.sh` (installs the AppImage per user) | repository root | tested in Debian 13, Ubuntu 24.04, Arch and Alpine containers; see below |
 | Windows x86_64 | `Chewvy-<version>-windows-x86_64-setup.exe` | `packaging/windows/build-installer.sh` | built; installed and uninstalled silently under Wine; **not run on real Windows** |
 | Windows x86_64 | `Chewvy-<version>-windows-x86_64.zip` | `packaging/windows/build-zip.sh` | built; an earlier build was started in a Windows 11 virtual machine with software OpenGL |
-| macOS arm64 | `Chewvy-<version>-macos-arm64.dmg` | `packaging/macos/build-app.sh` | **never built** |
+| macOS arm64 | `Chewvy-<version>-macos-arm64.dmg` | `packaging/macos/build-app.sh` | built on a GitHub-hosted runner, where the app started and drew its window; **not run on a physical Mac** |
 
 Every release also carries `SHA256SUMS`. None of the packages is code-signed.
 A Flatpak is planned and not started.
@@ -189,13 +189,20 @@ packaging/macos/build-app.sh            # -> target/macos/Chewvy-<version>-macos
 bundle (mandatory on Apple Silicon after the load commands are rewritten),
 checks that no Homebrew path is left in the binary, and builds a compressed
 DMG. The result has no Developer ID signature and is not notarised: a first
-launch needs right-click > Open, or
+launch needs *System Settings > Privacy & Security > Open Anyway*, or
 `xattr -dr com.apple.quarantine /Applications/Chewvy.app`.
 
-**No macOS build has been produced.** The project has no Mac hardware, so the
-script has only ever been read, not run. The release workflow has a macOS job
-for a GitHub-hosted runner, switched off unless the repository variable
-`CHEWVY_MACOS_BUILD` is `true`.
+The libraries are Homebrew bottles built for the runner's macOS, which is why
+the bundle asks for macOS 15 or newer. `packaging/macos/bundled-sources.sh`
+lists the Homebrew formula and version of each one, and a release publishes
+that list beside the disk image.
+
+The project has no Mac hardware. `.github/workflows/macos.yml` builds the
+disk image on a GitHub-hosted Apple Silicon runner, checks that the bundle
+starts without Homebrew present in its load paths, opens a window, and adds
+the image to an existing release. It is started by hand for a tag and does
+nothing unless the repository variable `CHEWVY_MACOS_BUILD` is `true`.
+Playback has never been exercised on macOS.
 
 ## Releases
 
@@ -208,7 +215,8 @@ an existing tag). In one `debian:trixie` container on a self-hosted runner it:
 4. creates a **draft** GitHub Release with the four files attached.
 
 A maintainer reads the draft, edits the notes from `CHANGELOG.md` and
-publishes it. Until then `install.sh` does not see it.
+publishes it. Until then `install.sh` does not see it. Running the `macos`
+workflow for the same tag then adds the disk image and its checksum.
 
 To cut a release: update `version` in `Cargo.toml` and `CHANGELOG.md`, run
 the gates, commit, tag `vX.Y.Z`, push the tag.
