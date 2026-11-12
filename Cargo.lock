@@ -1543,7 +1543,7 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 
 [[package]]
 name = "jellyfin-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "plex-core",
  "serde",
@@ -2321,7 +2321,7 @@ checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
 
 [[package]]
 name = "plex-app"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "egui",
  "egui-winit",
@@ -2347,7 +2347,7 @@ dependencies = [
 
 [[package]]
 name = "plex-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "clap",
  "pkg-config",
@@ -2358,7 +2358,7 @@ dependencies = [
 
 [[package]]
 name = "plex-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64",
  "dirs-sys",
@@ -2379,7 +2379,7 @@ dependencies = [
 
 [[package]]
 name = "plex-player"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bindgen",
  "pkg-config",

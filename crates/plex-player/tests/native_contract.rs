@@ -120,6 +120,6 @@ fn a_skipped_libmpv_guard_cannot_happen_silently() {
 
 #[test]
 fn version_and_license_stay_pinned() {
-    assert_eq!(env!("CARGO_PKG_VERSION"), "0.1.0");
+    assert_eq!(env!("CARGO_PKG_VERSION"), "0.1.1");
     assert_eq!(env!("CARGO_PKG_LICENSE"), "GPL-3.0-or-later");
 }

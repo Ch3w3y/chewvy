@@ -35,6 +35,11 @@ Debian source package and version of every library that was copied in. A
 release publishes that list beside the AppImage, because the bundled libraries
 are GPL and LGPL code and the list is how a user finds their exact source.
 
+**Bundled against the excludelist: `libjack`.** libmpv links it directly and
+a default Ubuntu desktop does not install it, so the script passes it to
+linuxdeploy with `--library`. The copy only matters for JACK output; mpv
+picks PipeWire, PulseAudio or ALSA first.
+
 **Not bundled, on purpose: the graphics stack.** The AppImage
 [excludelist](https://github.com/AppImageCommunity/pkg2appimage/blob/master/excludelist),
 which linuxdeploy applies by default, already leaves out `libEGL`, `libGL`,

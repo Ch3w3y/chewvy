@@ -132,8 +132,20 @@ echo "build-appimage.sh: running linuxdeploy (upstream excludelist: $EXCLUDELIST
 for lib in "${GPU_CANDIDATES[@]}"; do
     cmd+=(--exclude-library "$lib")
 done
+# libjack is on the excludelist because a JACK client library should match the
+# host's JACK server. libmpv links it directly though, and a default Ubuntu
+# desktop does not install it, so without a copy the app cannot start there.
+# --library deploys a library even when the excludelist names it.
+jack=$(ldd "$APPDIR/usr/bin/chewvy" | awk '$1 == "libjack.so.0" { print $3 }')
+if [[ -n $jack ]]; then
+    cmd+=(--library "$jack")
+fi
 # linuxdeploy writes the AppImage into the working directory.
 (cd -- "$OUT" && "${cmd[@]}")
+if [[ -n $jack && ! -e "$APPDIR/usr/lib/libjack.so.0" ]]; then
+    echo "build-appimage.sh: linuxdeploy did not bundle $jack" >&2
+    exit 1
+fi
 
 # Belt and braces: if the host graphics stack sneaked into usr/lib anyway, the
 # AppImage could load its own copy against the host driver and fail to start or

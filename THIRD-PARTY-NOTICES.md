@@ -77,7 +77,7 @@ mpv-winbuild-cmake release named in `.github/workflows/release.yml`
 (`MPV_DEV_URL`), and that repository holds the scripts that built it. Those
 scripts pin mpv to the commit in the file name but fetch most dependencies at
 the head of their upstream branch on the build date, so the revisions are read
-from the library itself: for Chewvy 0.1.0 it reports mpv
+from the library itself: the 20261110 build reports mpv
 `v0.42.0-19-ga61f6c3ab` (<https://github.com/mpv-player/mpv>) and FFmpeg
 `N-128718-gb2b543c07` (<https://github.com/FFmpeg/FFmpeg>). The other
 libraries linked into it are the upstream sources listed in that repository's

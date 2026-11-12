@@ -4,6 +4,13 @@ All notable changes to Chewvy are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-11-12
+
+### Fixed
+
+- The AppImage failed to start on systems without `libjack.so.0`, which
+  includes a default Ubuntu 24.04 desktop. The library is now bundled.
+
 ## [0.1.0] - 2026-11-12
 
 First public version.
