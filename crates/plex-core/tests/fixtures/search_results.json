@@ -1,0 +1,16 @@
+{
+  "MediaContainer": {
+    "size": 1,
+    "totalSize": 1,
+    "Metadata": [
+      {
+        "ratingKey": "10",
+        "key": "/library/metadata/10",
+        "type": "movie",
+        "title": "Sample Generated Movie",
+        "duration": 600000,
+        "addedAt": 1700000000
+      }
+    ]
+  }
+}

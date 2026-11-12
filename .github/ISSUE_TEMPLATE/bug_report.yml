@@ -1,0 +1,63 @@
+name: Bug report
+description: Something does not work as it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste tokens, passwords or `plex.direct` addresses. Security problems go through the Security tab, not here.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you saw instead.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Chewvy version
+      description: Settings > About, or the package file name.
+    validations:
+      required: true
+  - type: dropdown
+    id: package
+    attributes:
+      label: How it was installed
+      options:
+        - Linux install.sh
+        - Linux AppImage
+        - Windows installer
+        - Windows zip
+        - Built from source
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: System
+      description: Operating system and version, desktop session (Wayland or X11), GPU and driver version.
+      placeholder: Fedora 43, KDE Plasma Wayland, Intel Arc A750, Mesa 26.2
+    validations:
+      required: true
+  - type: dropdown
+    id: source
+    attributes:
+      label: Server
+      options:
+        - Plex
+        - Jellyfin
+        - Both or not relevant
+    validations:
+      required: true
+  - type: textarea
+    id: media
+    attributes:
+      label: For playback problems, the file
+      description: Container, video and audio codec, resolution, bit depth, HDR format. `ffprobe` or `mediainfo` output is ideal.
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: Start Chewvy from a terminal with `RUST_LOG=info chewvy` and paste the output. Remove server names or addresses you would rather not share.
+      render: text

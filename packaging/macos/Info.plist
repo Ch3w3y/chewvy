@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleExecutable</key>
+	<string>chewvy</string>
+	<key>CFBundleIdentifier</key>
+	<string>io.github.ch3w3y.chewvy</string>
+	<key>CFBundleName</key>
+	<string>Chewvy</string>
+	<key>CFBundleDisplayName</key>
+	<string>Chewvy</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>@VERSION@</string>
+	<key>CFBundleVersion</key>
+	<string>@VERSION@</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>11.0</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.video</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>CFBundleIconFile</key>
+	<string>@ICON_FILE@</string>
+</dict>
+</plist>

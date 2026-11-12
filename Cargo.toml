@@ -1,0 +1,96 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/plex-core",
+  "crates/jellyfin-core",
+  "crates/plex-player",
+  "crates/plex-app",
+  "crates/plex-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+# See docs/DEPENDENCIES.md, "License notes", before changing this.
+license = "GPL-3.0-or-later"
+repository = "https://github.com/Ch3w3y/chewvy"
+publish = false
+
+# All third-party versions are pinned here and frozen in Cargo.lock.
+# Provenance for each pin (locked version, registry source and the licence
+# declared by that crate version's own manifest) is in docs/DEPENDENCIES.md.
+# Builds are offline + locked: `cargo build --offline --locked --all-targets`.
+[workspace.dependencies]
+# workspace-internal
+plex-core = { path = "crates/plex-core", version = "0.1.0" }
+jellyfin-core = { path = "crates/jellyfin-core", version = "0.1.0" }
+plex-player = { path = "crates/plex-player", version = "0.1.0" }
+plex-app = { path = "crates/plex-app", version = "0.1.0" }
+
+# HTTP + JSON + auth plumbing (crates/plex-core, milestones M2+)
+ureq = "3.3.0"
+url = "2.5.8"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+thiserror = "2.0.20"
+base64 = "0.22.1"
+log = "0.4.34"
+env_logger = "0.11.11"
+xdg = "3.0.0"
+getrandom = "0.3.4"
+dirs-sys = "0.5.0"
+# Artwork decode (crates/plex-app, milestone P2): both are already resolved for
+# other members (arboard -> image, rustls -> ring) so no new crate enters the lock.
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png"] }
+ring = "0.17.14"
+# ureq's `rustls` feature selects the ring crypto provider (`_ring`), not aws-lc-rs.
+rustls = { version = "0.23.44", default-features = false, features = ["ring", "logging", "std", "tls12"] }
+rustls-native-certs = "0.8.4"
+# XDG Secret Service token store backend (milestone M2), direct D-Bus over zbus.
+zbus = { version = "5.19.0", default-features = false, features = ["async-io", "blocking-api", "bus-impl"] }
+tiny_http = "0.12.0"
+
+# Native player tooling (crates/plex-player, milestone M4)
+pkg-config = "0.3.34"
+bindgen = "0.72.1"
+
+# egui + glow shell, no eframe/wgpu (crates/plex-app, milestone M5)
+egui = "0.36.1"
+epaint = "0.36.1"
+egui-winit = { version = "0.36.1", default-features = false, features = ["clipboard", "links", "wayland", "x11"] }
+egui_glow = { version = "0.36.1", features = ["winit", "x11", "wayland"] }
+glow = "0.17.0"
+# wgl compiles only on Windows; glutin always builds cgl on macOS.
+glutin = { version = "0.32.3", default-features = false, features = ["egl", "glx", "x11", "wayland", "wgl"] }
+glutin-winit = { version = "0.5.0", default-features = false, features = ["egl", "glx", "x11", "wayland", "wgl"] }
+# winit defaults keep wayland-dlopen + adwaita CSD, which is what a desktop
+# client wants and is cache-present (sctk-adwaita 0.10.1).
+winit = "0.30.13"
+# The window's display handle passed to libmpv's native-display render param
+# (G1); the crate was already resolved transitively via winit/glutin.
+raw-window-handle = "0.6.2"
+
+# CLI (crates/plex-cli)
+clap = { version = "4.6.6", features = ["derive", "env"] }
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+# Milestone gate: `cargo clippy --offline --locked --all-targets -- -D warnings`.
+all = { level = "warn", priority = -1 }
+unwrap_used = "warn"
+expect_used = "warn"
+indexing_slicing = "warn"
+
+[profile.dev]
+debug = 1
+incremental = true
+
+[profile.release]
+codegen-units = 1
+debug = 1
+lto = "thin"
+opt-level = 3
+panic = "unwind"
+strip = false

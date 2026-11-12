@@ -1,0 +1,175 @@
+name: release
+
+# Builds the packages for a version tag and attaches them, with SHA256SUMS, to
+# a draft GitHub Release. A maintainer reviews the draft and publishes it;
+# install.sh only ever sees published releases.
+#
+# Linux and Windows are built on the project's own self-hosted runners. There
+# is deliberately no pull_request trigger: see ci.yml.
+#
+# macOS needs a GitHub-hosted runner, so it is opt-in: the job runs only when
+# the repository variable CHEWVY_MACOS_BUILD is "true".
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to build and release (for example v0.1.0)
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CARGO_BUILD_JOBS: '2'
+  RUST_VERSION: '1.99.1'
+  TAG: ${{ inputs.tag || github.ref_name }}
+  # Pinned linuxdeploy release and the SHA-256 of its x86_64 AppImage.
+  LINUXDEPLOY_VERSION: 1-alpha-20251107-1
+  LINUXDEPLOY_SHA256: c20cd71e3a4e3b80c3483cef793cda3f4e990aca14014d23c544ca3ce1270b4d
+  # Pinned libmpv development package for Windows (shinchiro/mpv-winbuild-cmake)
+  # and its SHA-256. Its libmpv-2.dll is what the Windows packages bundle.
+  MPV_DEV_URL: https://github.com/shinchiro/mpv-winbuild-cmake/releases/download/20261110/mpv-dev-x86_64-20261110-git-a61f6c3abd.7z
+  MPV_DEV_SHA256: f07b97a72f2394a7798d6e1d36d952bbfd63577e25cef051f716751ea5dc9688
+
+jobs:
+  packages:
+    name: Linux AppImage, Windows installer and zip
+    runs-on: [self-hosted, chewvy]
+    permissions:
+      contents: write
+    # One job and one container for both platforms: the files go straight from
+    # here to the release, with no workflow artifacts in between. Building on
+    # Debian 13 keeps the AppImage's glibc floor low.
+    container:
+      image: debian:trixie
+    env:
+      APPIMAGE_EXTRACT_AND_RUN: 1 # no FUSE in the job container
+      # linuxdeploy's bundled strip cannot read the .relr.dyn sections this toolchain emits.
+      NO_STRIP: '1'
+    steps:
+      - name: Install build dependencies
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update
+          apt-get install --no-install-recommends -y \
+            ca-certificates curl file patchelf git gh python3 \
+            build-essential pkg-config libclang-dev \
+            libmpv-dev libegl-dev libgl-dev libgles-dev libgbm-dev libvulkan-dev \
+            libx11-dev libx11-xcb-dev libxcb1-dev libxkbcommon-dev \
+            libwayland-dev wayland-protocols \
+            gcc-mingw-w64-x86-64 binutils-mingw-w64-x86-64 p7zip-full zip unzip nsis
+          apt-get clean
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Check the tag matches the workspace version
+        run: |
+          version=$(sed -n 's/^version = "\([^"]*\)".*/\1/p' Cargo.toml | head -n 1)
+          if [ "v$version" != "$TAG" ]; then
+            echo "tag $TAG does not match Cargo.toml version $version" >&2
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/rustup-init.sh
+          sh /tmp/rustup-init.sh -y --profile minimal --default-toolchain "$RUST_VERSION" \
+            --target x86_64-pc-windows-gnu
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Build for Linux
+        run: cargo build --release --locked -p plex-app
+      - name: Fetch linuxdeploy
+        run: |
+          curl -fL -o "$RUNNER_TEMP/linuxdeploy" \
+            "https://github.com/linuxdeploy/linuxdeploy/releases/download/${LINUXDEPLOY_VERSION}/linuxdeploy-x86_64.AppImage"
+          echo "${LINUXDEPLOY_SHA256}  $RUNNER_TEMP/linuxdeploy" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/linuxdeploy"
+      - name: Package the AppImage
+        env:
+          LINUXDEPLOY: ${{ runner.temp }}/linuxdeploy
+        run: packaging/linux/build-appimage.sh target/release/chewvy target/appimage
+
+      - name: Check install.sh states the AppImage's glibc floor
+        run: |
+          need=$(objdump -T target/appimage/AppDir/usr/bin/chewvy target/appimage/AppDir/usr/lib/*.so* 2>/dev/null |
+            grep -oE 'GLIBC_[0-9]+\.[0-9]+' | sort -Vu | tail -n 1 | cut -d_ -f2)
+          have=$(sed -n 's/^ *min_glibc="\(.*\)"$/\1/p' install.sh)
+          if [ "$need" != "$have" ]; then
+            echo "install.sh says glibc $have, but the AppImage needs $need" >&2
+            exit 1
+          fi
+
+      - name: Fetch the pinned libmpv development package
+        run: |
+          curl -fL "$MPV_DEV_URL" -o "$RUNNER_TEMP/mpv-dev.7z"
+          printf '%s  %s\n' "$MPV_DEV_SHA256" "$RUNNER_TEMP/mpv-dev.7z" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/mpv"
+          7z x -y "-o$RUNNER_TEMP/mpv" "$RUNNER_TEMP/mpv-dev.7z" >/dev/null
+          echo "MPV_DIR=$RUNNER_TEMP/mpv" >> "$GITHUB_ENV"
+      - name: Cross-build for Windows and package the zip
+        run: packaging/windows/build-zip.sh
+      - name: Package the Windows installer
+        run: packaging/windows/build-installer.sh
+
+      - name: Collect the release files
+        run: |
+          mkdir -p dist
+          cp "target/appimage/Chewvy-$VERSION-x86_64.AppImage" dist/
+          cp "target/windows/Chewvy-$VERSION-windows-x86_64.zip" dist/
+          cp "target/windows/Chewvy-$VERSION-windows-x86_64-setup.exe" dist/
+          packaging/linux/bundled-sources.sh target/appimage/AppDir \
+            > "dist/Chewvy-$VERSION-linux-bundled-sources.txt"
+          (cd dist && sha256sum Chewvy-* > SHA256SUMS && cat SHA256SUMS)
+      - name: Create the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          gh release create "$TAG" dist/* --draft --verify-tag --title "Chewvy $VERSION" \
+            --notes "See CHANGELOG.md. The packages are not code-signed: verify them against SHA256SUMS."
+
+  macos:
+    name: macOS disk image (opt-in)
+    needs: packages
+    if: vars.CHEWVY_MACOS_BUILD == 'true'
+    # Current standard Apple Silicon label in GitHub's runner reference.
+    runs-on: macos-15
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Install Homebrew dependencies
+        run: brew install mpv pkgconf dylibbundler librsvg
+      - name: Point pkg-config at Homebrew
+        run: |
+          prefix=$(brew --prefix)
+          echo "PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$prefix/share/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
+      - name: Install Rust
+        run: rustup toolchain install "$RUST_VERSION" --profile minimal && rustup default "$RUST_VERSION"
+      - name: Build
+        run: cargo build --release --locked -p plex-app
+      - name: Package the app bundle and disk image
+        run: packaging/macos/build-app.sh
+      - name: Add the disk image to the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          dmg=$(ls target/macos/Chewvy-*-macos-arm64.dmg)
+          gh release download "$TAG" --pattern SHA256SUMS --dir "$RUNNER_TEMP"
+          (cd target/macos && shasum -a 256 "$(basename "$dmg")") >> "$RUNNER_TEMP/SHA256SUMS"
+          gh release upload "$TAG" "$dmg" "$RUNNER_TEMP/SHA256SUMS" --clobber

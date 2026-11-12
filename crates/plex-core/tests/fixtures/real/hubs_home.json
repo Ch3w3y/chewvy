@@ -1,0 +1,1353 @@
+{
+ "MediaContainer": {
+  "size": 8,
+  "allowSync": true,
+  "identifier": "com.plexapp.plugins.library",
+  "Hub": [
+   {
+    "hubKey": "/library/metadata/43492,14431,42793,42025,21266,37683",
+    "key": "/hubs/home/continueWatching",
+    "title": "Continue Watching",
+    "type": "mixed",
+    "hubIdentifier": "home.continue",
+    "context": "hub.home.continue",
+    "size": 6,
+    "more": true,
+    "style": "hero",
+    "promoted": true,
+    "Metadata": [
+     {
+      "ratingKey": "43492",
+      "key": "/library/metadata/43492",
+      "parentRatingKey": "43289",
+      "grandparentRatingKey": "294",
+      "guid": "plex://episode/41164a63b4d8da51a5bbb431",
+      "parentGuid": "plex://season/a58d61e724afb93d39f492e8",
+      "grandparentGuid": "plex://show/1a475850b593a4ec8ee4bb13",
+      "grandparentSlug": "tolland-baron",
+      "studio": "Vesper Street",
+      "type": "episode",
+      "title": "Blue Rafter",
+      "grandparentKey": "/library/metadata/294",
+      "parentKey": "/library/metadata/43289",
+      "librarySectionTitle": "TV Programmes",
+      "librarySectionID": 1,
+      "librarySectionKey": "/library/sections/1",
+      "grandparentTitle": "Tolland Baron",
+      "parentTitle": "Season 4",
+      "contentRating": "TV-MA",
+      "summary": "A retired clockmaker is asked to repair a machine that should not be able to keep time at all. After the harvest fails, a village sends its youngest cartographer to find where the river went.",
+      "index": 2,
+      "parentIndex": 4,
+      "audienceRating": 8.6,
+      "viewOffset": 574000,
+      "lastViewedAt": 1789248404,
+      "year": 2026,
+      "thumb": "/library/metadata/43492/thumb/1789201157",
+      "art": "/library/metadata/294/art/1788478931",
+      "parentThumb": "/library/metadata/43289/thumb/1787627814",
+      "grandparentThumb": "/library/metadata/294/thumb/1788478931",
+      "grandparentArt": "/library/metadata/294/art/1788478931",
+      "grandparentTheme": "/library/metadata/294/theme/1788478931",
+      "duration": 2499936,
+      "originallyAvailableAt": "2026-10-23",
+      "addedAt": 1788478931,
+      "updatedAt": 1789201157,
+      "audienceRatingImage": "themoviedb://image.rating",
+      "Media": [
+       {
+        "id": 74514,
+        "duration": 2499936,
+        "bitrate": 8204,
+        "width": 1920,
+        "height": 1080,
+        "aspectRatio": 1.78,
+        "audioChannels": 6,
+        "audioCodec": "eac3",
+        "videoCodec": "h264",
+        "videoResolution": "1080",
+        "container": "mkv",
+        "videoFrameRate": "24p",
+        "videoProfile": "high",
+        "hasVoiceActivity": false,
+        "Part": [
+         {
+          "id": 74514,
+          "key": "/library/parts/74514/1788478883/file.mkv",
+          "duration": 2499936,
+          "file": "REDACTED",
+          "size": 2564642190,
+          "container": "mkv",
+          "videoProfile": "high"
+         }
+        ]
+       }
+      ],
+      "Image": [
+       {
+        "alt": "Blue Rafter",
+        "type": "coverPoster",
+        "url": "/library/metadata/294/thumb/1788478931"
+       },
+       {
+        "alt": "Blue Rafter",
+        "type": "snapshot",
+        "url": "/library/metadata/43492/thumb/1789201157"
+       },
+       {
+        "alt": "Blue Rafter",
+        "type": "background",
+        "url": "/library/metadata/294/art/1788478931"
+       }
+      ],
+      "UltraBlurColors": {
+       "topLeft": "2f1c0a",
+       "topRight": "1b0f04",
+       "bottomRight": "874c28",
+       "bottomLeft": "494b4b"
+      },
+      "Director": [
+       {
+        "tag": "Otis Abernathy"
+       }
+      ],
+      "Writer": [
+       {
+        "tag": "Rhea Merriweather"
+       },
+       {
+        "tag": "Rhea Winterbourne"
+       }
+      ],
+      "Role": [
+       {
+        "tag": "Ida Northcote"
+       },
+       {
+        "tag": "Quill Dunmore"
+       },
+       {
+        "tag": "Cora Whitlock"
+       }
+      ]
+     },
+     {
+      "ratingKey": "14431",
+      "key": "/library/metadata/14431",
+      "guid": "plex://movie/98ae6c04a1e7af6d3e0f2dce",
+      "slug": "moth-2013-1",
+      "studio": "Quiet Engine",
+      "type": "movie",
+      "title": "Moth",
+      "librarySectionTitle": "Films",
+      "librarySectionID": 2,
+      "librarySectionKey": "/library/sections/2",
+      "contentRating": "gb/15",
+      "contentRatingAge": 15,
+      "summary": "Old loyalties are tested, and not everyone who set out will see the far shore. When the night train stops between stations, its passengers discover that nobody remembers boarding. A weather station at the edge of the ice begins receiving forecasts for a town that was never built. A surveyor returns to the valley she left as a child and finds the maps no longer match the land.",
+      "rating": 6.3,
+      "audienceRating": 5.5,
+      "viewOffset": 4714000,
+      "lastViewedAt": 1787866891,
+      "year": 2013,
+      "tagline": "The lamp must not go out.",
+      "thumb": "/library/metadata/14431/thumb/1784342261",
+      "art": "/library/metadata/14431/art/1784342261",
+      "duration": 6012736,
+      "originallyAvailableAt": "2013-01-17",
+      "addedAt": 1754669104,
+      "updatedAt": 1784342261,
+      "audienceRatingImage": "rottentomatoes://image.rating.spilled",
+      "chapterSource": "media",
+      "primaryExtraKey": "/library/metadata/14432",
+      "ratingImage": "rottentomatoes://image.rating.ripe",
+      "Media": [
+       {
+        "id": 29224,
+        "duration": 6012736,
+        "bitrate": 3650,
+        "width": 1920,
+        "height": 1080,
+        "aspectRatio": 1.78,
+        "audioChannels": 2,
+        "audioCodec": "eac3",
+        "videoCodec": "h264",
+        "videoResolution": "1080",
+        "container": "mkv",
+        "videoFrameRate": "NTSC",
+        "videoProfile": "high",
+        "hasVoiceActivity": false,
+        "Part": [
+         {
+          "id": 29224,
+          "key": "/library/parts/29224/1754669023/file.mkv",
+          "duration": 6012736,
+          "file": "REDACTED",
+          "size": 2742966186,
+          "container": "mkv",
+          "videoProfile": "high"
+         }
+        ]
+       }
+      ],
+      "Image": [
+       {
+        "alt": "Moth",
+        "type": "coverPoster",
+        "url": "/library/metadata/14431/thumb/1784342261"
+       },
+       {
+        "alt": "Moth",
+        "type": "background",
+        "url": "/library/metadata/14431/art/1784342261"
+       },
+       {
+        "alt": "Moth",
+        "type": "clearLogo",
+        "url": "/library/metadata/14431/clearLogo/1784342261"
+       }
+      ],
+      "UltraBlurColors": {
+       "topLeft": "081508",
+       "topRight": "5a3a1b",
+       "bottomRight": "1c1004",
+       "bottomLeft": "0c020f"
+      },
+      "Genre": [
+       {
+        "tag": "Thriller"
+       },
+       {
+        "tag": "Horror"
+       }
+      ],
+      "Country": [
+       {
+        "tag": "Canada"
+       },
+       {
+        "tag": "Spain"
+       }
+      ],
+      "Director": [
+       {
+        "tag": "Anton Ingram"
+       }
+      ],
+      "Writer": [
+       {
+        "tag": "Anton Ingram"
+       },
+       {
+        "tag": "Alba Sallow"
+       }
+      ],
+      "Role": [
+       {
+        "tag": "Ida Hawksworth"
+       },
+       {
+        "tag": "Nell Marlowe"
+       },
+       {
+        "tag": "Cal Easterly"
+       }
+      ]
+     },
+     {
+      "ratingKey": "42793",
+      "key": "/library/metadata/42793",
+      "guid": "plex://movie/11e1ecc0a1d48fcd3870ceca",
+      "slug": "crow-vs-anvil",
+      "studio": "Yellow Door Films",
+      "type": "movie",
+      "title": "Crow vs. Anvil",
+      "librarySectionTitle": "Films",
+      "librarySectionID": 2,
+      "librarySectionKey": "/library/sections/2",
+      "contentRating": "gb/PG",
+      "contentRatingAge": 7,
+      "summary": "Three siblings inherit a hotel with one more room than its floor plan allows. A stage magician's assistant realises the trick only works because someone in the audience is helping. A surveyor returns to the valley she left as a child and finds the maps no longer match the land.",
+      "rating": 9.6,
+      "audienceRating": 9.4,
+      "viewOffset": 801551,
+      "lastViewedAt": 1786869076,
+      "year": 2026,
+      "tagline": "A long way round is still a way.",
+      "thumb": "/library/metadata/42793/thumb/1789186906",
+      "art": "/library/metadata/42793/art/1789186906",
+      "duration": 6175216,
+      "originallyAvailableAt": "2026-08-20",
+      "addedAt": 1785905964,
+      "updatedAt": 1789186906,
+      "audienceRatingImage": "rottentomatoes://image.rating.upright",
+      "chapterSource": "media",
+      "primaryExtraKey": "/library/metadata/42794",
+      "ratingImage": "rottentomatoes://image.rating.ripe",
+      "Media": [
+       {
+        "id": 73404,
+        "duration": 6175216,
+        "bitrate": 10155,
+        "width": 1920,
+        "height": 800,
+        "aspectRatio": 2.35,
+        "audioChannels": 6,
+        "audioCodec": "eac3",
+        "videoCodec": "h264",
+        "videoResolution": "1080",
+        "container": "mkv",
+        "videoFrameRate": "24p",
+        "audioProfile": "dolby digital plus + dolby atmos",
+        "videoProfile": "high",
+        "hasVoiceActivity": false,
+        "Part": [
+         {
+          "id": 73404,
+          "key": "/library/parts/73404/1785905876/file.mkv",
+          "duration": 6175216,
+          "file": "REDACTED",
+          "size": 7840611035,
+          "audioProfile": "dolby digital plus + dolby atmos",
+          "container": "mkv",
+          "videoProfile": "high"
+         }
+        ]
+       }
+      ],
+      "Image": [
+       {
+        "alt": "Crow vs. Anvil",
+        "type": "coverPoster",
+        "url": "/library/metadata/42793/thumb/1789186906"
+       },
+       {
+        "alt": "Crow vs. Anvil",
+        "type": "background",
+        "url": "/library/metadata/42793/art/1789186906"
+       },
+       {
+        "alt": "Crow vs. Anvil",
+        "type": "clearLogo",
+        "url": "/library/metadata/42793/clearLogo/1789186906"
+       }
+      ],
+      "UltraBlurColors": {
+       "topLeft": "570f05",
+       "topRight": "835005",
+       "bottomRight": "183d54",
+       "bottomLeft": "7a331d"
+      },
+      "Genre": [
+       {
+        "tag": "Comedy"
+       },
+       {
+        "tag": "Animation"
+       }
+      ],
+      "Country": [
+       {
+        "tag": "United States of America"
+       }
+      ],
+      "Director": [
+       {
+        "tag": "Lior Rosswood"
+       }
+      ],
+      "Writer": [
+       {
+        "tag": "Ivo Quennell"
+       },
+       {
+        "tag": "Lena Winterbourne"
+       }
+      ],
+      "Role": [
+       {
+        "tag": "Ida Kestrel"
+       },
+       {
+        "tag": "Una Rosswood"
+       },
+       {
+        "tag": "Alba Kestrel"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "hubKey": "/library/metadata/43492,43231,40506,40656,21266,37683",
+    "key": "/hubs/home/onDeck",
+    "title": "On Deck",
+    "type": "episode",
+    "hubIdentifier": "home.ondeck",
+    "context": "hub.home.ondeck",
+    "size": 6,
+    "more": true,
+    "style": "shelf",
+    "promoted": true,
+    "Metadata": [
+     {
+      "ratingKey": "43492",
+      "key": "/library/metadata/43492",
+      "parentRatingKey": "43289",
+      "grandparentRatingKey": "294",
+      "guid": "plex://episode/41164a63b4d8da51a5bbb431",
+      "parentGuid": "plex://season/a58d61e724afb93d39f492e8",
+      "grandparentGuid": "plex://show/1a475850b593a4ec8ee4bb13",
+      "grandparentSlug": "tolland-baron",
+      "studio": "Vesper Street",
+      "type": "episode",
+      "title": "Blue Rafter",
+      "grandparentKey": "/library/metadata/294",
+      "parentKey": "/library/metadata/43289",
+      "librarySectionTitle": "TV Programmes",
+      "librarySectionID": 1,
+      "librarySectionKey": "/library/sections/1",
+      "grandparentTitle": "Tolland Baron",
+      "parentTitle": "Season 4",
+      "contentRating": "TV-MA",
+      "summary": "A retired clockmaker is asked to repair a machine that should not be able to keep time at all. After the harvest fails, a village sends its youngest cartographer to find where the river went.",
+      "index": 2,
+      "parentIndex": 4,
+      "audienceRating": 8.6,
+      "viewOffset": 574000,
+      "lastViewedAt": 1789248404,
+      "year": 2026,
+      "thumb": "/library/metadata/43492/thumb/1789201157",
+      "art": "/library/metadata/294/art/1788478931",
+      "parentThumb": "/library/metadata/43289/thumb/1787627814",
+      "grandparentThumb": "/library/metadata/294/thumb/1788478931",
+      "grandparentArt": "/library/metadata/294/art/1788478931",
+      "grandparentTheme": "/library/metadata/294/theme/1788478931",
+      "duration": 2499936,
+      "originallyAvailableAt": "2026-10-23",
+      "addedAt": 1788478931,
+      "updatedAt": 1789201157,
+      "audienceRatingImage": "themoviedb://image.rating",
+      "Media": [
+       {
+        "id": 74514,
+        "duration": 2499936,
+        "bitrate": 8204,
+        "width": 1920,
+        "height": 1080,
+        "aspectRatio": 1.78,
+        "audioChannels": 6,
+        "audioCodec": "eac3",
+        "videoCodec": "h264",
+        "videoResolution": "1080",
+        "container": "mkv",
+        "videoFrameRate": "24p",
+        "videoProfile": "high",
+        "hasVoiceActivity": false,
+        "Part": [
+         {
+          "id": 74514,
+          "key": "/library/parts/74514/1788478883/file.mkv",
+          "duration": 2499936,
+          "file": "REDACTED",
+          "size": 2564642190,
+          "container": "mkv",
+          "videoProfile": "high"
+         }
+        ]
+       }
+      ],
+      "Image": [
+       {
+        "alt": "Blue Rafter",
+        "type": "coverPoster",
+        "url": "/library/metadata/294/thumb/1788478931"
+       },
+       {
+        "alt": "Blue Rafter",
+        "type": "snapshot",
+        "url": "/library/metadata/43492/thumb/1789201157"
+       },
+       {
+        "alt": "Blue Rafter",
+        "type": "background",
+        "url": "/library/metadata/294/art/1788478931"
+       }
+      ],
+      "UltraBlurColors": {
+       "topLeft": "2f1c0a",
+       "topRight": "1b0f04",
+       "bottomRight": "874c28",
+       "bottomLeft": "494b4b"
+      },
+      "Director": [
+       {
+        "tag": "Otis Abernathy"
+       }
+      ],
+      "Writer": [
+       {
+        "tag": "Rhea Merriweather"
+       },
+       {
+        "tag": "Rhea Winterbourne"
+       }
+      ],
+      "Role": [
+       {
+        "tag": "Ida Northcote"
+       },
+       {
+        "tag": "Quill Dunmore"
+       },
+       {
+        "tag": "Cora Whitlock"
+       }
+      ]
+     },
+     {
+      "ratingKey": "43231",
+      "key": "/library/metadata/43231",
+      "parentRatingKey": "43226",
+      "grandparentRatingKey": "43215",
+      "guid": "plex://episode/d516fb0f1217045cc93037f1",
+      "parentGuid": "plex://season/579e96e91a506c59a4ae1a1b",
+      "grandparentGuid": "plex://show/51512ea3c8d6cd4c513286c1",
+      "grandparentSlug": "the-five-harbours-2025",
+      "type": "episode",
+      "title": "Boat Yard",
+      "grandparentKey": "/library/metadata/43215",
+      "parentKey": "/library/metadata/43226",
+      "librarySectionTitle": "TV Programmes",
+      "librarySectionID": 1,
+      "librarySectionKey": "/library/sections/1",
+      "grandparentTitle": "The Five Harbours (2025)",
+      "parentTitle": "Season 1",
+      "contentRating": "TV-MA",
+      "summary": "Old loyalties are tested, and not everyone who set out will see the far shore. When the night train stops between stations, its passengers discover that nobody remembers boarding.",
+      "index": 4,
+      "parentIndex": 1,
+      "audienceRating": 4.8,
+      "lastViewedAt": 1788039057,
+      "year": 2025,
+      "thumb": "/library/metadata/43231/thumb/1787069788",
+      "art": "/library/metadata/43215/art/1787069324",
+      "parentThumb": "/library/metadata/43226/thumb/1787069448",
+      "grandparentThumb": "/library/metadata/43215/thumb/1787069324",
+      "grandparentArt": "/library/metadata/43215/art/1787069324",
+      "duration": 1974687,
+      "originallyAvailableAt": "2025-05-01",
+      "addedAt": 1787069786,
+      "updatedAt": 1787069788,
+      "audienceRatingImage": "themoviedb://image.rating",
+      "Media": [
+       {
+        "id": 74070,
+        "duration": 1974687,
+        "bitrate": 10451,
+        "width": 3840,
+        "height": 2160,
+        "aspectRatio": 1.78,
+        "audioChannels": 6,
+        "audioCodec": "eac3",
+        "videoCodec": "hevc",
+        "videoResolution": "4k",
+        "container": "mkv",
+        "videoFrameRate": "24p",
+        "audioProfile": "dolby digital plus + dolby atmos",
+        "videoProfile": "main 10",
+        "hasVoiceActivity": false,
+        "Part": [
+         {
+          "id": 74070,
+          "key": "/library/parts/74070/1787069732/file.mkv",
+          "duration": 1974687,
+          "file": "REDACTED",
+          "size": 2580802544,
+          "audioProfile": "dolby digital plus + dolby atmos",
+          "container": "mkv",
+          "videoProfile": "main 10",
+          "Stream": [
+           {
+            "id": 356981,
+            "streamType": 1,
+            "default": true,
+            "codec": "hevc",
+            "index": 0,
+            "bitrate": 9680,
+            "language": "English",
+            "languageTag": "en",
+            "languageCode": "eng",
+            "bitDepth": 10,
+            "chromaLocation": "topleft",
+            "chromaSubsampling": "4:2:0",
+            "codedHeight": 2160,
+            "codedWidth": 3840,
+            "colorPrimaries": "bt2020",
+            "colorRange": "tv",
+            "colorSpace": "bt2020nc",
+            "colorTrc": "smpte2084",
+            "frameRate": 23.976,
+            "height": 2160,
+            "level": 150,
+            "profile": "main 10",
+            "refFrames": 1,
+            "width": 3840,
+            "displayTitle": "4K HDR10",
+            "extendedDisplayTitle": "4K HDR10 (HEVC Main 10)"
+           },
+           {
+            "id": 356982,
+            "streamType": 2,
+            "canNormalizeLoudness": false,
+            "selected": true,
+            "default": true,
+            "codec": "eac3",
+            "index": 1,
+            "channels": 6,
+            "bitrate": 768,
+            "language": "English",
+            "languageTag": "en",
+            "languageCode": "eng",
+            "audioChannelLayout": "5.1(side)",
+            "profile": "dolby digital plus + dolby atmos",
+            "samplingRate": 48000,
+            "displayTitle": "English (EAC3 5.1 + Atmos)",
+            "extendedDisplayTitle": "English (EAC3 5.1 + Atmos)"
+           },
+           {
+            "id": 356983,
+            "streamType": 3,
+            "canAutoSync": false,
+            "codec": "srt",
+            "index": 2,
+            "bitrate": 0,
+            "language": "English",
+            "languageTag": "en",
+            "languageCode": "eng",
+            "title": "English",
+            "displayTitle": "English",
+            "extendedDisplayTitle": "English (SRT)"
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "Image": [
+       {
+        "alt": "Boat Yard",
+        "type": "coverPoster",
+        "url": "/library/metadata/43215/thumb/1787069324"
+       },
+       {
+        "alt": "Boat Yard",
+        "type": "snapshot",
+        "url": "/library/metadata/43231/thumb/1787069788"
+       },
+       {
+        "alt": "Boat Yard",
+        "type": "background",
+        "url": "/library/metadata/43215/art/1787069324"
+       }
+      ],
+      "UltraBlurColors": {
+       "topLeft": "401815",
+       "topRight": "544846",
+       "bottomRight": "873a3c",
+       "bottomLeft": "40322f"
+      },
+      "Guid": [
+       {
+        "id": "imdb://tt12945176"
+       },
+       {
+        "id": "tmdb://1861825"
+       },
+       {
+        "id": "tvdb://26756459"
+       }
+      ],
+      "Rating": [
+       {
+        "image": "imdb://image.rating",
+        "value": 7.3,
+        "type": "audience"
+       },
+       {
+        "image": "themoviedb://image.rating",
+        "value": 4.8,
+        "type": "audience"
+       }
+      ],
+      "Director": [
+       {
+        "id": 204031,
+        "filter": "director=204031",
+        "tag": "Sanna Larkspur",
+        "tagKey": "ae836b28b29d2493058e9228",
+        "thumb": "https://metadata-static.plex.tv/people/18fd7e6be57d271ef170b3af.jpg"
+       }
+      ],
+      "Writer": [
+       {
+        "id": 216346,
+        "filter": "writer=216346",
+        "tag": "Vera Bellamy-Rhodes",
+        "tagKey": "7de7c003b8c8d87ad096249c"
+       }
+      ],
+      "Role": [
+       {
+        "id": 22836,
+        "filter": "actor=22836",
+        "tag": "Ida Ingram",
+        "tagKey": "303269f8ea7f3e488d500461",
+        "role": "Esme",
+        "thumb": "https://metadata-static.plex.tv/4/people/4e9c56b5a8bc0ff03867af6a76131707.jpg"
+       },
+       {
+        "id": 13962,
+        "filter": "actor=13962",
+        "tag": "Yara Ingram",
+        "tagKey": "b5e31b309e1f9759eaf2586c",
+        "role": "Bea Sternhagen",
+        "thumb": "https://metadata-static.plex.tv/7/people/76b46e49ed4bcdba2c0a25903494b452.jpg"
+       },
+       {
+        "id": 23091,
+        "filter": "actor=23091",
+        "tag": "Bram Pemberton",
+        "tagKey": "4ea4526387d4fb8fc3c8eb5d",
+        "role": "Hal",
+        "thumb": "https://metadata-static.plex.tv/e/people/e467bbca4ee0f9d158e2d9d6cf84d056.jpg"
+       }
+      ],
+      "Producer": [
+       {
+        "id": 216334,
+        "filter": "producer=216334",
+        "tag": "Bea Larkspur",
+        "tagKey": "dfe341d1ea15e9af09573415",
+        "thumb": "https://metadata-static.plex.tv/1/people/1cef9b2bfa4fa1642de08389342aa3bf.jpg"
+       },
+       {
+        "id": 216335,
+        "filter": "producer=216335",
+        "tag": "Ines Jessop",
+        "tagKey": "d74ece16043efd4f4a93c9fa"
+       },
+       {
+        "id": 216373,
+        "filter": "producer=216373",
+        "tag": "Seth Yarrow",
+        "tagKey": "52159d88f1c1ebe9e44c9e3e"
+       }
+      ]
+     },
+     {
+      "ratingKey": "40506",
+      "key": "/library/metadata/40506",
+      "parentRatingKey": "40501",
+      "grandparentRatingKey": "40480",
+      "guid": "plex://episode/2504343d12ea401b30f6ed47",
+      "parentGuid": "plex://season/24d0ddf13dc41e8455a7eaab",
+      "grandparentGuid": "plex://show/166d25df6ca0456ca00a38dc",
+      "grandparentSlug": "hecklers-1",
+      "type": "episode",
+      "title": "Clockwork Fence",
+      "grandparentKey": "/library/metadata/40480",
+      "parentKey": "/library/metadata/40501",
+      "librarySectionTitle": "TV Programmes",
+      "librarySectionID": 1,
+      "librarySectionKey": "/library/sections/1",
+      "grandparentTitle": "Hecklers",
+      "parentTitle": "Season 4",
+      "contentRating": "TV-MA",
+      "summary": "A retired clockmaker is asked to repair a machine that should not be able to keep time at all. After the harvest fails, a village sends its youngest cartographer to find where the river went. Old loyalties are tested, and not everyone who set out will see the far shore. Three siblings inherit a hotel with one more room than its floor plan allows.",
+      "index": 5,
+      "parentIndex": 4,
+      "audienceRating": 5.1,
+      "lastViewedAt": 1786045036,
+      "year": 2025,
+      "thumb": "/library/metadata/40506/thumb/1782609020",
+      "art": "/library/metadata/40480/art/1786675421",
+      "parentThumb": "/library/metadata/40501/thumb/1780774527",
+      "grandparentThumb": "/library/metadata/40480/thumb/1786675421",
+      "grandparentArt": "/library/metadata/40480/art/1786675421",
+      "grandparentTheme": "/library/metadata/40480/theme/1786675421",
+      "duration": 1869312,
+      "originallyAvailableAt": "2025-05-01",
+      "addedAt": 1780774764,
+      "updatedAt": 1782609020,
+      "audienceRatingImage": "themoviedb://image.rating",
+      "Media": [
+       {
+        "id": 69808,
+        "duration": 1869312,
+        "bitrate": 16349,
+        "width": 3840,
+        "height": 1920,
+        "aspectRatio": 1.85,
+        "audioChannels": 6,
+        "audioCodec": "eac3",
+        "videoCodec": "hevc",
+        "videoResolution": "4k",
+        "container": "mkv",
+        "videoFrameRate": "24p",
+        "videoProfile": "main 10",
+        "hasVoiceActivity": false,
+        "Part": [
+         {
+          "id": 69808,
+          "key": "/library/parts/69808/1780774696/file.mkv",
+          "duration": 1869312,
+          "file": "REDACTED",
+          "size": 3820259352,
+          "container": "mkv",
+          "videoProfile": "main 10",
+          "Stream": [
+           {
+            "id": 334133,
+            "streamType": 1,
+            "default": true,
+            "codec": "hevc",
+            "index": 0,
+            "bitrate": 16093,
+            "language": "English",
+            "languageTag": "en",
+            "languageCode": "eng",
+            "bitDepth": 10,
+            "chromaLocation": "left",
+            "chromaSubsampling": "4:2:0",
+            "codedHeight": 1920,
+            "codedWidth": 3840,
+            "colorPrimaries": "bt709",
+            "colorRange": "tv",
+            "colorSpace": "bt709",
+            "colorTrc": "bt709",
+            "frameRate": 23.976,
+            "height": 1920,
+            "level": 153,
+            "profile": "main 10",
+            "refFrames": 1,
+            "width": 3840,
+            "displayTitle": "4K",
+            "extendedDisplayTitle": "4K (HEVC Main 10)"
+           },
+           {
+            "id": 334134,
+            "streamType": 2,
+            "canNormalizeLoudness": false,
+            "selected": true,
+            "default": true,
+            "codec": "eac3",
+            "index": 1,
+            "channels": 6,
+            "bitrate": 256,
+            "language": "English",
+            "languageTag": "en",
+            "languageCode": "eng",
+            "audioChannelLayout": "5.1(side)",
+            "samplingRate": 48000,
+            "displayTitle": "English (EAC3 5.1)",
+            "extendedDisplayTitle": "English (EAC3 5.1)"
+           },
+           {
+            "id": 334135,
+            "streamType": 3,
+            "canAutoSync": false,
+            "codec": "srt",
+            "index": 2,
+            "bitrate": 0,
+            "language": "English",
+            "languageTag": "en",
+            "languageCode": "eng",
+            "title": "English",
+            "displayTitle": "English",
+            "extendedDisplayTitle": "English (SRT)"
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "Image": [
+       {
+        "alt": "Clockwork Fence",
+        "type": "coverPoster",
+        "url": "/library/metadata/40480/thumb/1786675421"
+       },
+       {
+        "alt": "Clockwork Fence",
+        "type": "snapshot",
+        "url": "/library/metadata/40506/thumb/1782609020"
+       },
+       {
+        "alt": "Clockwork Fence",
+        "type": "background",
+        "url": "/library/metadata/40480/art/1786675421"
+       }
+      ],
+      "UltraBlurColors": {
+       "topLeft": "261c1a",
+       "topRight": "5b2621",
+       "bottomRight": "1f1d24",
+       "bottomLeft": "313031"
+      },
+      "Guid": [
+       {
+        "id": "imdb://tt58366496"
+       },
+       {
+        "id": "tmdb://5347219"
+       },
+       {
+        "id": "tvdb://24307164"
+       }
+      ],
+      "Rating": [
+       {
+        "image": "imdb://image.rating",
+        "value": 7.6,
+        "type": "audience"
+       },
+       {
+        "image": "themoviedb://image.rating",
+        "value": 5.1,
+        "type": "audience"
+       }
+      ],
+      "Director": [
+       {
+        "id": 203137,
+        "filter": "director=203137",
+        "tag": "Hal Sallow",
+        "tagKey": "5bb83c917612e3015ad271b1",
+        "thumb": "https://metadata-static.plex.tv/9/people/9caaf787810045eadaa89e0ff5b78b55.jpg"
+       }
+      ],
+      "Writer": [
+       {
+        "id": 42220,
+        "filter": "writer=42220",
+        "tag": "Cal Ravenscroft",
+        "tagKey": "08200cd23e4e3aeccc8a6ed7",
+        "thumb": "https://metadata-static.plex.tv/1/people/1b8eab54fcebf31b8f70720db1b8adbb.jpg"
+       }
+      ],
+      "Role": [
+       {
+        "id": 24635,
+        "filter": "actor=24635",
+        "tag": "Vera Sallow",
+        "tagKey": "bae0b966f782adb1519b9392",
+        "role": "Jem Abernathy",
+        "thumb": "https://metadata-static.plex.tv/d/people/d9b6c606324602e446665309eb527df9.jpg"
+       },
+       {
+        "id": 203014,
+        "filter": "actor=203014",
+        "tag": "Sanna Easterly",
+        "tagKey": "1fc6b001c81d051da929125e",
+        "role": "Pia",
+        "thumb": "https://metadata-static.plex.tv/c/people/c7cd3f8f917604fb30b7b495f1292416.jpg"
+       },
+       {
+        "id": 66440,
+        "filter": "actor=66440",
+        "tag": "Cora Quennell",
+        "tagKey": "9cbdb834c0a638e0038cfe49",
+        "role": "Cal",
+        "thumb": "https://metadata-static.plex.tv/8/people/8e235ac1bb1ee0fd6f1a7c1d1eca057e.jpg"
+       }
+      ],
+      "Producer": [
+       {
+        "id": 203207,
+        "filter": "producer=203207",
+        "tag": "Theo Halloran",
+        "tagKey": "cdc604405b927fea9af01e0b",
+        "thumb": "https://metadata-static.plex.tv/1/people/1a054087eb7db5a0b4f0afc46ca7c3d4.jpg"
+       },
+       {
+        "id": 203208,
+        "filter": "producer=203208",
+        "tag": "Noor Ingram",
+        "tagKey": "ec191fa7f9013e7ddb39da24"
+       },
+       {
+        "id": 203209,
+        "filter": "producer=203209",
+        "tag": "Pia Quennell",
+        "tagKey": "82fb3e0226dfdcc20543fdfa"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "hubKey": "/library/metadata/43718,43674,43668,43666,43604,43594",
+    "key": "/hubs/home/recentlyAdded?type=1",
+    "title": "Recently Added Movies",
+    "type": "movie",
+    "hubIdentifier": "home.movies.recent",
+    "context": "hub.home.movies.recent",
+    "size": 6,
+    "more": true,
+    "style": "shelf",
+    "promoted": true,
+    "Metadata": [
+     {
+      "ratingKey": "43718",
+      "key": "/library/metadata/43718",
+      "guid": "plex://movie/c5f1f64b8f2fa5b5d4120139",
+      "slug": "the-cellar-the-storm-made-me-do-it",
+      "studio": "Mistral Productions",
+      "type": "movie",
+      "title": "The Cellar: The Storm Made Me Do It",
+      "titleSort": "Cellar: The Storm Made Me Do It",
+      "librarySectionTitle": "Films",
+      "librarySectionID": 2,
+      "librarySectionKey": "/library/sections/2",
+      "contentRating": "gb/15",
+      "contentRatingAge": 16,
+      "summary": "A weather station at the edge of the ice begins receiving forecasts for a town that was never built. What begins as a quiet inquiry becomes a race across the marshes before the tide comes in. Two rival lighthouse keepers are forced to share one lamp through the longest winter on record. Three siblings inherit a hotel with one more room than its floor plan allows. A stage magician's assistant realises the trick only works because someone in the audience is helping.",
+      "rating": 5.6,
+      "audienceRating": 8.3,
+      "year": 2021,
+      "tagline": "Listen for the second bell.",
+      "thumb": "/library/metadata/43718/thumb/1789252742",
+      "art": "/library/metadata/43718/art/1789252742",
+      "duration": 6710144,
+      "originallyAvailableAt": "2021-05-26",
+      "addedAt": 1789252738,
+      "updatedAt": 1789252742,
+      "audienceRatingImage": "rottentomatoes://image.rating.upright",
+      "primaryExtraKey": "/library/metadata/43719",
+      "ratingImage": "rottentomatoes://image.rating.rotten",
+      "Media": [
+       {
+        "id": 74962,
+        "duration": 6710144,
+        "bitrate": 11404,
+        "width": 3840,
+        "height": 1600,
+        "aspectRatio": 2.35,
+        "audioChannels": 6,
+        "audioCodec": "eac3",
+        "videoCodec": "hevc",
+        "videoResolution": "4k",
+        "container": "mkv",
+        "videoFrameRate": "24p",
+        "audioProfile": "dolby digital plus + dolby atmos",
+        "videoProfile": "main 10",
+        "hasVoiceActivity": false,
+        "Part": [
+         {
+          "id": 74962,
+          "key": "/library/parts/74962/1789252642/file.mkv",
+          "duration": 6710144,
+          "file": "REDACTED",
+          "size": 9565115348,
+          "audioProfile": "dolby digital plus + dolby atmos",
+          "container": "mkv",
+          "videoProfile": "main 10"
+         }
+        ]
+       }
+      ],
+      "Image": [
+       {
+        "alt": "The Cellar: The Storm Made Me Do It",
+        "type": "coverPoster",
+        "url": "/library/metadata/43718/thumb/1789252742"
+       },
+       {
+        "alt": "The Cellar: The Storm Made Me Do It",
+        "type": "background",
+        "url": "/library/metadata/43718/art/1789252742"
+       },
+       {
+        "alt": "The Cellar: The Storm Made Me Do It",
+        "type": "clearLogo",
+        "url": "/library/metadata/43718/clearLogo/1789252742"
+       }
+      ],
+      "UltraBlurColors": {
+       "topLeft": "150403",
+       "topRight": "1b0604",
+       "bottomRight": "31100b",
+       "bottomLeft": "11030c"
+      },
+      "Genre": [
+       {
+        "tag": "Horror"
+       },
+       {
+        "tag": "Mystery"
+       }
+      ],
+      "Country": [
+       {
+        "tag": "United States of America"
+       }
+      ],
+      "Director": [
+       {
+        "tag": "Pia Ravenscroft"
+       }
+      ],
+      "Writer": [
+       {
+        "tag": "Ida Sternhagen"
+       },
+       {
+        "tag": "Della Zielinski"
+       }
+      ],
+      "Role": [
+       {
+        "tag": "Ines Whitlock"
+       },
+       {
+        "tag": "Juno Fairweather"
+       },
+       {
+        "tag": "Finn Halloran"
+       }
+      ]
+     },
+     {
+      "ratingKey": "43674",
+      "key": "/library/metadata/43674",
+      "guid": "plex://movie/106d9cc219994c8fbc5f7c48",
+      "slug": "the-history-of-gravel",
+      "studio": "Ninth Lamp",
+      "type": "movie",
+      "title": "The History of Gravel",
+      "titleSort": "History of Gravel",
+      "librarySectionTitle": "Films",
+      "librarySectionID": 2,
+      "librarySectionKey": "/library/sections/2",
+      "contentRating": "Not Rated",
+      "summary": "Three siblings inherit a hotel with one more room than its floor plan allows. A stage magician's assistant realises the trick only works because someone in the audience is helping.",
+      "rating": 9.8,
+      "audienceRating": 9.3,
+      "year": 2026,
+      "thumb": "/library/metadata/43674/thumb/1789186911",
+      "art": "/library/metadata/43674/art/1789186911",
+      "duration": 6067264,
+      "originallyAvailableAt": "2026-11-27",
+      "addedAt": 1788933530,
+      "updatedAt": 1789186911,
+      "audienceRatingImage": "rottentomatoes://image.rating.upright",
+      "primaryExtraKey": "/library/metadata/43675",
+      "ratingImage": "rottentomatoes://image.rating.ripe",
+      "Media": [
+       {
+        "id": 74861,
+        "duration": 6067264,
+        "bitrate": 9908,
+        "width": 1920,
+        "height": 1080,
+        "aspectRatio": 1.78,
+        "audioChannels": 6,
+        "audioCodec": "eac3",
+        "videoCodec": "h264",
+        "videoResolution": "1080",
+        "container": "mkv",
+        "videoFrameRate": "NTSC",
+        "videoProfile": "high",
+        "hasVoiceActivity": false,
+        "Part": [
+         {
+          "id": 74861,
+          "key": "/library/parts/74861/1788933441/file.mkv",
+          "duration": 6067264,
+          "file": "REDACTED",
+          "size": 7516158454,
+          "container": "mkv",
+          "videoProfile": "high"
+         }
+        ]
+       }
+      ],
+      "Image": [
+       {
+        "alt": "The History of Gravel",
+        "type": "coverPoster",
+        "url": "/library/metadata/43674/thumb/1789186911"
+       },
+       {
+        "alt": "The History of Gravel",
+        "type": "background",
+        "url": "/library/metadata/43674/art/1789186911"
+       },
+       {
+        "alt": "The History of Gravel",
+        "type": "clearLogo",
+        "url": "/library/metadata/43674/clearLogo/1789186911"
+       }
+      ],
+      "UltraBlurColors": {
+       "topLeft": "5c0302",
+       "topRight": "2c657d",
+       "bottomRight": "3e6a40",
+       "bottomLeft": "aa201a"
+      },
+      "Genre": [
+       {
+        "tag": "Documentary"
+       },
+       {
+        "tag": "Comedy"
+       }
+      ],
+      "Country": [
+       {
+        "tag": "United States of America"
+       }
+      ],
+      "Director": [
+       {
+        "tag": "Eli Jessop"
+       }
+      ],
+      "Writer": [
+       {
+        "tag": "Eli Jessop"
+       }
+      ],
+      "Role": [
+       {
+        "tag": "Eli Jessop"
+       },
+       {
+        "tag": "Bea Fairweather"
+       },
+       {
+        "tag": "Una Hawksworth"
+       }
+      ]
+     },
+     {
+      "ratingKey": "43668",
+      "key": "/library/metadata/43668",
+      "guid": "plex://movie/cf275ae5cf628a02e5a965d3",
+      "slug": "pressroom-2026",
+      "studio": "Saltmarsh Studios",
+      "type": "movie",
+      "title": "Pressroom",
+      "librarySectionTitle": "Films",
+      "librarySectionID": 2,
+      "librarySectionKey": "/library/sections/2",
+      "contentRating": "gb/15",
+      "contentRatingAge": 16,
+      "summary": "Old loyalties are tested, and not everyone who set out will see the far shore. When the night train stops between stations, its passengers discover that nobody remembers boarding. A weather station at the edge of the ice begins receiving forecasts for a town that was never built.",
+      "rating": 8.6,
+      "audienceRating": 7.8,
+      "year": 2026,
+      "tagline": "Nobody boards by accident.",
+      "thumb": "/library/metadata/43668/thumb/1789005968",
+      "art": "/library/metadata/43668/art/1789005968",
+      "duration": 6589440,
+      "originallyAvailableAt": "2026-09-11",
+      "addedAt": 1788926209,
+      "updatedAt": 1789005968,
+      "audienceRatingImage": "rottentomatoes://image.rating.upright",
+      "chapterSource": "media",
+      "primaryExtraKey": "/library/metadata/43669",
+      "ratingImage": "rottentomatoes://image.rating.ripe",
+      "Media": [
+       {
+        "id": 74846,
+        "duration": 6589440,
+        "bitrate": 10233,
+        "width": 1920,
+        "height": 1080,
+        "aspectRatio": 1.78,
+        "audioChannels": 6,
+        "audioCodec": "eac3",
+        "videoCodec": "h264",
+        "videoResolution": "1080",
+        "container": "mkv",
+        "videoFrameRate": "24p",
+        "videoProfile": "high",
+        "hasVoiceActivity": false,
+        "Part": [
+         {
+          "id": 74846,
+          "key": "/library/parts/74846/1788926132/file.mkv",
+          "duration": 6589440,
+          "file": "REDACTED",
+          "size": 8430396567,
+          "container": "mkv",
+          "videoProfile": "high"
+         }
+        ]
+       }
+      ],
+      "Image": [
+       {
+        "alt": "Pressroom",
+        "type": "coverPoster",
+        "url": "/library/metadata/43668/thumb/1789005968"
+       },
+       {
+        "alt": "Pressroom",
+        "type": "background",
+        "url": "/library/metadata/43668/art/1789005968"
+       },
+       {
+        "alt": "Pressroom",
+        "type": "clearLogo",
+        "url": "/library/metadata/43668/clearLogo/1789005968"
+       }
+      ],
+      "UltraBlurColors": {
+       "topLeft": "051e29",
+       "topRight": "0f3949",
+       "bottomRight": "0b2c49",
+       "bottomLeft": "074d5d"
+      },
+      "Genre": [
+       {
+        "tag": "Thriller"
+       },
+       {
+        "tag": "Crime"
+       }
+      ],
+      "Country": [
+       {
+        "tag": "United States of America"
+       }
+      ],
+      "Director": [
+       {
+        "tag": "Nell Winterbourne"
+       }
+      ],
+      "Writer": [
+       {
+        "tag": "Nell Bellamy-Rhodes"
+       }
+      ],
+      "Role": [
+       {
+        "tag": "Nell Hawksworth"
+       },
+       {
+        "tag": "Theo Marlowe"
+       },
+       {
+        "tag": "Wren Carrow"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

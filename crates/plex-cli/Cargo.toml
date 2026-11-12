@@ -1,0 +1,24 @@
+[package]
+name = "plex-cli"
+description = "Display-free entry point: workspace/native readiness report now, mock-auth + mock-player smoke report later."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "chewvy-cli"
+path = "src/main.rs"
+
+[dependencies]
+plex-core = { workspace = true }
+plex-player = { workspace = true }
+clap = { workspace = true }
+serde_json = { workspace = true }
+
+[build-dependencies]
+pkg-config = { workspace = true }
+
+[lints]
+workspace = true

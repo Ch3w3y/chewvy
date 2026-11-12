@@ -1,0 +1,167 @@
+{
+ "MediaContainer": {
+  "size": 1,
+  "allowSync": true,
+  "identifier": "com.plexapp.plugins.library",
+  "librarySectionID": 1,
+  "librarySectionTitle": "TV Programmes",
+  "librarySectionUUID": "REDACTED",
+  "mediaTagPrefix": "/system/bundle/media/flags/",
+  "mediaTagVersion": 1787604119,
+  "Metadata": [
+   {
+    "ratingKey": "35773",
+    "key": "/library/metadata/35773/children",
+    "guid": "plex://show/292a394cf29f8c6c64fd7fd4",
+    "slug": "the-404",
+    "studio": "Stonecrop Television",
+    "type": "show",
+    "title": "The 404",
+    "titleSort": "404",
+    "librarySectionTitle": "TV Programmes",
+    "librarySectionID": 1,
+    "librarySectionKey": "/library/sections/1",
+    "contentRating": "TV-14",
+    "contentRatingAge": 15,
+    "summary": "A surveyor returns to the valley she left as a child and finds the maps no longer match the land. An apprentice archivist finds a ledger that records events a week before they happen. The crew of a salvage tug answers a distress call from a ship that sank forty years earlier. The answer, when it comes, is stranger and kinder than anyone expected.",
+    "index": 1,
+    "audienceRating": 7.9,
+    "year": 2014,
+    "tagline": "The ledger is never wrong. (season 1)",
+    "thumb": "/library/metadata/35773/thumb/1787107952",
+    "art": "/library/metadata/35773/art/1787107952",
+    "theme": "/library/metadata/35773/theme/1787107952",
+    "duration": 2520000,
+    "originallyAvailableAt": "2014-03-19",
+    "leafCount": 100,
+    "viewedLeafCount": 0,
+    "childCount": 7,
+    "addedAt": 1773779564,
+    "updatedAt": 1787107952,
+    "audienceRatingImage": "themoviedb://image.rating",
+    "Image": [
+     {
+      "alt": "The 404",
+      "type": "coverPoster",
+      "url": "/library/metadata/35773/thumb/1787107952"
+     },
+     {
+      "alt": "The 404",
+      "type": "background",
+      "url": "/library/metadata/35773/art/1787107952"
+     },
+     {
+      "alt": "The 404",
+      "type": "clearLogo",
+      "url": "/library/metadata/35773/clearLogo/1787107952"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "4a200b",
+     "topRight": "79350b",
+     "bottomRight": "253b6c",
+     "bottomLeft": "1b1f27"
+    },
+    "Genre": [
+     {
+      "id": 12,
+      "filter": "genre=12",
+      "tag": "Drama"
+     },
+     {
+      "id": 498,
+      "filter": "genre=498",
+      "tag": "Mystery"
+     },
+     {
+      "id": 14,
+      "filter": "genre=14",
+      "tag": "Science Fiction"
+     }
+    ],
+    "Country": [
+     {
+      "id": 82,
+      "filter": "country=82",
+      "tag": "United States of America"
+     }
+    ],
+    "Guid": [
+     {
+      "id": "imdb://tt1311087"
+     },
+     {
+      "id": "tmdb://15639"
+     },
+     {
+      "id": "tvdb://192412"
+     }
+    ],
+    "Rating": [
+     {
+      "image": "imdb://image.rating",
+      "value": 7.5,
+      "type": "audience"
+     },
+     {
+      "image": "rottentomatoes://image.rating.ripe",
+      "value": 9.3,
+      "type": "critic"
+     },
+     {
+      "image": "rottentomatoes://image.rating.upright",
+      "value": 6.7,
+      "type": "audience"
+     }
+    ],
+    "Role": [
+     {
+      "id": 190629,
+      "filter": "actor=190629",
+      "tag": "Milo Larkspur",
+      "tagKey": "d51ece5db58a26ef103a8e1d",
+      "role": "Mara Pemberton",
+      "thumb": "https://metadata-static.plex.tv/a/people/af152b1e5439f7fac4446ecc9593f13c.jpg"
+     },
+     {
+      "id": 44179,
+      "filter": "actor=44179",
+      "tag": "Mara Ravenscroft",
+      "tagKey": "a8c7cd336ee084fbe318b035",
+      "role": "Rhea Rosswood",
+      "thumb": "https://metadata-static.plex.tv/7/people/79709001a59a5d228b7ee3b47d1a64f8.jpg"
+     },
+     {
+      "id": 72232,
+      "filter": "actor=72232",
+      "tag": "Lior Underhill",
+      "tagKey": "89564fdc04e8335ca31e1cda",
+      "role": "Alba Dunmore",
+      "thumb": "https://metadata-static.plex.tv/7/people/79deff384b3f62df357246890bd77234.jpg"
+     }
+    ],
+    "CommonSenseMedia": [
+     {
+      "id": 99,
+      "oneLiner": "Warm coming-of-age tale; mild peril.",
+      "AgeRating": [
+       {
+        "type": "official",
+        "rating": 4,
+        "age": 15
+       }
+      ]
+     }
+    ],
+    "Location": [
+     {
+      "path": "/media/TV/The 404"
+     }
+    ],
+    "Extras": {
+     "size": 0
+    }
+   }
+  ]
+ }
+}

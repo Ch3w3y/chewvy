@@ -1,0 +1,486 @@
+{
+ "MediaContainer": {
+  "size": 17,
+  "Hub": [
+   {
+    "title": "Movies",
+    "type": "movie",
+    "hubIdentifier": "movie",
+    "context": "",
+    "size": 4,
+    "more": false,
+    "style": "shelf",
+    "Metadata": [
+     {
+      "librarySectionTitle": "Films",
+      "score": "0.83094",
+      "ratingKey": "2184",
+      "key": "/library/metadata/2184",
+      "guid": "plex://movie/0c9756ab481e33d9d94d2017",
+      "slug": "aphelion",
+      "studio": "Lanternhouse Pictures",
+      "type": "movie",
+      "title": "Aphelion",
+      "librarySectionID": 2,
+      "librarySectionKey": "/library/sections/2",
+      "contentRating": "gb/18",
+      "contentRatingAge": 15,
+      "summary": "After the harvest fails, a village sends its youngest cartographer to find where the river went. Old loyalties are tested, and not everyone who set out will see the far shore. When the night train stops between stations, its passengers discover that nobody remembers boarding. A weather station at the edge of the ice begins receiving forecasts for a town that was never built. What begins as a quiet inquiry becomes a race across the marshes before the tide comes in.",
+      "rating": 9.3,
+      "audienceRating": 9.4,
+      "year": 1979,
+      "tagline": "What the river took, it remembers.",
+      "thumb": "/library/metadata/2184/thumb/1788667891",
+      "art": "/library/metadata/2184/art/1788667891",
+      "duration": 6996288,
+      "originallyAvailableAt": "1979-05-25",
+      "addedAt": 1754283685,
+      "updatedAt": 1788667891,
+      "audienceRatingImage": "rottentomatoes://image.rating.upright",
+      "loudnessAnalysisVersion": "0.02",
+      "primaryExtraKey": "/library/metadata/2185",
+      "ratingImage": "rottentomatoes://image.rating.ripe",
+      "Media": [
+       {
+        "id": 5453,
+        "duration": 6996288,
+        "bitrate": 5861,
+        "width": 1920,
+        "height": 1080,
+        "aspectRatio": 1.78,
+        "audioChannels": 6,
+        "audioCodec": "eac3",
+        "videoCodec": "h264",
+        "videoResolution": "1080",
+        "container": "mp4",
+        "videoFrameRate": "24p",
+        "optimizedForStreaming": 1,
+        "has64bitOffsets": true,
+        "videoProfile": "high",
+        "hasVoiceActivity": false,
+        "Part": [
+         {
+          "id": 5453,
+          "key": "/library/parts/5453/1754283601/file.mp4",
+          "duration": 6996288,
+          "file": "REDACTED",
+          "size": 5125250418,
+          "container": "mp4",
+          "has64bitOffsets": true,
+          "hasThumbnail": "1",
+          "optimizedForStreaming": true,
+          "videoProfile": "high"
+         }
+        ]
+       }
+      ],
+      "Image": [
+       {
+        "alt": "Aphelion",
+        "type": "coverPoster",
+        "url": "/library/metadata/2184/thumb/1788667891"
+       },
+       {
+        "alt": "Aphelion",
+        "type": "background",
+        "url": "/library/metadata/2184/art/1788667891"
+       },
+       {
+        "alt": "Aphelion",
+        "type": "clearLogo",
+        "url": "/library/metadata/2184/clearLogo/1788667891"
+       }
+      ],
+      "UltraBlurColors": {
+       "topLeft": "282e36",
+       "topRight": "1b1c23",
+       "bottomRight": "1a244d",
+       "bottomLeft": "2c657f"
+      },
+      "Genre": [
+       {
+        "tag": "Science Fiction"
+       },
+       {
+        "tag": "Horror"
+       }
+      ],
+      "Country": [
+       {
+        "tag": "United States of America"
+       },
+       {
+        "tag": "United Kingdom"
+       }
+      ],
+      "Director": [
+       {
+        "tag": "Cal Northcote"
+       }
+      ],
+      "Writer": [
+       {
+        "tag": "Cora Fairweather"
+       },
+       {
+        "tag": "Una Dunmore"
+       }
+      ],
+      "Role": [
+       {
+        "tag": "Finn Kestrel"
+       },
+       {
+        "tag": "Seth Underhill"
+       },
+       {
+        "tag": "Alba Quennell"
+       }
+      ]
+     },
+     {
+      "librarySectionTitle": "Films",
+      "score": "0.43085",
+      "ratingKey": "8662",
+      "key": "/library/metadata/8662",
+      "guid": "plex://movie/09f668433bc3f0af991dd9b0",
+      "slug": "aphelion-remnant",
+      "studio": "Copperline Entertainment",
+      "type": "movie",
+      "title": "Aphelion: Remnant",
+      "librarySectionID": 2,
+      "librarySectionKey": "/library/sections/2",
+      "contentRating": "gb/15",
+      "contentRatingAge": 15,
+      "summary": "The crew of a salvage tug answers a distress call from a ship that sank forty years earlier. The answer, when it comes, is stranger and kinder than anyone expected.",
+      "rating": 8.0,
+      "audienceRating": 8.5,
+      "year": 2024,
+      "tagline": "Count the rooms again.",
+      "thumb": "/library/metadata/8662/thumb/1782612850",
+      "art": "/library/metadata/8662/art/1782612850",
+      "duration": 7133824,
+      "originallyAvailableAt": "2024-08-14",
+      "addedAt": 1754454710,
+      "updatedAt": 1782612850,
+      "audienceRatingImage": "rottentomatoes://image.rating.upright",
+      "loudnessAnalysisVersion": "0.02",
+      "primaryExtraKey": "/library/metadata/8663",
+      "ratingImage": "rottentomatoes://image.rating.ripe",
+      "Media": [
+       {
+        "id": 18206,
+        "duration": 7133824,
+        "bitrate": 6377,
+        "width": 1920,
+        "height": 1080,
+        "aspectRatio": 1.78,
+        "audioChannels": 6,
+        "audioCodec": "eac3",
+        "videoCodec": "h264",
+        "videoResolution": "1080",
+        "container": "mkv",
+        "videoFrameRate": "24p",
+        "videoProfile": "high",
+        "hasVoiceActivity": false,
+        "Part": [
+         {
+          "id": 18206,
+          "key": "/library/parts/18206/1727436405/file.mkv",
+          "duration": 7133824,
+          "file": "REDACTED",
+          "size": 5686548197,
+          "container": "mkv",
+          "videoProfile": "high"
+         }
+        ]
+       }
+      ],
+      "Image": [
+       {
+        "alt": "Aphelion: Remnant",
+        "type": "coverPoster",
+        "url": "/library/metadata/8662/thumb/1782612850"
+       },
+       {
+        "alt": "Aphelion: Remnant",
+        "type": "background",
+        "url": "/library/metadata/8662/art/1782612850"
+       },
+       {
+        "alt": "Aphelion: Remnant",
+        "type": "clearLogo",
+        "url": "/library/metadata/8662/clearLogo/1782612850"
+       }
+      ],
+      "UltraBlurColors": {
+       "topLeft": "2d0e0c",
+       "topRight": "5e0e0d",
+       "bottomRight": "b00e0a",
+       "bottomLeft": "6d0e0c"
+      },
+      "Genre": [
+       {
+        "tag": "Science Fiction"
+       },
+       {
+        "tag": "Horror"
+       }
+      ],
+      "Country": [
+       {
+        "tag": "United States of America"
+       }
+      ],
+      "Director": [
+       {
+        "tag": "Bram O'Dell"
+       }
+      ],
+      "Writer": [
+       {
+        "tag": "Bram O'Dell"
+       },
+       {
+        "tag": "Bea Yarrow"
+       }
+      ],
+      "Role": [
+       {
+        "tag": "Vera Sternhagen"
+       },
+       {
+        "tag": "Milo O'Dell"
+       },
+       {
+        "tag": "Jem Fairweather"
+       }
+      ]
+     },
+     {
+      "librarySectionTitle": "Films",
+      "score": "0.43055",
+      "ratingKey": "4646",
+      "key": "/library/metadata/4646",
+      "guid": "plex://movie/98b6fd1532d84f2b718b8804",
+      "slug": "aphelion-concord",
+      "studio": "Northlight Films",
+      "type": "movie",
+      "title": "Aphelion: Concord",
+      "librarySectionID": 2,
+      "librarySectionKey": "/library/sections/2",
+      "contentRating": "gb/15",
+      "contentRatingAge": 15,
+      "summary": "The last ferry of the season leaves without its captain, and the crossing takes far longer than it should. A night-shift radio host keeps taking calls from a listener who knows what the next song will be.",
+      "rating": 6.5,
+      "audienceRating": 5.5,
+      "year": 2017,
+      "tagline": "Tomorrow already happened.",
+      "thumb": "/library/metadata/4646/thumb/1789186873",
+      "art": "/library/metadata/4646/art/1789186873",
+      "duration": 10434967,
+      "originallyAvailableAt": "2017-05-09",
+      "addedAt": 1754314864,
+      "updatedAt": 1789186873,
+      "audienceRatingImage": "rottentomatoes://image.rating.spilled",
+      "loudnessAnalysisVersion": "0.02",
+      "primaryExtraKey": "/library/metadata/4647",
+      "ratingImage": "rottentomatoes://image.rating.ripe",
+      "Media": [
+       {
+        "id": 11274,
+        "duration": 10434967,
+        "bitrate": 6192,
+        "width": 1920,
+        "height": 800,
+        "aspectRatio": 2.35,
+        "audioChannels": 6,
+        "audioCodec": "eac3",
+        "videoCodec": "hevc",
+        "videoResolution": "1080",
+        "container": "mkv",
+        "videoFrameRate": "24p",
+        "videoProfile": "main 10",
+        "hasVoiceActivity": false,
+        "Part": [
+         {
+          "id": 11274,
+          "key": "/library/parts/11274/1754314815/file.mkv",
+          "duration": 10434967,
+          "file": "REDACTED",
+          "size": 8077104802,
+          "container": "mkv",
+          "videoProfile": "main 10"
+         }
+        ]
+       }
+      ],
+      "Image": [
+       {
+        "alt": "Aphelion: Concord",
+        "type": "coverPoster",
+        "url": "/library/metadata/4646/thumb/1789186873"
+       },
+       {
+        "alt": "Aphelion: Concord",
+        "type": "background",
+        "url": "/library/metadata/4646/art/1789186873"
+       },
+       {
+        "alt": "Aphelion: Concord",
+        "type": "clearLogo",
+        "url": "/library/metadata/4646/clearLogo/1789186873"
+       }
+      ],
+      "UltraBlurColors": {
+       "topLeft": "1e242b",
+       "topRight": "030310",
+       "bottomRight": "353f4a",
+       "bottomLeft": "0d122d"
+      },
+      "Genre": [
+       {
+        "tag": "Horror"
+       },
+       {
+        "tag": "Science Fiction"
+       }
+      ],
+      "Country": [
+       {
+        "tag": "United States of America"
+       }
+      ],
+      "Director": [
+       {
+        "tag": "Cal Northcote"
+       }
+      ],
+      "Writer": [
+       {
+        "tag": "Juno Jessop"
+       },
+       {
+        "tag": "Una Dunmore"
+       }
+      ],
+      "Role": [
+       {
+        "tag": "Yara Sallow"
+       },
+       {
+        "tag": "Vera Brightwater"
+       },
+       {
+        "tag": "Greta Halloran"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "title": "Shows",
+    "type": "show",
+    "hubIdentifier": "show",
+    "context": "",
+    "size": 1,
+    "more": false,
+    "style": "shelf",
+    "Metadata": [
+     {
+      "librarySectionTitle": "TV Programmes",
+      "score": "0.43073",
+      "ratingKey": "1",
+      "key": "/library/metadata/1/children",
+      "guid": "plex://show/5ead188d9e45b03e4854cc15",
+      "slug": "aphelion-ember",
+      "studio": "Bluebird Reel",
+      "type": "show",
+      "title": "Aphelion: Ember",
+      "librarySectionID": 1,
+      "librarySectionKey": "/library/sections/1",
+      "contentRating": "TV-MA",
+      "contentRatingAge": 15,
+      "summary": "A night-shift radio host keeps taking calls from a listener who knows what the next song will be. Nothing in the town is quite what the visitors were promised. A retired clockmaker is asked to repair a machine that should not be able to keep time at all.",
+      "index": 1,
+      "audienceRating": 7.3,
+      "year": 2025,
+      "tagline": "Keep to the marked path.",
+      "thumb": "/library/metadata/1/thumb/1786675382",
+      "art": "/library/metadata/1/art/1786675382",
+      "duration": 3300000,
+      "originallyAvailableAt": "2025-08-12",
+      "leafCount": 8,
+      "viewedLeafCount": 0,
+      "childCount": 1,
+      "addedAt": 1754243051,
+      "updatedAt": 1786675382,
+      "audienceRatingImage": "themoviedb://image.rating",
+      "primaryExtraKey": "/library/metadata/6",
+      "Image": [
+       {
+        "alt": "Aphelion: Ember",
+        "type": "coverPoster",
+        "url": "/library/metadata/1/thumb/1786675382"
+       },
+       {
+        "alt": "Aphelion: Ember",
+        "type": "background",
+        "url": "/library/metadata/1/art/1786675382"
+       },
+       {
+        "alt": "Aphelion: Ember",
+        "type": "clearLogo",
+        "url": "/library/metadata/1/clearLogo/1786675382"
+       }
+      ],
+      "UltraBlurColors": {
+       "topLeft": "022d5b",
+       "topRight": "13435e",
+       "bottomRight": "0a2f4b",
+       "bottomLeft": "13545f"
+      },
+      "Genre": [
+       {
+        "tag": "Drama"
+       },
+       {
+        "tag": "Horror"
+       }
+      ],
+      "Country": [
+       {
+        "tag": "United States of America"
+       }
+      ],
+      "Role": [
+       {
+        "tag": "Mara Zielinski"
+       },
+       {
+        "tag": "Juno Dunmore"
+       },
+       {
+        "tag": "Vera Marlowe"
+       }
+      ],
+      "Location": [
+       {
+        "path": "/media/TV/Aphelion - Ember"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "title": "Artists",
+    "type": "artist",
+    "hubIdentifier": "artist",
+    "context": "",
+    "size": 0,
+    "more": false,
+    "style": "shelf"
+   }
+  ]
+ }
+}

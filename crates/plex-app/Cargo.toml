@@ -1,0 +1,50 @@
+[package]
+name = "plex-app"
+description = "Desktop shell: egui overlay UI over an app-owned EGL/GL context, glutin/winit event loop, mpv GL render target."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "chewvy"
+path = "src/main.rs"
+
+[dependencies]
+plex-core = { workspace = true }
+plex-player = { workspace = true }
+# The Jellyfin half of the source list: address validation, Quick Connect and
+# password sign-in on the add-source screen.
+jellyfin-core = { workspace = true }
+egui = { workspace = true }
+epaint = { workspace = true }
+egui-winit = { workspace = true }
+egui_glow = { workspace = true }
+glow = { workspace = true }
+glutin = { workspace = true }
+glutin-winit = { workspace = true }
+winit = { workspace = true }
+log = { workspace = true }
+serde = { workspace = true }
+# The app persists its own settings as serde_json instead of enabling egui's
+# serde/accesskit persistence, which would require the cache-absent `enumn` crate.
+serde_json = { workspace = true }
+# Artwork loader : JPEG/PNG decode of `/photo/:/transcode` answers
+# and SHA-256 disk-cache keys. `xdg` resolves $XDG_CACHE_HOME for the cache dir.
+image = { workspace = true }
+ring = { workspace = true }
+xdg = { workspace = true }
+resvg = { version = "0.47", default-features = false }
+
+# Only for the startup failure dialog: a GUI-subsystem exe launched from the
+# shell has no console to read an error line from. Path and signatures confirmed
+# against windows-sys-0.61.2/src/Windows/Win32/UI/WindowsAndMessaging/mod.rs.
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61.2", features = ["Win32_UI_WindowsAndMessaging"] }
+
+[dev-dependencies]
+env_logger = { workspace = true }
+
+[lints]
+workspace = true

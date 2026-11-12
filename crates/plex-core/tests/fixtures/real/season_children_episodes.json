@@ -1,0 +1,362 @@
+{
+ "MediaContainer": {
+  "size": 13,
+  "allowSync": true,
+  "art": "/library/metadata/35773/art/1787107952",
+  "grandparentContentRating": "TV-14",
+  "grandparentRatingKey": 35773,
+  "grandparentStudio": "Stonecrop Television",
+  "grandparentTheme": "/library/metadata/35773/theme/1787107952",
+  "grandparentThumb": "/library/metadata/35773/thumb/1787107952",
+  "grandparentTitle": "The 404",
+  "identifier": "com.plexapp.plugins.library",
+  "key": "36099",
+  "librarySectionID": 1,
+  "librarySectionTitle": "TV Programmes",
+  "librarySectionUUID": "REDACTED",
+  "mediaTagPrefix": "/system/bundle/media/flags/",
+  "mediaTagVersion": 1787604119,
+  "nocache": true,
+  "parentIndex": 1,
+  "parentTitle": "",
+  "summary": "When the night train stops between stations, its passengers discover that nobody remembers boarding. A weather station at the edge of the ice begins receiving forecasts for a town that was never built. What begins as a quiet inquiry becomes a race across the marshes before the tide comes in. Two rival lighthouse keepers are forced to share one lamp through the longest winter on record. Three siblings inherit a hotel with one more room than its floor plan allows.",
+  "theme": "/library/metadata/35773/theme/1787107952",
+  "thumb": "/library/metadata/36099/thumb/1774015269",
+  "title1": "The 404",
+  "title2": "Season 1",
+  "viewGroup": "episode",
+  "viewMode": 65592,
+  "Metadata": [
+   {
+    "ratingKey": "36100",
+    "key": "/library/metadata/36100",
+    "parentRatingKey": "36099",
+    "grandparentRatingKey": "35773",
+    "guid": "plex://episode/34cff55989bcaa2e2d3d635d",
+    "parentGuid": "plex://season/aa2300639d4f6d69bb37a805",
+    "grandparentGuid": "plex://show/292a394cf29f8c6c64fd7fd4",
+    "grandparentSlug": "the-404",
+    "type": "episode",
+    "title": "Pilot",
+    "grandparentKey": "/library/metadata/35773",
+    "parentKey": "/library/metadata/36099",
+    "grandparentTitle": "The 404",
+    "parentTitle": "Season 1",
+    "contentRating": "TV-14",
+    "summary": "A surveyor returns to the valley she left as a child and finds the maps no longer match the land. An apprentice archivist finds a ledger that records events a week before they happen.",
+    "index": 1,
+    "parentIndex": 1,
+    "audienceRating": 6.7,
+    "year": 2014,
+    "thumb": "/library/metadata/36100/thumb/1774055077",
+    "art": "/library/metadata/35773/art/1787107952",
+    "parentThumb": "/library/metadata/36099/thumb/1774015269",
+    "grandparentThumb": "/library/metadata/35773/thumb/1787107952",
+    "grandparentArt": "/library/metadata/35773/art/1787107952",
+    "grandparentTheme": "/library/metadata/35773/theme/1787107952",
+    "duration": 2476480,
+    "originallyAvailableAt": "2014-03-19",
+    "addedAt": 1774015267,
+    "updatedAt": 1774055077,
+    "audienceRatingImage": "themoviedb://image.rating",
+    "chapterSource": "media",
+    "Media": [
+     {
+      "id": 62023,
+      "duration": 2476480,
+      "bitrate": 19506,
+      "width": 1920,
+      "height": 1080,
+      "aspectRatio": 1.78,
+      "audioChannels": 6,
+      "audioCodec": "dca-ma",
+      "videoCodec": "h264",
+      "videoResolution": "1080",
+      "container": "mkv",
+      "videoFrameRate": "24p",
+      "audioProfile": "ma",
+      "videoProfile": "high",
+      "hasVoiceActivity": false,
+      "Part": [
+       {
+        "id": 62023,
+        "key": "/library/parts/62023/1644270344/file.mkv",
+        "duration": 2476480,
+        "file": "REDACTED",
+        "size": 6038236088,
+        "audioProfile": "ma",
+        "container": "mkv",
+        "videoProfile": "high"
+       }
+      ]
+     }
+    ],
+    "Image": [
+     {
+      "alt": "Pilot",
+      "type": "coverPoster",
+      "url": "/library/metadata/35773/thumb/1787107952"
+     },
+     {
+      "alt": "Pilot",
+      "type": "snapshot",
+      "url": "/library/metadata/36100/thumb/1774055077"
+     },
+     {
+      "alt": "Pilot",
+      "type": "background",
+      "url": "/library/metadata/35773/art/1787107952"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "482115",
+     "topRight": "121213",
+     "bottomRight": "202321",
+     "bottomLeft": "232423"
+    },
+    "Director": [
+     {
+      "tag": "Dag Halloran"
+     }
+    ],
+    "Writer": [
+     {
+      "tag": "Kai Ravenscroft"
+     }
+    ],
+    "Role": [
+     {
+      "tag": "Milo Larkspur"
+     },
+     {
+      "tag": "Mara Ravenscroft"
+     },
+     {
+      "tag": "Lior Underhill"
+     }
+    ]
+   },
+   {
+    "ratingKey": "36101",
+    "key": "/library/metadata/36101",
+    "parentRatingKey": "36099",
+    "grandparentRatingKey": "35773",
+    "guid": "plex://episode/94138c252963523b61f27ef1",
+    "parentGuid": "plex://season/aa2300639d4f6d69bb37a805",
+    "grandparentGuid": "plex://show/292a394cf29f8c6c64fd7fd4",
+    "grandparentSlug": "the-404",
+    "type": "episode",
+    "title": "Ember Calls",
+    "grandparentKey": "/library/metadata/35773",
+    "parentKey": "/library/metadata/36099",
+    "grandparentTitle": "The 404",
+    "parentTitle": "Season 1",
+    "contentRating": "TV-14",
+    "summary": "The last ferry of the season leaves without its captain, and the crossing takes far longer than it should. A night-shift radio host keeps taking calls from a listener who knows what the next song will be. Nothing in the town is quite what the visitors were promised.",
+    "index": 2,
+    "parentIndex": 1,
+    "audienceRating": 6.6,
+    "year": 2014,
+    "thumb": "/library/metadata/36101/thumb/1774055088",
+    "art": "/library/metadata/35773/art/1787107952",
+    "parentThumb": "/library/metadata/36099/thumb/1774015269",
+    "grandparentThumb": "/library/metadata/35773/thumb/1787107952",
+    "grandparentArt": "/library/metadata/35773/art/1787107952",
+    "grandparentTheme": "/library/metadata/35773/theme/1787107952",
+    "duration": 2540544,
+    "originallyAvailableAt": "2014-03-26",
+    "addedAt": 1774015293,
+    "updatedAt": 1774055088,
+    "audienceRatingImage": "themoviedb://image.rating",
+    "chapterSource": "media",
+    "Media": [
+     {
+      "id": 62024,
+      "duration": 2540544,
+      "bitrate": 19424,
+      "width": 1920,
+      "height": 1080,
+      "aspectRatio": 1.78,
+      "audioChannels": 6,
+      "audioCodec": "dca-ma",
+      "videoCodec": "h264",
+      "videoResolution": "1080",
+      "container": "mkv",
+      "videoFrameRate": "24p",
+      "audioProfile": "ma",
+      "videoProfile": "high",
+      "hasVoiceActivity": false,
+      "Part": [
+       {
+        "id": 62024,
+        "key": "/library/parts/62024/1644273783/file.mkv",
+        "duration": 2540544,
+        "file": "REDACTED",
+        "size": 6168488259,
+        "audioProfile": "ma",
+        "container": "mkv",
+        "videoProfile": "high"
+       }
+      ]
+     }
+    ],
+    "Image": [
+     {
+      "alt": "Ember Calls",
+      "type": "coverPoster",
+      "url": "/library/metadata/35773/thumb/1787107952"
+     },
+     {
+      "alt": "Ember Calls",
+      "type": "snapshot",
+      "url": "/library/metadata/36101/thumb/1774055088"
+     },
+     {
+      "alt": "Ember Calls",
+      "type": "background",
+      "url": "/library/metadata/35773/art/1787107952"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "422611",
+     "topRight": "874c2d",
+     "bottomRight": "0b0209",
+     "bottomLeft": "19191b"
+    },
+    "Director": [
+     {
+      "tag": "Wren Brightwater"
+     }
+    ],
+    "Writer": [
+     {
+      "tag": "Kai Ravenscroft"
+     }
+    ],
+    "Role": [
+     {
+      "tag": "Milo Larkspur"
+     },
+     {
+      "tag": "Mara Ravenscroft"
+     },
+     {
+      "tag": "Lior Underhill"
+     }
+    ]
+   },
+   {
+    "ratingKey": "36102",
+    "key": "/library/metadata/36102",
+    "parentRatingKey": "36099",
+    "grandparentRatingKey": "35773",
+    "guid": "plex://episode/2b621ae0cd93f76b318ac2be",
+    "parentGuid": "plex://season/aa2300639d4f6d69bb37a805",
+    "grandparentGuid": "plex://show/292a394cf29f8c6c64fd7fd4",
+    "grandparentSlug": "the-404",
+    "type": "episode",
+    "title": "Ember Falls",
+    "grandparentKey": "/library/metadata/35773",
+    "parentKey": "/library/metadata/36099",
+    "grandparentTitle": "The 404",
+    "parentTitle": "Season 1",
+    "contentRating": "TV-14",
+    "summary": "Three siblings inherit a hotel with one more room than its floor plan allows. A stage magician's assistant realises the trick only works because someone in the audience is helping. A surveyor returns to the valley she left as a child and finds the maps no longer match the land. A night-shift radio host keeps taking calls from a listener who knows what the next song will be.",
+    "index": 3,
+    "parentIndex": 1,
+    "audienceRating": 7.2,
+    "year": 2014,
+    "thumb": "/library/metadata/36102/thumb/1774055069",
+    "art": "/library/metadata/35773/art/1787107952",
+    "parentThumb": "/library/metadata/36099/thumb/1774015269",
+    "grandparentThumb": "/library/metadata/35773/thumb/1787107952",
+    "grandparentArt": "/library/metadata/35773/art/1787107952",
+    "grandparentTheme": "/library/metadata/35773/theme/1787107952",
+    "duration": 2540544,
+    "originallyAvailableAt": "2014-04-02",
+    "addedAt": 1774015388,
+    "updatedAt": 1774055069,
+    "audienceRatingImage": "themoviedb://image.rating",
+    "chapterSource": "media",
+    "Media": [
+     {
+      "id": 62025,
+      "duration": 2540544,
+      "bitrate": 19358,
+      "width": 1920,
+      "height": 1080,
+      "aspectRatio": 1.78,
+      "audioChannels": 6,
+      "audioCodec": "dca-ma",
+      "videoCodec": "h264",
+      "videoResolution": "1080",
+      "container": "mkv",
+      "videoFrameRate": "24p",
+      "audioProfile": "ma",
+      "videoProfile": "high",
+      "hasVoiceActivity": false,
+      "Part": [
+       {
+        "id": 62025,
+        "key": "/library/parts/62025/1644273256/file.mkv",
+        "duration": 2540544,
+        "file": "REDACTED",
+        "size": 6147636013,
+        "audioProfile": "ma",
+        "container": "mkv",
+        "videoProfile": "high"
+       }
+      ]
+     }
+    ],
+    "Image": [
+     {
+      "alt": "Ember Falls",
+      "type": "coverPoster",
+      "url": "/library/metadata/35773/thumb/1787107952"
+     },
+     {
+      "alt": "Ember Falls",
+      "type": "snapshot",
+      "url": "/library/metadata/36102/thumb/1774055069"
+     },
+     {
+      "alt": "Ember Falls",
+      "type": "background",
+      "url": "/library/metadata/35773/art/1787107952"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "1a210a",
+     "topRight": "141115",
+     "bottomRight": "3f6539",
+     "bottomLeft": "353a36"
+    },
+    "Director": [
+     {
+      "tag": "Wren Brightwater"
+     }
+    ],
+    "Writer": [
+     {
+      "tag": "Quill Yarrow"
+     },
+     {
+      "tag": "Yara Sternhagen"
+     }
+    ],
+    "Role": [
+     {
+      "tag": "Milo Larkspur"
+     },
+     {
+      "tag": "Mara Ravenscroft"
+     },
+     {
+      "tag": "Lior Underhill"
+     }
+    ]
+   }
+  ]
+ }
+}

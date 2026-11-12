@@ -1,0 +1,66 @@
+name: ci
+
+# Gates for main, on the project's own self-hosted runners.
+#
+# There is deliberately no pull_request trigger: a self-hosted runner executes
+# whatever the workflow file in the triggering ref says, so pull requests from
+# forks must never start a job here. Maintainers run a contributor's branch
+# with "Run workflow" after reading it.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CARGO_BUILD_JOBS: '2'
+  RUST_VERSION: '1.99.1'
+
+jobs:
+  gates:
+    name: Gates (fmt, clippy, test, build, Windows type-check)
+    runs-on: [self-hosted, chewvy]
+    # Debian 13 is the oldest release whose libmpv has client API 2.5.
+    container:
+      image: debian:trixie
+    steps:
+      - name: Install build dependencies
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update
+          apt-get install --no-install-recommends -y \
+            ca-certificates curl git build-essential pkg-config libclang-dev clang llvm \
+            libmpv-dev libegl-dev libgl-dev libgles-dev libgbm-dev libvulkan-dev \
+            libx11-dev libx11-xcb-dev libxcb1-dev libxkbcommon-dev \
+            libwayland-dev wayland-protocols mingw-w64-x86-64-dev
+          apt-get clean
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/rustup-init.sh
+          sh /tmp/rustup-init.sh -y --profile minimal --default-toolchain "$RUST_VERSION" \
+            --component rustfmt,clippy --target x86_64-pc-windows-gnu
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - name: Fetch crates
+        run: cargo fetch --locked
+      - name: fmt
+        run: scripts/check.sh fmt
+      - name: clippy
+        run: scripts/check.sh check
+      - name: test
+        run: scripts/check.sh test
+      - name: build
+        run: scripts/check.sh build
+      - name: Windows type-check
+        run: scripts/xcheck.sh windows

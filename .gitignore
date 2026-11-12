@@ -1,0 +1,10 @@
+/target/
+/.tools/
+/.cargo/
+/local-data/
+*.token
+.env
+
+# Python caches
+__pycache__/
+*.py[cod]

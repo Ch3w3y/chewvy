@@ -1,0 +1,60 @@
+{
+  "MediaContainer": {
+    "media-server": [
+      {
+        "accessToken": "ROWTOKEN-ALPHA-6d1f4b8ce2a74f05",
+        "clientIdentifier": "alpha-machine-client-id",
+        "device": "Alpha-PMS",
+        "name": "Alpha Server",
+        "provides": "server",
+        "presence": 1,
+        "owned": 1,
+        "httpsRequired": 0,
+        "dnsRebindingProtection": 1,
+        "natLoopbackSupported": 1,
+        "relay": 1,
+        "connections": [
+          {
+            "address": "203.0.113.10",
+            "port": 32400,
+            "protocol": "https",
+            "uri": "https://203.0.113.10:32400",
+            "local": 0,
+            "relay": 0,
+            "IPv6": 0,
+            "httpuri": "http://203.0.113.10:32400"
+          },
+          {
+            "address": "2001:db8:1::10",
+            "port": 32400,
+            "protocol": "https",
+            "uri": "https://[2001:db8:1::10]:32400",
+            "local": 1,
+            "relay": 0,
+            "IPv6": 1,
+            "httpuri": "http://[2001:db8:1::10]:32400"
+          },
+          {
+            "address": "192.168.1.10",
+            "port": 32400,
+            "protocol": "https",
+            "uri": "https://192.168.1.10:32400",
+            "local": 1,
+            "relay": 0,
+            "IPv6": 0,
+            "httpuri": "http://192.168.1.10:32400"
+          },
+          {
+            "address": "relay.example.invalid",
+            "port": 443,
+            "protocol": "https",
+            "uri": "https://relay.example.invalid:443",
+            "local": 0,
+            "relay": 1,
+            "IPv6": 0
+          }
+        ]
+      }
+    ]
+  }
+}

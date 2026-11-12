@@ -1,0 +1,39 @@
+[package]
+name = "plex-player"
+description = "libmpv-backed playback engine: async mpv control loop, observed properties, track/subtitle selection."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+
+[dependencies]
+plex-core = { workspace = true }
+# `render_link` turns the window's raw display handle into libmpv's
+# native-display creation parameter (`render_gl.h` hwdec interop).
+raw-window-handle = { workspace = true }
+# `events::PlayerError` derives `Error` with thiserror, exactly like
+# `plex-core`'s error enums; the version is the workspace pin frozen in Cargo.lock.
+thiserror = { workspace = true }
+
+[build-dependencies]
+pkg-config = { workspace = true }
+bindgen = { workspace = true, optional = true }
+
+[features]
+# the libmpv FFI is part of the normal build, so the plain `build/check/test`
+# gate invocations (no --features) really compile the bindgen bindings and the
+# async control loop against the installed libmpv headers. The build script
+# guard makes an older/absent libmpv a hard build error (PLEX_DISABLE_MPV_GUARD
+# is the documented escape hatch for a display-free skeleton build).
+default = ["libmpv-ffi"]
+# Compile src/mpv_bindings.rs (bindgen output) + the libmpv-backed link.
+libmpv-ffi = []
+# Explicit regeneration mode: pulls bindgen (version-locked in Cargo.lock) into
+# the build graph and rewrites src/mpv_bindings.rs from the installed headers.
+# bindgen is *not* compiled by the routine gates because no default feature
+# activates this.
+regenerate-mpv-bindings = ["dep:bindgen"]
+
+[lints]
+workspace = true

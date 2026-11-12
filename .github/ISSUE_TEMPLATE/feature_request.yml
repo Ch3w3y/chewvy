@@ -1,0 +1,26 @@
+name: Feature request
+description: Something Chewvy should do
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What you are trying to do
+      description: The situation, not only the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like
+  - type: dropdown
+    id: source
+    attributes:
+      label: Applies to
+      options:
+        - Plex
+        - Jellyfin
+        - Both
+        - Neither (interface, packaging, other)
+    validations:
+      required: true

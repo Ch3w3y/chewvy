@@ -1,0 +1,30 @@
+{
+  "MediaContainer": {
+    "size": 1,
+    "totalSize": 1,
+    "Metadata": [
+      {
+        "ratingKey": "10",
+        "key": "/library/metadata/10",
+        "type": "movie",
+        "title": "Sample Generated Movie",
+        "index": 1,
+        "parentTitle": "Sample Generated Collection",
+        "duration": 600000,
+        "addedAt": 1700000000,
+        "Media": [
+          {
+            "Part": [
+              {
+                "key": "/library/parts/10/1/file.mkv",
+                "container": "mkv",
+                "protocol": "http",
+                "size": 1048576
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

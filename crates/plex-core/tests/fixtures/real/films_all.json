@@ -1,0 +1,370 @@
+{
+ "MediaContainer": {
+  "size": 3,
+  "totalSize": 1654,
+  "offset": 0,
+  "allowSync": true,
+  "art": "/:/resources/movie-fanart.jpg",
+  "identifier": "com.plexapp.plugins.library",
+  "librarySectionID": 2,
+  "librarySectionTitle": "Films",
+  "librarySectionUUID": "REDACTED",
+  "mediaTagPrefix": "/system/bundle/media/flags/",
+  "mediaTagVersion": 1787604119,
+  "thumb": "/:/resources/movie.png",
+  "title1": "Films",
+  "title2": "All Films",
+  "viewGroup": "movie",
+  "viewMode": 65592,
+  "Metadata": [
+   {
+    "ratingKey": "30874",
+    "key": "/library/metadata/30874",
+    "guid": "plex://movie/0c23c3e2fc266bf0a91f2aca",
+    "slug": "the-brook",
+    "studio": "Wild Thyme Pictures",
+    "type": "movie",
+    "title": "The 'Brook",
+    "titleSort": "'Brook",
+    "contentRating": "gb/PG",
+    "contentRatingAge": 13,
+    "summary": "The last ferry of the season leaves without its captain, and the crossing takes far longer than it should. A night-shift radio host keeps taking calls from a listener who knows what the next song will be. Nothing in the town is quite what the visitors were promised. A retired clockmaker is asked to repair a machine that should not be able to keep time at all. After the harvest fails, a village sends its youngest cartographer to find where the river went.",
+    "rating": 5.7,
+    "audienceRating": 7.1,
+    "year": 1989,
+    "tagline": "Every map leaves something out.",
+    "thumb": "/library/metadata/30874/thumb/1789186896",
+    "art": "/library/metadata/30874/art/1789186896",
+    "duration": 6081194,
+    "originallyAvailableAt": "1989-02-17",
+    "addedAt": 1762085654,
+    "updatedAt": 1789186896,
+    "audienceRatingImage": "rottentomatoes://image.rating.upright",
+    "primaryExtraKey": "/library/metadata/30875",
+    "ratingImage": "rottentomatoes://image.rating.rotten",
+    "Media": [
+     {
+      "id": 52844,
+      "duration": 6081194,
+      "bitrate": 7777,
+      "width": 1920,
+      "height": 1080,
+      "aspectRatio": 1.78,
+      "audioChannels": 2,
+      "audioCodec": "aac",
+      "videoCodec": "h264",
+      "videoResolution": "1080",
+      "container": "mkv",
+      "videoFrameRate": "24p",
+      "audioProfile": "lc",
+      "videoProfile": "high",
+      "hasVoiceActivity": false,
+      "Part": [
+       {
+        "id": 52844,
+        "key": "/library/parts/52844/1695796561/file.mkv",
+        "duration": 6081194,
+        "file": "REDACTED",
+        "size": 5911954320,
+        "audioProfile": "lc",
+        "container": "mkv",
+        "videoProfile": "high"
+       }
+      ]
+     }
+    ],
+    "Image": [
+     {
+      "alt": "The 'Brook",
+      "type": "coverPoster",
+      "url": "/library/metadata/30874/thumb/1789186896"
+     },
+     {
+      "alt": "The 'Brook",
+      "type": "background",
+      "url": "/library/metadata/30874/art/1789186896"
+     },
+     {
+      "alt": "The 'Brook",
+      "type": "clearLogo",
+      "url": "/library/metadata/30874/clearLogo/1789186896"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "1a264e",
+     "topRight": "204966",
+     "bottomRight": "0b3049",
+     "bottomLeft": "245140"
+    },
+    "Genre": [
+     {
+      "tag": "Comedy"
+     },
+     {
+      "tag": "Thriller"
+     }
+    ],
+    "Country": [
+     {
+      "tag": "United States of America"
+     }
+    ],
+    "Director": [
+     {
+      "tag": "Noor Sallow"
+     }
+    ],
+    "Writer": [
+     {
+      "tag": "Juno Bellamy-Rhodes"
+     }
+    ],
+    "Role": [
+     {
+      "tag": "Ida Rosswood"
+     },
+     {
+      "tag": "Una Whitlock"
+     },
+     {
+      "tag": "Bea Kestrel"
+     }
+    ]
+   },
+   {
+    "ratingKey": "41709",
+    "key": "/library/metadata/41709",
+    "guid": "plex://movie/065a973025dbe5530d1c0b6a",
+    "slug": "adrift-2020",
+    "studio": "Harrow & Pine",
+    "type": "movie",
+    "title": "#Adrift",
+    "originalTitle": "#표류",
+    "contentRating": "gb/15",
+    "contentRatingAge": 16,
+    "summary": "What begins as a quiet inquiry becomes a race across the marshes before the tide comes in. Two rival lighthouse keepers are forced to share one lamp through the longest winter on record.",
+    "rating": 8.8,
+    "audienceRating": 6.3,
+    "year": 2020,
+    "tagline": "The tide keeps its own time.",
+    "thumb": "/library/metadata/41709/thumb/1787107941",
+    "art": "/library/metadata/41709/art/1787107941",
+    "duration": 5484896,
+    "originallyAvailableAt": "2020-06-24",
+    "addedAt": 1783381996,
+    "updatedAt": 1787107941,
+    "audienceRatingImage": "rottentomatoes://image.rating.upright",
+    "ratingImage": "rottentomatoes://image.rating.ripe",
+    "Media": [
+     {
+      "id": 71701,
+      "duration": 5484896,
+      "bitrate": 7063,
+      "width": 1920,
+      "height": 816,
+      "aspectRatio": 2.35,
+      "audioChannels": 6,
+      "audioCodec": "eac3",
+      "videoCodec": "h264",
+      "videoResolution": "1080",
+      "container": "mkv",
+      "videoFrameRate": "24p",
+      "videoProfile": "high",
+      "hasVoiceActivity": false,
+      "Part": [
+       {
+        "id": 71701,
+        "key": "/library/parts/71701/1753033357/file.mkv",
+        "duration": 5484896,
+        "file": "REDACTED",
+        "size": 4842250549,
+        "container": "mkv",
+        "videoProfile": "high"
+       }
+      ]
+     }
+    ],
+    "Image": [
+     {
+      "alt": "#Adrift",
+      "type": "coverPoster",
+      "url": "/library/metadata/41709/thumb/1787107941"
+     },
+     {
+      "alt": "#Adrift",
+      "type": "background",
+      "url": "/library/metadata/41709/art/1787107941"
+     },
+     {
+      "alt": "#Adrift",
+      "type": "clearLogo",
+      "url": "/library/metadata/41709/clearLogo/1787107941"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "123144",
+     "topRight": "155fa2",
+     "bottomRight": "0d5bac",
+     "bottomLeft": "813447"
+    },
+    "Genre": [
+     {
+      "tag": "Drama"
+     },
+     {
+      "tag": "Action"
+     }
+    ],
+    "Country": [
+     {
+      "tag": "Republic of Korea"
+     }
+    ],
+    "Director": [
+     {
+      "tag": "Nell Okonjo"
+     }
+    ],
+    "Writer": [
+     {
+      "tag": "Eli Calloway"
+     },
+     {
+      "tag": "Nell Okonjo"
+     }
+    ],
+    "Role": [
+     {
+      "tag": "Mara Sternhagen"
+     },
+     {
+      "tag": "Lior Calloway"
+     },
+     {
+      "tag": "Vera Carrow"
+     }
+    ]
+   },
+   {
+    "ratingKey": "1382",
+    "key": "/library/metadata/1382",
+    "guid": "plex://movie/e913f9baae9ff6f9972da50c",
+    "slug": "2-slow-2-serious",
+    "studio": "Old Ferry Films",
+    "type": "movie",
+    "title": "2 Slow 2 Serious",
+    "contentRating": "gb/12A",
+    "contentRatingAge": 14,
+    "summary": "A retired clockmaker is asked to repair a machine that should not be able to keep time at all. After the harvest fails, a village sends its youngest cartographer to find where the river went. Old loyalties are tested, and not everyone who set out will see the far shore.",
+    "rating": 3.7,
+    "audienceRating": 5.0,
+    "year": 2003,
+    "tagline": "Some doors only open once.",
+    "thumb": "/library/metadata/1382/thumb/1788494706",
+    "art": "/library/metadata/1382/art/1788494706",
+    "duration": 6456405,
+    "originallyAvailableAt": "2003-06-05",
+    "addedAt": 1754270909,
+    "updatedAt": 1788494706,
+    "audienceRatingImage": "rottentomatoes://image.rating.spilled",
+    "loudnessAnalysisVersion": "0.02",
+    "primaryExtraKey": "/library/metadata/1383",
+    "ratingImage": "rottentomatoes://image.rating.rotten",
+    "Media": [
+     {
+      "id": 3626,
+      "duration": 6456405,
+      "bitrate": 7906,
+      "width": 1920,
+      "height": 1080,
+      "aspectRatio": 1.78,
+      "audioChannels": 2,
+      "audioCodec": "aac",
+      "videoCodec": "h264",
+      "videoResolution": "1080",
+      "container": "mkv",
+      "videoFrameRate": "24p",
+      "audioProfile": "lc",
+      "videoProfile": "high",
+      "hasVoiceActivity": false,
+      "Part": [
+       {
+        "id": 3626,
+        "key": "/library/parts/3626/1712801503/file.mkv",
+        "duration": 6456405,
+        "file": "REDACTED",
+        "size": 6380477856,
+        "audioProfile": "lc",
+        "container": "mkv",
+        "videoProfile": "high"
+       }
+      ]
+     }
+    ],
+    "Image": [
+     {
+      "alt": "2 Slow 2 Serious",
+      "type": "coverPoster",
+      "url": "/library/metadata/1382/thumb/1788494706"
+     },
+     {
+      "alt": "2 Slow 2 Serious",
+      "type": "background",
+      "url": "/library/metadata/1382/art/1788494706"
+     },
+     {
+      "alt": "2 Slow 2 Serious",
+      "type": "clearLogo",
+      "url": "/library/metadata/1382/clearLogo/1788494706"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "162e4f",
+     "topRight": "30618f",
+     "bottomRight": "345e96",
+     "bottomLeft": "1c2c56"
+    },
+    "Genre": [
+     {
+      "tag": "Action"
+     },
+     {
+      "tag": "Crime"
+     }
+    ],
+    "Country": [
+     {
+      "tag": "Germany"
+     },
+     {
+      "tag": "United States of America"
+     }
+    ],
+    "Director": [
+     {
+      "tag": "Della Winterbourne"
+     }
+    ],
+    "Writer": [
+     {
+      "tag": "Una Zielinski"
+     },
+     {
+      "tag": "Otis Ravenscroft"
+     }
+    ],
+    "Role": [
+     {
+      "tag": "Ines Underhill"
+     },
+     {
+      "tag": "Finn Ingram"
+     },
+     {
+      "tag": "Wren Fairweather"
+     }
+    ]
+   }
+  ]
+ }
+}

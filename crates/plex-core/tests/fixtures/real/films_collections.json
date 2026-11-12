@@ -1,0 +1,20 @@
+{
+ "MediaContainer": {
+  "size": 0,
+  "totalSize": 0,
+  "offset": 0,
+  "allowSync": true,
+  "art": "/:/resources/movie-fanart.jpg",
+  "identifier": "com.plexapp.plugins.library",
+  "librarySectionID": 2,
+  "librarySectionTitle": "Films",
+  "librarySectionUUID": "REDACTED",
+  "mediaTagPrefix": "/system/bundle/media/flags/",
+  "mediaTagVersion": 1787604119,
+  "thumb": "/:/resources/movie.png",
+  "title1": "Films",
+  "title2": "All Films",
+  "viewGroup": "movie",
+  "viewMode": 65592
+ }
+}

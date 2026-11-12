@@ -1,0 +1,87 @@
+{
+ "MediaContainer": {
+  "size": 5,
+  "allowSync": false,
+  "title1": "Plex Library",
+  "Directory": [
+   {
+    "allowSync": true,
+    "filters": true,
+    "refreshing": false,
+    "key": "5",
+    "type": "movie",
+    "title": "4K Movies",
+    "agent": "tv.plex.agents.movie",
+    "scanner": "Plex Movie",
+    "language": "en-GB",
+    "metadataAgentProviderGroupId": 1,
+    "uuid": "REDACTED",
+    "updatedAt": 1789251638,
+    "createdAt": 1754241176,
+    "scannedAt": 1789251583,
+    "content": true,
+    "directory": true,
+    "contentChangedAt": 4435638,
+    "hidden": 0,
+    "Location": [
+     {
+      "id": 5,
+      "path": "/media/Movies4k"
+     }
+    ]
+   },
+   {
+    "allowSync": true,
+    "filters": true,
+    "refreshing": false,
+    "key": "2",
+    "type": "movie",
+    "title": "Films",
+    "agent": "tv.plex.agents.movie",
+    "scanner": "Plex Movie",
+    "language": "en-US",
+    "metadataAgentProviderGroupId": 1,
+    "uuid": "REDACTED",
+    "updatedAt": 1789252796,
+    "createdAt": 1754241146,
+    "scannedAt": 1789252585,
+    "content": true,
+    "directory": true,
+    "contentChangedAt": 5605156,
+    "hidden": 0,
+    "Location": [
+     {
+      "id": 2,
+      "path": "/media/Movies"
+     }
+    ]
+   },
+   {
+    "allowSync": true,
+    "filters": true,
+    "refreshing": false,
+    "key": "6",
+    "type": "show",
+    "title": "4K TV",
+    "agent": "tv.plex.agents.series",
+    "scanner": "Plex TV Series",
+    "language": "en-GB",
+    "metadataAgentProviderGroupId": 2,
+    "uuid": "REDACTED",
+    "updatedAt": 1789253738,
+    "createdAt": 1754241192,
+    "scannedAt": 1789253683,
+    "content": true,
+    "directory": true,
+    "contentChangedAt": 4413705,
+    "hidden": 0,
+    "Location": [
+     {
+      "id": 6,
+      "path": "/media/TV4k"
+     }
+    ]
+   }
+  ]
+ }
+}

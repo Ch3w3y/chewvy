@@ -1,0 +1,10 @@
+{
+  "id": 42424242,
+  "uuid": "mock-uuid-0000-0000-000000000000",
+  "username": "mockuser",
+  "email": "mock@example.invalid",
+  "authToken": "MOCKTOKEN-9f4c1b7ae2d84c0f",
+  "rememberExpiresAt": 1893456000,
+  "twoFactorEnabled": false,
+  "restricted": false
+}

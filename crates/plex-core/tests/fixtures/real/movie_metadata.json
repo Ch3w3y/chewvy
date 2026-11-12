@@ -1,0 +1,1915 @@
+{
+ "MediaContainer": {
+  "size": 1,
+  "allowSync": true,
+  "identifier": "com.plexapp.plugins.library",
+  "librarySectionID": 2,
+  "librarySectionTitle": "Films",
+  "librarySectionUUID": "REDACTED",
+  "mediaTagPrefix": "/system/bundle/media/flags/",
+  "mediaTagVersion": 1787604119,
+  "Metadata": [
+   {
+    "ratingKey": "30874",
+    "key": "/library/metadata/30874",
+    "guid": "plex://movie/0c23c3e2fc266bf0a91f2aca",
+    "slug": "the-brook",
+    "studio": "Wild Thyme Pictures",
+    "type": "movie",
+    "title": "The 'Brook",
+    "titleSort": "'Brook",
+    "librarySectionTitle": "Films",
+    "librarySectionID": 2,
+    "librarySectionKey": "/library/sections/2",
+    "contentRating": "gb/PG",
+    "contentRatingAge": 13,
+    "summary": "The last ferry of the season leaves without its captain, and the crossing takes far longer than it should. A night-shift radio host keeps taking calls from a listener who knows what the next song will be. Nothing in the town is quite what the visitors were promised. A retired clockmaker is asked to repair a machine that should not be able to keep time at all. After the harvest fails, a village sends its youngest cartographer to find where the river went.",
+    "rating": 5.7,
+    "audienceRating": 7.1,
+    "year": 1989,
+    "tagline": "Every map leaves something out.",
+    "thumb": "/library/metadata/30874/thumb/1789186896",
+    "art": "/library/metadata/30874/art/1789186896",
+    "duration": 6081194,
+    "originallyAvailableAt": "1989-02-17",
+    "addedAt": 1762085654,
+    "updatedAt": 1789186896,
+    "audienceRatingImage": "rottentomatoes://image.rating.upright",
+    "primaryExtraKey": "/library/metadata/30875",
+    "ratingImage": "rottentomatoes://image.rating.rotten",
+    "Media": [
+     {
+      "id": 52844,
+      "duration": 6081194,
+      "bitrate": 7777,
+      "width": 1920,
+      "height": 1080,
+      "aspectRatio": 1.78,
+      "audioChannels": 2,
+      "audioCodec": "aac",
+      "videoCodec": "h264",
+      "videoResolution": "1080",
+      "container": "mkv",
+      "videoFrameRate": "24p",
+      "audioProfile": "lc",
+      "videoProfile": "high",
+      "hasVoiceActivity": false,
+      "Part": [
+       {
+        "id": 52844,
+        "key": "/library/parts/52844/1695796561/file.mkv",
+        "duration": 6081194,
+        "file": "REDACTED",
+        "size": 5911954320,
+        "audioProfile": "lc",
+        "container": "mkv",
+        "videoProfile": "high",
+        "Stream": [
+         {
+          "id": 253966,
+          "streamType": 1,
+          "default": true,
+          "codec": "h264",
+          "index": 0,
+          "bitrate": 7777,
+          "language": "English",
+          "languageTag": "en",
+          "languageCode": "eng",
+          "bitDepth": 8,
+          "chromaLocation": "left",
+          "chromaSubsampling": "4:2:0",
+          "closedCaptions": true,
+          "codedHeight": 1088,
+          "codedWidth": 1920,
+          "colorPrimaries": "bt709",
+          "colorRange": "tv",
+          "colorSpace": "bt709",
+          "colorTrc": "bt709",
+          "frameRate": 23.976,
+          "hasScalingMatrix": false,
+          "height": 1080,
+          "level": 40,
+          "profile": "high",
+          "refFrames": 4,
+          "scanType": "progressive",
+          "width": 1920,
+          "displayTitle": "1080p",
+          "extendedDisplayTitle": "1080p (H.264)"
+         },
+         {
+          "id": 253968,
+          "streamType": 2,
+          "canNormalizeLoudness": false,
+          "selected": true,
+          "default": true,
+          "codec": "aac",
+          "index": 1,
+          "channels": 2,
+          "bitrate": 96,
+          "language": "English",
+          "languageTag": "en",
+          "languageCode": "eng",
+          "audioChannelLayout": "stereo",
+          "profile": "lc",
+          "samplingRate": 48000,
+          "displayTitle": "English (AAC Stereo)",
+          "extendedDisplayTitle": "English (AAC Stereo)"
+         },
+         {
+          "id": 253967,
+          "streamType": 3,
+          "canAutoSync": false,
+          "codec": "eia_608",
+          "index": 0,
+          "language": "English",
+          "languageTag": "en",
+          "languageCode": "eng",
+          "embeddedInVideo": "1",
+          "displayTitle": "English",
+          "extendedDisplayTitle": "English (Closed Captions)"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "Image": [
+     {
+      "alt": "The 'Brook",
+      "type": "coverPoster",
+      "url": "/library/metadata/30874/thumb/1789186896"
+     },
+     {
+      "alt": "The 'Brook",
+      "type": "background",
+      "url": "/library/metadata/30874/art/1789186896"
+     },
+     {
+      "alt": "The 'Brook",
+      "type": "clearLogo",
+      "url": "/library/metadata/30874/clearLogo/1789186896"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "1a264e",
+     "topRight": "204966",
+     "bottomRight": "0b3049",
+     "bottomLeft": "245140"
+    },
+    "Genre": [
+     {
+      "id": 337,
+      "filter": "genre=337",
+      "tag": "Comedy"
+     },
+     {
+      "id": 11,
+      "filter": "genre=11",
+      "tag": "Thriller"
+     },
+     {
+      "id": 498,
+      "filter": "genre=498",
+      "tag": "Mystery"
+     }
+    ],
+    "Country": [
+     {
+      "id": 82,
+      "filter": "country=82",
+      "tag": "United States of America"
+     }
+    ],
+    "Guid": [
+     {
+      "id": "imdb://tt2172380"
+     },
+     {
+      "id": "tmdb://22969"
+     },
+     {
+      "id": "tvdb://1648"
+     }
+    ],
+    "Rating": [
+     {
+      "image": "imdb://image.rating",
+      "value": 6.8,
+      "type": "audience"
+     },
+     {
+      "image": "rottentomatoes://image.rating.rotten",
+      "value": 5.7,
+      "type": "critic"
+     },
+     {
+      "image": "rottentomatoes://image.rating.upright",
+      "value": 7.1,
+      "type": "audience"
+     }
+    ],
+    "Director": [
+     {
+      "id": 74776,
+      "filter": "director=74776",
+      "tag": "Noor Sallow",
+      "tagKey": "1542c8bb821f08625d599c1a",
+      "thumb": "https://metadata-static.plex.tv/d/people/dabc5ef898833bd2367cac237f4040b8.jpg"
+     }
+    ],
+    "Writer": [
+     {
+      "id": 162444,
+      "filter": "writer=162444",
+      "tag": "Juno Bellamy-Rhodes",
+      "tagKey": "70507d7d1426567ee925e8f4"
+     }
+    ],
+    "Role": [
+     {
+      "id": 2266,
+      "filter": "actor=2266",
+      "tag": "Ida Rosswood",
+      "tagKey": "2b514e4db86abd9487e72bb7",
+      "role": "Theo O'Dell",
+      "thumb": "https://metadata-static.plex.tv/4/people/4a8cd29ce336b3923c59841892b17d05.jpg"
+     },
+     {
+      "id": 12429,
+      "filter": "actor=12429",
+      "tag": "Una Whitlock",
+      "tagKey": "8878ee5ce1d28d12006a8a84",
+      "role": "Milo Brightwater",
+      "thumb": "https://metadata-static.plex.tv/f/people/f91b054225dd2bf50398c1c7156d56bb.jpg"
+     },
+     {
+      "id": 3477,
+      "filter": "actor=3477",
+      "tag": "Bea Kestrel",
+      "tagKey": "a9e43e9a38f42ec2fcb61893",
+      "role": "Esme Sternhagen",
+      "thumb": "https://metadata-static.plex.tv/7/people/779fcb4daa53c46b035cc73a2760c07d.jpg"
+     }
+    ],
+    "Producer": [
+     {
+      "id": 74809,
+      "filter": "producer=74809",
+      "tag": "Wren Sternhagen",
+      "tagKey": "d73bd48531f325f1670b168b",
+      "thumb": "https://metadata-static.plex.tv/5/people/504abf191863390bf739d6af1439122e.jpg"
+     },
+     {
+      "id": 162313,
+      "filter": "producer=162313",
+      "tag": "Otis Hawksworth",
+      "tagKey": "624fa0e32a947c35771b09d7",
+      "thumb": "https://metadata-static.plex.tv/6/people/6f695d1d6effe0f13a1e6a56f3dfc36a.jpg"
+     }
+    ],
+    "CommonSenseMedia": [
+     {
+      "id": 99,
+      "oneLiner": "Slow-burning mystery has peril and mild language.",
+      "AgeRating": [
+       {
+        "type": "official",
+        "rating": 2,
+        "age": 13
+       }
+      ]
+     }
+    ],
+    "Marker": [
+     {
+      "final": true,
+      "id": 8,
+      "type": "credits",
+      "startTimeOffset": 5845074,
+      "endTimeOffset": 6081194,
+      "Attributes": {
+       "id": 8,
+       "version": 4
+      }
+     }
+    ],
+    "Extras": {
+     "size": 2,
+     "Metadata": [
+      {
+       "ratingKey": "30875",
+       "key": "/library/metadata/30875",
+       "guid": "iva://api.internetvideoarchive.com/2.0/DataService/VideoAssets(1711009)",
+       "type": "clip",
+       "title": "The Brook",
+       "titleSort": "Brook",
+       "summary": "",
+       "index": 1,
+       "year": 2016,
+       "thumb": "/library/metadata/30875/thumb/1482865883",
+       "primaryGuid": "plex://movie/0c23c3e2fc266bf0a91f2aca",
+       "subtype": "trailer",
+       "duration": 88000,
+       "originallyAvailableAt": "2016-12-27",
+       "addedAt": 1478113883,
+       "extraType": 1,
+       "Media": [
+        {
+         "id": 52845,
+         "duration": 88000,
+         "bitrate": 1500,
+         "width": 720,
+         "height": 412,
+         "aspectRatio": 1.78,
+         "audioCodec": "aac",
+         "videoCodec": "h264",
+         "videoResolution": "sd",
+         "container": "mp4",
+         "optimizedForStreaming": 1,
+         "protocol": "mp4",
+         "premium": true,
+         "hasVoiceActivity": false,
+         "Part": [
+          {
+           "id": 52845,
+           "duration": 88000,
+           "container": "mp4",
+           "key": "/services/iva/assets/1119/video.mp4?fmt=4&bitrate=1500",
+           "Stream": [
+            {
+             "id": 253970,
+             "streamType": 1,
+             "codec": "h264",
+             "index": 0,
+             "bitrate": 1500,
+             "height": 412,
+             "width": 720,
+             "displayTitle": "SD",
+             "extendedDisplayTitle": "SD (H.264)"
+            },
+            {
+             "id": 253971,
+             "streamType": 2,
+             "canNormalizeLoudness": false,
+             "selected": true,
+             "codec": "aac",
+             "index": 1,
+             "channels": 2,
+             "language": "English",
+             "languageTag": "en",
+             "languageCode": "eng",
+             "displayTitle": "English (AAC Stereo)",
+             "extendedDisplayTitle": "English (AAC Stereo)"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "id": 52846,
+         "duration": 88000,
+         "bitrate": 750,
+         "width": 480,
+         "height": 275,
+         "aspectRatio": 1.78,
+         "audioCodec": "aac",
+         "videoCodec": "h264",
+         "videoResolution": "sd",
+         "container": "mp4",
+         "optimizedForStreaming": 1,
+         "protocol": "mp4",
+         "premium": true,
+         "hasVoiceActivity": false,
+         "Part": [
+          {
+           "id": 52846,
+           "duration": 88000,
+           "container": "mp4",
+           "key": "/services/iva/assets/1119/video.mp4?fmt=4&bitrate=750",
+           "Stream": [
+            {
+             "id": 253972,
+             "streamType": 1,
+             "codec": "h264",
+             "index": 0,
+             "bitrate": 750,
+             "height": 275,
+             "width": 480,
+             "displayTitle": "SD",
+             "extendedDisplayTitle": "SD (H.264)"
+            },
+            {
+             "id": 253973,
+             "streamType": 2,
+             "canNormalizeLoudness": false,
+             "selected": true,
+             "codec": "aac",
+             "index": 1,
+             "channels": 2,
+             "language": "English",
+             "languageTag": "en",
+             "languageCode": "eng",
+             "displayTitle": "English (AAC Stereo)",
+             "extendedDisplayTitle": "English (AAC Stereo)"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "Image": [
+        {
+         "alt": "The Brook",
+         "type": "coverPoster",
+         "url": "/library/metadata/30875/thumb/1482865883"
+        }
+       ]
+      },
+      {
+       "ratingKey": "30876",
+       "key": "/library/metadata/30876",
+       "guid": "iva://api.internetvideoarchive.com/2.0/DataService/VideoAssets(157664)",
+       "type": "clip",
+       "title": "The Brook: Alternate Ending",
+       "titleSort": "Brook: Alternate Ending",
+       "summary": "",
+       "index": 2,
+       "year": 2017,
+       "thumb": "/library/metadata/30876/thumb/1496339867",
+       "subtype": "sceneOrSample",
+       "duration": 386000,
+       "originallyAvailableAt": "2017-07-26",
+       "addedAt": 1496339867,
+       "extraType": 6,
+       "Media": [
+        {
+         "id": 52847,
+         "duration": 386000,
+         "bitrate": 2500,
+         "width": 1280,
+         "height": 702,
+         "aspectRatio": 1.85,
+         "audioCodec": "aac",
+         "videoCodec": "h264",
+         "videoResolution": "720",
+         "container": "mp4",
+         "optimizedForStreaming": 1,
+         "protocol": "mp4",
+         "premium": true,
+         "hasVoiceActivity": false,
+         "Part": [
+          {
+           "id": 52847,
+           "duration": 386000,
+           "container": "mp4",
+           "key": "/services/iva/assets/220456/video.mp4?fmt=4&bitrate=2500",
+           "Stream": [
+            {
+             "id": 253974,
+             "streamType": 1,
+             "codec": "h264",
+             "index": 0,
+             "bitrate": 2500,
+             "height": 702,
+             "width": 1280,
+             "displayTitle": "720p",
+             "extendedDisplayTitle": "720p (H.264)"
+            },
+            {
+             "id": 253975,
+             "streamType": 2,
+             "canNormalizeLoudness": false,
+             "selected": true,
+             "codec": "aac",
+             "index": 1,
+             "channels": 2,
+             "language": "English",
+             "languageTag": "en",
+             "languageCode": "eng",
+             "displayTitle": "English (AAC Stereo)",
+             "extendedDisplayTitle": "English (AAC Stereo)"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "id": 52848,
+         "duration": 386000,
+         "bitrate": 1500,
+         "width": 720,
+         "height": 394,
+         "aspectRatio": 1.85,
+         "audioCodec": "aac",
+         "videoCodec": "h264",
+         "videoResolution": "sd",
+         "container": "mp4",
+         "optimizedForStreaming": 1,
+         "protocol": "mp4",
+         "premium": true,
+         "hasVoiceActivity": false,
+         "Part": [
+          {
+           "id": 52848,
+           "duration": 386000,
+           "container": "mp4",
+           "key": "/services/iva/assets/220456/video.mp4?fmt=4&bitrate=1500",
+           "Stream": [
+            {
+             "id": 253976,
+             "streamType": 1,
+             "codec": "h264",
+             "index": 0,
+             "bitrate": 1500,
+             "height": 394,
+             "width": 720,
+             "displayTitle": "SD",
+             "extendedDisplayTitle": "SD (H.264)"
+            },
+            {
+             "id": 253977,
+             "streamType": 2,
+             "canNormalizeLoudness": false,
+             "selected": true,
+             "codec": "aac",
+             "index": 1,
+             "channels": 2,
+             "language": "English",
+             "languageTag": "en",
+             "languageCode": "eng",
+             "displayTitle": "English (AAC Stereo)",
+             "extendedDisplayTitle": "English (AAC Stereo)"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "id": 52849,
+         "duration": 386000,
+         "bitrate": 750,
+         "width": 480,
+         "height": 263,
+         "aspectRatio": 1.85,
+         "audioCodec": "aac",
+         "videoCodec": "h264",
+         "videoResolution": "sd",
+         "container": "mp4",
+         "optimizedForStreaming": 1,
+         "protocol": "mp4",
+         "premium": true,
+         "hasVoiceActivity": false,
+         "Part": [
+          {
+           "id": 52849,
+           "duration": 386000,
+           "container": "mp4",
+           "key": "/services/iva/assets/220456/video.mp4?fmt=4&bitrate=750",
+           "Stream": [
+            {
+             "id": 253978,
+             "streamType": 1,
+             "codec": "h264",
+             "index": 0,
+             "bitrate": 750,
+             "height": 263,
+             "width": 480,
+             "displayTitle": "SD",
+             "extendedDisplayTitle": "SD (H.264)"
+            },
+            {
+             "id": 253979,
+             "streamType": 2,
+             "canNormalizeLoudness": false,
+             "selected": true,
+             "codec": "aac",
+             "index": 1,
+             "channels": 2,
+             "language": "English",
+             "languageTag": "en",
+             "languageCode": "eng",
+             "displayTitle": "English (AAC Stereo)",
+             "extendedDisplayTitle": "English (AAC Stereo)"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "Image": [
+        {
+         "alt": "The Brook: Alternate Ending",
+         "type": "coverPoster",
+         "url": "/library/metadata/30876/thumb/1496339867"
+        }
+       ]
+      }
+     ]
+    },
+    "Related": {
+     "Hub": [
+      {
+       "hubKey": "/library/metadata/30196,30337,28237,16769,957",
+       "key": "/library/metadata/30874/similar",
+       "title": "Related Movies",
+       "type": "movie",
+       "hubIdentifier": "movie.similar",
+       "context": "hub.movie.similar",
+       "size": 5,
+       "more": true,
+       "style": "shelf",
+       "Metadata": [
+        {
+         "ratingKey": "30196",
+         "key": "/library/metadata/30196",
+         "guid": "plex://movie/11d89561fe0ccb16ce408a0e",
+         "slug": "walk-down-slow-road",
+         "studio": "Zephyr & Co",
+         "type": "movie",
+         "title": "Walk Down Slow Road",
+         "librarySectionTitle": "Films",
+         "librarySectionID": 2,
+         "librarySectionKey": "/library/sections/2",
+         "contentRating": "gb/12A",
+         "contentRatingAge": 13,
+         "summary": "The last ferry of the season leaves without its captain, and the crossing takes far longer than it should. A night-shift radio host keeps taking calls from a listener who knows what the next song will be. Nothing in the town is quite what the visitors were promised. A retired clockmaker is asked to repair a machine that should not be able to keep time at all. After the harvest fails, a village sends its youngest cartographer to find where the river went. A night-shift radio host keeps taking calls from a listener who knows what the next song will be.",
+         "rating": 9.2,
+         "audienceRating": 9.3,
+         "viewCount": 1,
+         "lastViewedAt": 1760987954,
+         "year": 2025,
+         "tagline": "The forecast was never for you.",
+         "thumb": "/library/metadata/30196/thumb/1782616196",
+         "art": "/library/metadata/30196/art/1782616196",
+         "duration": 8775648,
+         "originallyAvailableAt": "2025-11-26",
+         "addedAt": 1760777887,
+         "updatedAt": 1782616196,
+         "audienceRatingImage": "rottentomatoes://image.rating.upright",
+         "primaryExtraKey": "/library/metadata/30197",
+         "ratingImage": "rottentomatoes://image.rating.ripe",
+         "Media": [
+          {
+           "id": 51418,
+           "duration": 8775648,
+           "bitrate": 8346,
+           "width": 1920,
+           "height": 1080,
+           "aspectRatio": 1.78,
+           "audioChannels": 6,
+           "audioCodec": "eac3",
+           "videoCodec": "h264",
+           "videoResolution": "1080",
+           "container": "mkv",
+           "videoFrameRate": "24p",
+           "audioProfile": "dolby digital plus + dolby atmos",
+           "videoProfile": "high",
+           "hasVoiceActivity": false,
+           "Part": [
+            {
+             "id": 51418,
+             "key": "/library/parts/51418/1760777801/file.mkv",
+             "duration": 8775648,
+             "file": "REDACTED",
+             "size": 9155591172,
+             "audioProfile": "dolby digital plus + dolby atmos",
+             "container": "mkv",
+             "videoProfile": "high",
+             "Stream": [
+              {
+               "id": 248015,
+               "streamType": 1,
+               "default": true,
+               "codec": "h264",
+               "index": 0,
+               "bitrate": 7578,
+               "language": "English",
+               "languageTag": "en",
+               "languageCode": "eng",
+               "bitDepth": 8,
+               "chromaLocation": "left",
+               "chromaSubsampling": "4:2:0",
+               "codedHeight": 1088,
+               "codedWidth": 1920,
+               "frameRate": 24.0,
+               "hasScalingMatrix": false,
+               "height": 1080,
+               "level": 40,
+               "profile": "high",
+               "refFrames": 4,
+               "scanType": "progressive",
+               "width": 1920,
+               "displayTitle": "1080p",
+               "extendedDisplayTitle": "1080p (H.264)"
+              },
+              {
+               "id": 248016,
+               "streamType": 2,
+               "canNormalizeLoudness": false,
+               "selected": true,
+               "default": true,
+               "codec": "eac3",
+               "index": 1,
+               "channels": 6,
+               "bitrate": 768,
+               "language": "English",
+               "languageTag": "en",
+               "languageCode": "eng",
+               "audioChannelLayout": "5.1(side)",
+               "profile": "dolby digital plus + dolby atmos",
+               "samplingRate": 48000,
+               "displayTitle": "English (EAC3 5.1 + Atmos)",
+               "extendedDisplayTitle": "English (EAC3 5.1 + Atmos)"
+              },
+              {
+               "id": 248017,
+               "streamType": 3,
+               "canAutoSync": false,
+               "selected": true,
+               "codec": "srt",
+               "index": 2,
+               "bitrate": 0,
+               "language": "English",
+               "languageTag": "en",
+               "languageCode": "eng",
+               "title": "English",
+               "displayTitle": "English",
+               "extendedDisplayTitle": "English (SRT)"
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "Image": [
+          {
+           "alt": "Walk Down Slow Road",
+           "type": "coverPoster",
+           "url": "/library/metadata/30196/thumb/1782616196"
+          },
+          {
+           "alt": "Walk Down Slow Road",
+           "type": "background",
+           "url": "/library/metadata/30196/art/1782616196"
+          },
+          {
+           "alt": "Walk Down Slow Road",
+           "type": "clearLogo",
+           "url": "/library/metadata/30196/clearLogo/1782616196"
+          }
+         ],
+         "UltraBlurColors": {
+          "topLeft": "101211",
+          "topRight": "4b514c",
+          "bottomRight": "8e4634",
+          "bottomLeft": "413f4c"
+         },
+         "Genre": [
+          {
+           "id": 12,
+           "filter": "genre=12",
+           "tag": "Drama"
+          },
+          {
+           "id": 498,
+           "filter": "genre=498",
+           "tag": "Mystery"
+          },
+          {
+           "id": 11,
+           "filter": "genre=11",
+           "tag": "Thriller"
+          }
+         ],
+         "Country": [
+          {
+           "id": 82,
+           "filter": "country=82",
+           "tag": "United States of America"
+          }
+         ],
+         "Guid": [
+          {
+           "id": "imdb://tt56681074"
+          },
+          {
+           "id": "tmdb://188015"
+          },
+          {
+           "id": "tvdb://226921"
+          }
+         ],
+         "Rating": [
+          {
+           "image": "imdb://image.rating",
+           "value": 7.3,
+           "type": "audience"
+          },
+          {
+           "image": "rottentomatoes://image.rating.ripe",
+           "value": 9.2,
+           "type": "critic"
+          },
+          {
+           "image": "rottentomatoes://image.rating.upright",
+           "value": 9.3,
+           "type": "audience"
+          }
+         ],
+         "Director": [
+          {
+           "id": 9688,
+           "filter": "director=9688",
+           "tag": "Greta Kestrel",
+           "tagKey": "84598e51608a81cf67e83d58",
+           "thumb": "https://metadata-static.plex.tv/iva/person/363468/2ec79d6b48567a1c24e559d46340b3b6.jpg"
+          }
+         ],
+         "Writer": [
+          {
+           "id": 9689,
+           "filter": "writer=9689",
+           "tag": "Greta Kestrel",
+           "tagKey": "84598e51608a81cf67e83d58",
+           "thumb": "https://metadata-static.plex.tv/iva/person/363468/2ec79d6b48567a1c24e559d46340b3b6.jpg"
+          }
+         ],
+         "Role": [
+          {
+           "id": 3542,
+           "filter": "actor=3542",
+           "tag": "Rafe Dunmore",
+           "tagKey": "5ee1f4e48026d8f655810d48",
+           "role": "Lena Oakhurst",
+           "thumb": "https://metadata-static.plex.tv/8/people/8f215b4dc7420cd06f9fc7fbae276660.jpg"
+          },
+          {
+           "id": 80821,
+           "filter": "actor=80821",
+           "tag": "Ines Ashdown",
+           "tagKey": "79941468667bd0c949aca01f",
+           "role": "Kai Underhill",
+           "thumb": "https://metadata-static.plex.tv/3/people/3b6b6c1a17c8ed197cb3d5564a7c1908.jpg"
+          },
+          {
+           "id": 17774,
+           "filter": "actor=17774",
+           "tag": "Ada Oakhurst",
+           "tagKey": "da5e78088da0d5d023f185b8",
+           "role": "Jem Marlowe",
+           "thumb": "https://metadata-static.plex.tv/d/people/d06410312a341f037eec5d8bdedfd58f.jpg"
+          }
+         ],
+         "Producer": [
+          {
+           "id": 14364,
+           "filter": "producer=14364",
+           "tag": "Greta Kestrel",
+           "tagKey": "84598e51608a81cf67e83d58",
+           "thumb": "https://metadata-static.plex.tv/iva/person/363468/2ec79d6b48567a1c24e559d46340b3b6.jpg"
+          },
+          {
+           "id": 9754,
+           "filter": "producer=9754",
+           "tag": "Quill Sternhagen",
+           "tagKey": "df532289b1dda901a81f00ad",
+           "thumb": "https://metadata-static.plex.tv/0/people/05470b7367fb6cccb1138a70f5ded0e0.jpg"
+          }
+         ],
+         "CommonSenseMedia": [
+          {
+           "id": 99,
+           "oneLiner": "Gentle adventure with some tense moments.",
+           "AgeRating": [
+            {
+             "type": "official",
+             "rating": 5,
+             "age": 13
+            }
+           ]
+          }
+         ],
+         "Marker": [
+          {
+           "final": true,
+           "id": 8,
+           "type": "credits",
+           "startTimeOffset": 8256083,
+           "endTimeOffset": 8775648,
+           "Attributes": {
+            "id": 8,
+            "version": 4
+           }
+          }
+         ]
+        },
+        {
+         "ratingKey": "30337",
+         "key": "/library/metadata/30337",
+         "guid": "plex://movie/e21a3240be201c3fd6b54ab1",
+         "slug": "now-you-hear-it-now-you-dont-2025",
+         "studio": "Paper Kite Pictures",
+         "type": "movie",
+         "title": "Now You Hear It: Now You Don't",
+         "librarySectionTitle": "Films",
+         "librarySectionID": 2,
+         "librarySectionKey": "/library/sections/2",
+         "contentRating": "gb/12A",
+         "contentRatingAge": 13,
+         "summary": "Three siblings inherit a hotel with one more room than its floor plan allows. A stage magician's assistant realises the trick only works because someone in the audience is helping. A surveyor returns to the valley she left as a child and finds the maps no longer match the land. An apprentice archivist finds a ledger that records events a week before they happen.",
+         "rating": 6.1,
+         "audienceRating": 7.9,
+         "viewCount": 1,
+         "lastViewedAt": 1762635570,
+         "year": 2025,
+         "tagline": "One more crossing.",
+         "thumb": "/library/metadata/30337/thumb/1782008572",
+         "art": "/library/metadata/30337/art/1782008572",
+         "duration": 6775488,
+         "originallyAvailableAt": "2025-11-12",
+         "addedAt": 1761092893,
+         "updatedAt": 1782008572,
+         "audienceRatingImage": "rottentomatoes://image.rating.upright",
+         "chapterSource": "media",
+         "primaryExtraKey": "/library/metadata/30338",
+         "ratingImage": "rottentomatoes://image.rating.ripe",
+         "Media": [
+          {
+           "id": 51610,
+           "duration": 6775488,
+           "bitrate": 7201,
+           "width": 1920,
+           "height": 800,
+           "aspectRatio": 2.35,
+           "audioChannels": 6,
+           "audioCodec": "eac3",
+           "videoCodec": "h264",
+           "videoResolution": "1080",
+           "container": "mkv",
+           "videoFrameRate": "24p",
+           "videoProfile": "high",
+           "hasVoiceActivity": false,
+           "Part": [
+            {
+             "id": 51610,
+             "key": "/library/parts/51610/1761092870/file.mkv",
+             "duration": 6775488,
+             "file": "REDACTED",
+             "size": 6098644175,
+             "container": "mkv",
+             "videoProfile": "high",
+             "Stream": [
+              {
+               "id": 248798,
+               "streamType": 1,
+               "default": true,
+               "codec": "h264",
+               "index": 0,
+               "bitrate": 6561,
+               "language": "English",
+               "languageTag": "en",
+               "languageCode": "eng",
+               "bitDepth": 8,
+               "chromaLocation": "topleft",
+               "chromaSubsampling": "4:2:0",
+               "codedHeight": 800,
+               "codedWidth": 1920,
+               "colorPrimaries": "bt709",
+               "colorRange": "tv",
+               "colorSpace": "bt709",
+               "colorTrc": "bt709",
+               "frameRate": 23.976,
+               "hasScalingMatrix": false,
+               "height": 800,
+               "level": 40,
+               "original": true,
+               "profile": "high",
+               "refFrames": 5,
+               "scanType": "progressive",
+               "width": 1920,
+               "displayTitle": "1080p",
+               "extendedDisplayTitle": "1080p (H.264)"
+              },
+              {
+               "id": 248799,
+               "streamType": 2,
+               "canNormalizeLoudness": false,
+               "selected": true,
+               "default": true,
+               "codec": "eac3",
+               "index": 1,
+               "channels": 6,
+               "bitrate": 640,
+               "language": "English",
+               "languageTag": "en",
+               "languageCode": "eng",
+               "audioChannelLayout": "5.1(side)",
+               "samplingRate": 48000,
+               "displayTitle": "English (EAC3 5.1)",
+               "extendedDisplayTitle": "English (EAC3 5.1)"
+              },
+              {
+               "id": 248800,
+               "streamType": 3,
+               "canAutoSync": false,
+               "codec": "srt",
+               "index": 2,
+               "bitrate": 0,
+               "language": "English",
+               "languageTag": "en",
+               "languageCode": "eng",
+               "title": "Stripped",
+               "displayTitle": "English",
+               "extendedDisplayTitle": "Stripped (English SRT)"
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "Image": [
+          {
+           "alt": "Now You Hear It: Now You Don't",
+           "type": "coverPoster",
+           "url": "/library/metadata/30337/thumb/1782008572"
+          },
+          {
+           "alt": "Now You Hear It: Now You Don't",
+           "type": "background",
+           "url": "/library/metadata/30337/art/1782008572"
+          },
+          {
+           "alt": "Now You Hear It: Now You Don't",
+           "type": "clearLogo",
+           "url": "/library/metadata/30337/clearLogo/1782008572"
+          }
+         ],
+         "UltraBlurColors": {
+          "topLeft": "0c1e42",
+          "topRight": "2d5788",
+          "bottomRight": "182f55",
+          "bottomLeft": "071738"
+         },
+         "Genre": [
+          {
+           "id": 338,
+           "filter": "genre=338",
+           "tag": "Crime"
+          },
+          {
+           "id": 11,
+           "filter": "genre=11",
+           "tag": "Thriller"
+          },
+          {
+           "id": 123,
+           "filter": "genre=123",
+           "tag": "Adventure"
+          }
+         ],
+         "Country": [
+          {
+           "id": 82,
+           "filter": "country=82",
+           "tag": "United States of America"
+          }
+         ],
+         "Guid": [
+          {
+           "id": "imdb://tt1604924"
+          },
+          {
+           "id": "tmdb://190271"
+          },
+          {
+           "id": "tvdb://67367"
+          }
+         ],
+         "Rating": [
+          {
+           "image": "imdb://image.rating",
+           "value": 5.9,
+           "type": "audience"
+          },
+          {
+           "image": "rottentomatoes://image.rating.ripe",
+           "value": 6.1,
+           "type": "critic"
+          },
+          {
+           "image": "rottentomatoes://image.rating.upright",
+           "value": 7.9,
+           "type": "audience"
+          }
+         ],
+         "Director": [
+          {
+           "id": 13176,
+           "filter": "director=13176",
+           "tag": "Otis Sallow",
+           "tagKey": "784e1b84412f7155e902acc1",
+           "thumb": "https://metadata-static.plex.tv/0/people/0045dd02a563d6c133fb643947cde3f4.jpg"
+          }
+         ],
+         "Writer": [
+          {
+           "id": 12601,
+           "filter": "writer=12601",
+           "tag": "Quill Thackeray",
+           "tagKey": "e10f25a7de17ac8e4b0ba240",
+           "thumb": "https://metadata-static.plex.tv/a/people/a94e403a61546a4c0b9d6061fd6d358e.jpg"
+          },
+          {
+           "id": 12602,
+           "filter": "writer=12602",
+           "tag": "Ada Quennell",
+           "tagKey": "c4a8f79575017fd395e90100",
+           "thumb": "https://metadata-static.plex.tv/3/people/3bcbe120a25c911a9f7a74211a1c2672.jpg"
+          },
+          {
+           "id": 4773,
+           "filter": "writer=4773",
+           "tag": "Greta Brightwater",
+           "tagKey": "261d6d023ccedb04f4aee6a6",
+           "thumb": "https://metadata-static.plex.tv/1/people/1daabe6e6bc5eccd47e136c99e584b55.jpg"
+          }
+         ],
+         "Role": [
+          {
+           "id": 12603,
+           "filter": "actor=12603",
+           "tag": "Cora Yarrow",
+           "tagKey": "42a05b2bb320b33ee2e6e18c",
+           "role": "Kai Whitlock",
+           "thumb": "https://metadata-static.plex.tv/6/people/68037bb783b0f2947e8972330665527c.jpg"
+          },
+          {
+           "id": 157014,
+           "filter": "actor=157014",
+           "tag": "Lior Yarrow",
+           "tagKey": "de7782cb0c9a3f8dbe04d492",
+           "role": "Ida",
+           "thumb": "https://metadata-static.plex.tv/1/people/1a9c68157016b3ea247a99affdf73e90.jpg"
+          },
+          {
+           "id": 6123,
+           "filter": "actor=6123",
+           "tag": "Odile Larkspur",
+           "tagKey": "48c9fac0785d84353c3871ee",
+           "role": "Della",
+           "thumb": "https://metadata-static.plex.tv/5/people/5ad5ec3d3cd797e196061dadf876d6b2.jpg"
+          }
+         ],
+         "Producer": [
+          {
+           "id": 12646,
+           "filter": "producer=12646",
+           "tag": "Pia O'Dell",
+           "tagKey": "b22a867a1bd3c449a64b6764",
+           "thumb": "https://metadata-static.plex.tv/6/people/6923aff0a6638048fb01363f87c0b55c.jpg"
+          },
+          {
+           "id": 12644,
+           "filter": "producer=12644",
+           "tag": "Dag Whitlock",
+           "tagKey": "8e23c41cbf8222112f3aaeed",
+           "thumb": "https://metadata-static.plex.tv/2/people/2dd42a9829bd372d97a0b19eb96b9a44.jpg"
+          },
+          {
+           "id": 12645,
+           "filter": "producer=12645",
+           "tag": "Jem Yarrow",
+           "tagKey": "2b2bd84464bb1a45122e340b",
+           "thumb": "https://metadata-static.plex.tv/6/people/6d2a4cb9ebfed55b29dd173d51f6e8d7.jpg"
+          }
+         ],
+         "CommonSenseMedia": [
+          {
+           "id": 99,
+           "oneLiner": "Wry ensemble drama; brief strong language.",
+           "AgeRating": [
+            {
+             "type": "official",
+             "rating": 4,
+             "age": 13
+            }
+           ]
+          }
+         ],
+         "Chapter": [
+          {
+           "id": 121,
+           "filter": "thumb=121",
+           "index": 1,
+           "startTimeOffset": 0,
+           "endTimeOffset": 564200,
+           "thumb": "/library/media/51610/chapterImages/1"
+          },
+          {
+           "id": 121,
+           "filter": "thumb=121",
+           "index": 2,
+           "startTimeOffset": 564200,
+           "endTimeOffset": 1105650,
+           "thumb": "/library/media/51610/chapterImages/2"
+          },
+          {
+           "id": 121,
+           "filter": "thumb=121",
+           "index": 3,
+           "startTimeOffset": 1105650,
+           "endTimeOffset": 2041350,
+           "thumb": "/library/media/51610/chapterImages/3"
+          }
+         ],
+         "Marker": [
+          {
+           "final": true,
+           "id": 8,
+           "type": "credits",
+           "startTimeOffset": 6269939,
+           "endTimeOffset": 6775488,
+           "Attributes": {
+            "id": 8,
+            "version": 4
+           }
+          }
+         ]
+        },
+        {
+         "ratingKey": "28237",
+         "key": "/library/metadata/28237",
+         "guid": "plex://movie/241812465f89fc6f92518e9b",
+         "slug": "bellwether",
+         "studio": "Tall Grass Media",
+         "type": "movie",
+         "title": "Bellwether",
+         "librarySectionTitle": "Films",
+         "librarySectionID": 2,
+         "librarySectionKey": "/library/sections/2",
+         "contentRating": "gb/15",
+         "contentRatingAge": 15,
+         "summary": "A stage magician's assistant realises the trick only works because someone in the audience is helping. A surveyor returns to the valley she left as a child and finds the maps no longer match the land.",
+         "rating": 8.7,
+         "audienceRating": 8.4,
+         "viewOffset": 6387453,
+         "viewCount": 3,
+         "lastViewedAt": 1762906496,
+         "year": 2025,
+         "tagline": "Ask the clockmaker.",
+         "thumb": "/library/metadata/28237/thumb/1785121625",
+         "art": "/library/metadata/28237/art/1785121625",
+         "duration": 7099264,
+         "originallyAvailableAt": "2025-10-24",
+         "addedAt": 1759358220,
+         "updatedAt": 1785121625,
+         "audienceRatingImage": "rottentomatoes://image.rating.upright",
+         "primaryExtraKey": "/library/metadata/28238",
+         "ratingImage": "rottentomatoes://image.rating.ripe",
+         "Media": [
+          {
+           "id": 48787,
+           "duration": 7099264,
+           "bitrate": 10726,
+           "width": 1622,
+           "height": 1080,
+           "aspectRatio": 1.66,
+           "audioChannels": 6,
+           "audioCodec": "eac3",
+           "videoCodec": "h264",
+           "videoResolution": "1080",
+           "container": "mkv",
+           "videoFrameRate": "24p",
+           "audioProfile": "dolby digital plus + dolby atmos",
+           "videoProfile": "high",
+           "hasVoiceActivity": false,
+           "Part": [
+            {
+             "id": 48787,
+             "key": "/library/parts/48787/1759358125/file.mkv",
+             "duration": 7099264,
+             "file": "REDACTED",
+             "size": 9518078235,
+             "audioProfile": "dolby digital plus + dolby atmos",
+             "container": "mkv",
+             "videoProfile": "high",
+             "Stream": [
+              {
+               "id": 237444,
+               "streamType": 1,
+               "default": true,
+               "codec": "h264",
+               "index": 0,
+               "bitrate": 9958,
+               "language": "English",
+               "languageTag": "en",
+               "languageCode": "eng",
+               "bitDepth": 8,
+               "chromaLocation": "topleft",
+               "chromaSubsampling": "4:2:0",
+               "codedHeight": 1088,
+               "codedWidth": 1632,
+               "colorPrimaries": "bt709",
+               "colorRange": "tv",
+               "colorSpace": "bt709",
+               "colorTrc": "bt709",
+               "frameRate": 23.976,
+               "hasScalingMatrix": false,
+               "height": 1080,
+               "level": 40,
+               "profile": "high",
+               "refFrames": 4,
+               "scanType": "progressive",
+               "width": 1622,
+               "displayTitle": "1080p",
+               "extendedDisplayTitle": "1080p (H.264)"
+              },
+              {
+               "id": 237445,
+               "streamType": 2,
+               "canNormalizeLoudness": false,
+               "selected": true,
+               "default": true,
+               "codec": "eac3",
+               "index": 1,
+               "channels": 6,
+               "bitrate": 768,
+               "language": "English",
+               "languageTag": "en",
+               "languageCode": "eng",
+               "audioChannelLayout": "5.1(side)",
+               "profile": "dolby digital plus + dolby atmos",
+               "samplingRate": 48000,
+               "displayTitle": "English (EAC3 5.1 + Atmos)",
+               "extendedDisplayTitle": "English (EAC3 5.1 + Atmos)"
+              },
+              {
+               "id": 237446,
+               "streamType": 3,
+               "canAutoSync": false,
+               "default": true,
+               "forced": true,
+               "codec": "srt",
+               "index": 2,
+               "bitrate": 0,
+               "language": "English",
+               "languageTag": "en",
+               "languageCode": "eng",
+               "title": "English (US) (forced)",
+               "displayTitle": "English Forced",
+               "extendedDisplayTitle": "English (US) (forced) (SRT)"
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "Image": [
+          {
+           "alt": "Bellwether",
+           "type": "coverPoster",
+           "url": "/library/metadata/28237/thumb/1785121625"
+          },
+          {
+           "alt": "Bellwether",
+           "type": "background",
+           "url": "/library/metadata/28237/art/1785121625"
+          },
+          {
+           "alt": "Bellwether",
+           "type": "clearLogo",
+           "url": "/library/metadata/28237/clearLogo/1785121625"
+          }
+         ],
+         "UltraBlurColors": {
+          "topLeft": "4c1d17",
+          "topRight": "71332a",
+          "bottomRight": "361a0c",
+          "bottomLeft": "553018"
+         },
+         "Genre": [
+          {
+           "id": 14,
+           "filter": "genre=14",
+           "tag": "Science Fiction"
+          },
+          {
+           "id": 337,
+           "filter": "genre=337",
+           "tag": "Comedy"
+          },
+          {
+           "id": 338,
+           "filter": "genre=338",
+           "tag": "Crime"
+          }
+         ],
+         "Country": [
+          {
+           "id": 53691,
+           "filter": "country=53691",
+           "tag": "Ireland"
+          },
+          {
+           "id": 38363,
+           "filter": "country=38363",
+           "tag": "Republic of Korea"
+          },
+          {
+           "id": 82,
+           "filter": "country=82",
+           "tag": "United States of America"
+          }
+         ],
+         "Guid": [
+          {
+           "id": "imdb://tt15449856"
+          },
+          {
+           "id": "tmdb://267262"
+          },
+          {
+           "id": "tvdb://648839"
+          }
+         ],
+         "Rating": [
+          {
+           "image": "imdb://image.rating",
+           "value": 7.4,
+           "type": "audience"
+          },
+          {
+           "image": "rottentomatoes://image.rating.ripe",
+           "value": 8.7,
+           "type": "critic"
+          },
+          {
+           "image": "rottentomatoes://image.rating.upright",
+           "value": 8.4,
+           "type": "audience"
+          }
+         ],
+         "Director": [
+          {
+           "id": 150675,
+           "filter": "director=150675",
+           "tag": "Yara Valdés",
+           "tagKey": "525351b73f61b8eb96d42869",
+           "thumb": "https://metadata-static.plex.tv/2/people/2c3573dfb294c50ed4fa894bd8c063df.jpg"
+          }
+         ],
+         "Writer": [
+          {
+           "id": 150676,
+           "filter": "writer=150676",
+           "tag": "Noor Underhill",
+           "tagKey": "40adb2b3eabd60592448aa01",
+           "thumb": "https://metadata-static.plex.tv/9/people/98e2c8aa5412751ead4d5fc0f508f3e1.jpg"
+          },
+          {
+           "id": 14424,
+           "filter": "writer=14424",
+           "tag": "Esme Marlowe",
+           "tagKey": "7922aa1f195c5a43dd9ee22d"
+          }
+         ],
+         "Role": [
+          {
+           "id": 11675,
+           "filter": "actor=11675",
+           "tag": "Cora Okonjo",
+           "tagKey": "405dcccf58aa48674e6955bb",
+           "role": "Nell",
+           "thumb": "https://metadata-static.plex.tv/4/people/4f0f37817f3689dbfa7883d76622d0be.jpg"
+          },
+          {
+           "id": 9469,
+           "filter": "actor=9469",
+           "tag": "Seth Pemberton",
+           "tagKey": "d1ea11588cfa7fd02e4333d9",
+           "role": "Cal",
+           "thumb": "https://metadata-static.plex.tv/b/people/b27ca3da95636d49d6d597f0026ea2ac.jpg"
+          },
+          {
+           "id": 150677,
+           "filter": "actor=150677",
+           "tag": "Una Yarrow",
+           "tagKey": "eef86015d6045fc24914e04c",
+           "role": "Kai",
+           "thumb": "https://metadata-static.plex.tv/6/people/6562c320bd1943724692e79fbb9538c3.jpg"
+          }
+         ],
+         "Producer": [
+          {
+           "id": 150702,
+           "filter": "producer=150702",
+           "tag": "Lior Whitlock",
+           "tagKey": "53da8c6ce0afb032497c6148",
+           "thumb": "https://metadata-static.plex.tv/a/people/acd21f83c38a321d0100af41bc13a241.jpg"
+          },
+          {
+           "id": 150703,
+           "filter": "producer=150703",
+           "tag": "Ada Jessop",
+           "tagKey": "51854145866c6a799fe9bab5",
+           "thumb": "https://metadata-static.plex.tv/f/people/f4828f55621c1666fc1db1bdb9669cd9.jpg"
+          },
+          {
+           "id": 150704,
+           "filter": "producer=150704",
+           "tag": "Yara Valdés",
+           "tagKey": "525351b73f61b8eb96d42869",
+           "thumb": "https://metadata-static.plex.tv/2/people/2c3573dfb294c50ed4fa894bd8c063df.jpg"
+          }
+         ],
+         "CommonSenseMedia": [
+          {
+           "id": 99,
+           "oneLiner": "Atmospheric thriller with scenes of threat.",
+           "AgeRating": [
+            {
+             "type": "official",
+             "rating": 3,
+             "age": 15
+            }
+           ]
+          }
+         ],
+         "Marker": [
+          {
+           "final": true,
+           "id": 8,
+           "type": "credits",
+           "startTimeOffset": 6721337,
+           "endTimeOffset": 7099264,
+           "Attributes": {
+            "id": 8,
+            "version": 4
+           }
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "hubKey": "/library/metadata/10362,17230,17345,15481,10561",
+       "key": "/library/sections/2/all?actor=2266&id!=30874",
+       "title": "More with Ida Rosswood",
+       "type": "movie",
+       "hubIdentifier": "movie.same.actor.0",
+       "context": "hub.movie.same.actor",
+       "size": 5,
+       "more": true,
+       "style": "shelf",
+       "Metadata": [
+        {
+         "ratingKey": "10362",
+         "key": "/library/metadata/10362",
+         "guid": "plex://movie/78d24cb1bd6f63fc5d3d75eb",
+         "slug": "anchors-and-daggers",
+         "studio": "Redshift Studios",
+         "type": "movie",
+         "title": "Anchors & Daggers",
+         "contentRating": "gb/12A",
+         "contentRatingAge": 14,
+         "summary": "After the harvest fails, a village sends its youngest cartographer to find where the river went. Old loyalties are tested, and not everyone who set out will see the far shore. When the night train stops between stations, its passengers discover that nobody remembers boarding.",
+         "rating": 3.6,
+         "audienceRating": 5.7,
+         "year": 2009,
+         "tagline": "It was always the quiet one.",
+         "thumb": "/library/metadata/10362/thumb/1784000057",
+         "art": "/library/metadata/10362/art/1784000057",
+         "duration": 8321024,
+         "originallyAvailableAt": "2009-05-13",
+         "addedAt": 1754488690,
+         "updatedAt": 1784000057,
+         "audienceRatingImage": "rottentomatoes://image.rating.spilled",
+         "loudnessAnalysisVersion": "0.02",
+         "primaryExtraKey": "/library/metadata/10363",
+         "ratingImage": "rottentomatoes://image.rating.rotten",
+         "Media": [
+          {
+           "id": 21412,
+           "duration": 8321024,
+           "bitrate": 6321,
+           "width": 1920,
+           "height": 1080,
+           "aspectRatio": 1.78,
+           "audioChannels": 6,
+           "audioCodec": "eac3",
+           "videoCodec": "h264",
+           "videoResolution": "1080",
+           "container": "mkv",
+           "videoFrameRate": "24p",
+           "videoProfile": "high",
+           "hasVoiceActivity": false,
+           "Part": [
+            {
+             "id": 21412,
+             "key": "/library/parts/21412/1754488667/file.mkv",
+             "duration": 8321024,
+             "file": "REDACTED",
+             "size": 6574153022,
+             "container": "mkv",
+             "videoProfile": "high"
+            }
+           ]
+          }
+         ],
+         "Image": [
+          {
+           "alt": "Anchors & Daggers",
+           "type": "coverPoster",
+           "url": "/library/metadata/10362/thumb/1784000057"
+          },
+          {
+           "alt": "Anchors & Daggers",
+           "type": "background",
+           "url": "/library/metadata/10362/art/1784000057"
+          },
+          {
+           "alt": "Anchors & Daggers",
+           "type": "clearLogo",
+           "url": "/library/metadata/10362/clearLogo/1784000057"
+          }
+         ],
+         "UltraBlurColors": {
+          "topLeft": "4c1b23",
+          "topRight": "a52730",
+          "bottomRight": "933e48",
+          "bottomLeft": "a2272e"
+         },
+         "Genre": [
+          {
+           "tag": "Thriller"
+          },
+          {
+           "tag": "Mystery"
+          }
+         ],
+         "Country": [
+          {
+           "tag": "Italy"
+          },
+          {
+           "tag": "United States of America"
+          }
+         ],
+         "Director": [
+          {
+           "tag": "Esme Dunmore"
+          }
+         ],
+         "Writer": [
+          {
+           "tag": "Mara Ashdown"
+          },
+          {
+           "tag": "Ines Garrick"
+          }
+         ],
+         "Role": [
+          {
+           "tag": "Ida Rosswood"
+          },
+          {
+           "tag": "Wren Thackeray"
+          },
+          {
+           "tag": "Juno Pemberton"
+          }
+         ]
+        },
+        {
+         "ratingKey": "17230",
+         "key": "/library/metadata/17230",
+         "guid": "plex://movie/7435e74524009416819961fa",
+         "slug": "argo-31",
+         "studio": "Ironbridge Television",
+         "type": "movie",
+         "title": "Argo 31",
+         "contentRating": "gb/PG",
+         "contentRatingAge": 11,
+         "summary": "An apprentice archivist finds a ledger that records events a week before they happen. The crew of a salvage tug answers a distress call from a ship that sank forty years earlier. The answer, when it comes, is stranger and kinder than anyone expected. The last ferry of the season leaves without its captain, and the crossing takes far longer than it should. A night-shift radio host keeps taking calls from a listener who knows what the next song will be.",
+         "rating": 9.2,
+         "audienceRating": 8.7,
+         "year": 1995,
+         "tagline": "Winter is a patient guest.",
+         "thumb": "/library/metadata/17230/thumb/1784600989",
+         "art": "/library/metadata/17230/art/1784600989",
+         "duration": 8391104,
+         "originallyAvailableAt": "1995-06-30",
+         "addedAt": 1754852859,
+         "updatedAt": 1784600989,
+         "audienceRatingImage": "rottentomatoes://image.rating.upright",
+         "primaryExtraKey": "/library/metadata/17231",
+         "ratingImage": "rottentomatoes://image.rating.ripe",
+         "Media": [
+          {
+           "id": 34063,
+           "duration": 8391104,
+           "bitrate": 4368,
+           "width": 1920,
+           "height": 1080,
+           "aspectRatio": 1.78,
+           "audioChannels": 6,
+           "audioCodec": "ac3",
+           "videoCodec": "h264",
+           "videoResolution": "1080",
+           "container": "mkv",
+           "videoFrameRate": "24p",
+           "videoProfile": "high",
+           "hasVoiceActivity": false,
+           "Part": [
+            {
+             "id": 34063,
+             "key": "/library/parts/34063/1754852841/file.mkv",
+             "duration": 8391104,
+             "file": "REDACTED",
+             "size": 4581693500,
+             "container": "mkv",
+             "videoProfile": "high"
+            }
+           ]
+          }
+         ],
+         "Image": [
+          {
+           "alt": "Argo 31",
+           "type": "coverPoster",
+           "url": "/library/metadata/17230/thumb/1784600989"
+          },
+          {
+           "alt": "Argo 31",
+           "type": "background",
+           "url": "/library/metadata/17230/art/1784600989"
+          },
+          {
+           "alt": "Argo 31",
+           "type": "clearLogo",
+           "url": "/library/metadata/17230/clearLogo/1784600989"
+          }
+         ],
+         "UltraBlurColors": {
+          "topLeft": "4a1e19",
+          "topRight": "3a4541",
+          "bottomRight": "96373c",
+          "bottomLeft": "3a443e"
+         },
+         "Genre": [
+          {
+           "tag": "Drama"
+          },
+          {
+           "tag": "History"
+          }
+         ],
+         "Country": [
+          {
+           "tag": "United States of America"
+          }
+         ],
+         "Director": [
+          {
+           "tag": "Esme Dunmore"
+          }
+         ],
+         "Writer": [
+          {
+           "tag": "Nell Larkspur"
+          },
+          {
+           "tag": "Enid Larkspur"
+          }
+         ],
+         "Role": [
+          {
+           "tag": "Ida Rosswood"
+          },
+          {
+           "tag": "Rhea Oakhurst"
+          },
+          {
+           "tag": "Eli Lindqvist"
+          }
+         ]
+        },
+        {
+         "ratingKey": "17345",
+         "key": "/library/metadata/17345",
+         "guid": "plex://movie/674e9779c99a000529be926c",
+         "slug": "calm-waters",
+         "studio": "Northlight Films",
+         "type": "movie",
+         "title": "Calm Waters",
+         "contentRating": "gb/12",
+         "contentRatingAge": 13,
+         "summary": "A retired clockmaker is asked to repair a machine that should not be able to keep time at all. After the harvest fails, a village sends its youngest cartographer to find where the river went. Old loyalties are tested, and not everyone who set out will see the far shore. When the night train stops between stations, its passengers discover that nobody remembers boarding.",
+         "rating": 8.8,
+         "audienceRating": 8.4,
+         "year": 2000,
+         "tagline": "Mind the gap between stations.",
+         "thumb": "/library/metadata/17345/thumb/1784600993",
+         "art": "/library/metadata/17345/art/1784600993",
+         "duration": 8711648,
+         "originallyAvailableAt": "2000-12-22",
+         "addedAt": 1754854539,
+         "updatedAt": 1784600993,
+         "audienceRatingImage": "rottentomatoes://image.rating.upright",
+         "primaryExtraKey": "/library/metadata/17346",
+         "ratingImage": "rottentomatoes://image.rating.ripe",
+         "Media": [
+          {
+           "id": 34355,
+           "duration": 8711648,
+           "bitrate": 9824,
+           "width": 1920,
+           "height": 1080,
+           "aspectRatio": 1.78,
+           "audioChannels": 6,
+           "audioCodec": "eac3",
+           "videoCodec": "h264",
+           "videoResolution": "1080",
+           "container": "mkv",
+           "videoFrameRate": "24p",
+           "videoProfile": "high",
+           "hasVoiceActivity": false,
+           "Part": [
+            {
+             "id": 34355,
+             "key": "/library/parts/34355/1754854482/file.mkv",
+             "duration": 8711648,
+             "file": "REDACTED",
+             "size": 10698148808,
+             "container": "mkv",
+             "videoProfile": "high"
+            }
+           ]
+          }
+         ],
+         "Image": [
+          {
+           "alt": "Calm Waters",
+           "type": "coverPoster",
+           "url": "/library/metadata/17345/thumb/1784600993"
+          },
+          {
+           "alt": "Calm Waters",
+           "type": "background",
+           "url": "/library/metadata/17345/art/1784600993"
+          },
+          {
+           "alt": "Calm Waters",
+           "type": "clearLogo",
+           "url": "/library/metadata/17345/clearLogo/1784600993"
+          }
+         ],
+         "UltraBlurColors": {
+          "topLeft": "292629",
+          "topRight": "6b3423",
+          "bottomRight": "52201f",
+          "bottomLeft": "1a171c"
+         },
+         "Genre": [
+          {
+           "tag": "Adventure"
+          },
+          {
+           "tag": "Drama"
+          }
+         ],
+         "Country": [
+          {
+           "tag": "United States of America"
+          }
+         ],
+         "Director": [
+          {
+           "tag": "Della Rosswood"
+          }
+         ],
+         "Writer": [
+          {
+           "tag": "Nell Larkspur"
+          }
+         ],
+         "Role": [
+          {
+           "tag": "Ida Rosswood"
+          },
+          {
+           "tag": "Alba Dunmore"
+          },
+          {
+           "tag": "Bram Ashdown"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

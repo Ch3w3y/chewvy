@@ -1,0 +1,37 @@
+[package]
+name = "plex-core"
+description = "Display-free Plex client core: client identity, HTTP transport, PIN auth state machine, Plex API models, token storage."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+
+# No UI/display dependency is allowed here.
+# Enforced by tests/workspace_contract.rs::plex_core_has_no_display_or_ffi_dependency.
+[dependencies]
+ureq = { workspace = true }
+url = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+base64 = { workspace = true }
+# `log` 0.4.34 declares no default features (`std`/`alloc` are opt-in). This
+# crate calls `log::set_boxed_logger` (src/log.rs), which is gated behind
+# `alloc`, so the request must be explicit: without it `cargo build -p plex-core`
+# fails with E0425 and the crate only compiles because a *sibling* crate in a
+# whole-workspace build happens to enable `log/std`. `std` implies `alloc`.
+log = { workspace = true, features = ["std"] }
+xdg = { workspace = true }
+getrandom = { workspace = true }
+dirs-sys = { workspace = true }
+rustls = { workspace = true }
+rustls-native-certs = { workspace = true }
+zbus = { workspace = true }
+
+[dev-dependencies]
+tiny_http = { workspace = true }
+env_logger = { workspace = true }
+
+[lints]
+workspace = true

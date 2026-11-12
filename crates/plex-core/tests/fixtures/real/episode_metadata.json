@@ -1,0 +1,284 @@
+{
+ "MediaContainer": {
+  "size": 1,
+  "allowSync": true,
+  "identifier": "com.plexapp.plugins.library",
+  "librarySectionID": 1,
+  "librarySectionTitle": "TV Programmes",
+  "librarySectionUUID": "REDACTED",
+  "mediaTagPrefix": "/system/bundle/media/flags/",
+  "mediaTagVersion": 1787604119,
+  "Metadata": [
+   {
+    "ratingKey": "36100",
+    "key": "/library/metadata/36100",
+    "parentRatingKey": "36099",
+    "grandparentRatingKey": "35773",
+    "guid": "plex://episode/34cff55989bcaa2e2d3d635d",
+    "parentGuid": "plex://season/aa2300639d4f6d69bb37a805",
+    "grandparentGuid": "plex://show/292a394cf29f8c6c64fd7fd4",
+    "grandparentSlug": "the-404",
+    "type": "episode",
+    "title": "Pilot",
+    "grandparentKey": "/library/metadata/35773",
+    "parentKey": "/library/metadata/36099",
+    "librarySectionTitle": "TV Programmes",
+    "librarySectionID": 1,
+    "librarySectionKey": "/library/sections/1",
+    "grandparentTitle": "The 404",
+    "parentTitle": "Season 1",
+    "contentRating": "TV-14",
+    "summary": "A surveyor returns to the valley she left as a child and finds the maps no longer match the land. An apprentice archivist finds a ledger that records events a week before they happen.",
+    "index": 1,
+    "parentIndex": 1,
+    "audienceRating": 6.7,
+    "year": 2014,
+    "thumb": "/library/metadata/36100/thumb/1774055077",
+    "art": "/library/metadata/35773/art/1787107952",
+    "parentThumb": "/library/metadata/36099/thumb/1774015269",
+    "grandparentThumb": "/library/metadata/35773/thumb/1787107952",
+    "grandparentArt": "/library/metadata/35773/art/1787107952",
+    "grandparentTheme": "/library/metadata/35773/theme/1787107952",
+    "duration": 2476480,
+    "originallyAvailableAt": "2014-03-19",
+    "addedAt": 1774015267,
+    "updatedAt": 1774055077,
+    "audienceRatingImage": "themoviedb://image.rating",
+    "chapterSource": "media",
+    "Media": [
+     {
+      "id": 62023,
+      "duration": 2476480,
+      "bitrate": 19506,
+      "width": 1920,
+      "height": 1080,
+      "aspectRatio": 1.78,
+      "audioChannels": 6,
+      "audioCodec": "dca-ma",
+      "videoCodec": "h264",
+      "videoResolution": "1080",
+      "container": "mkv",
+      "videoFrameRate": "24p",
+      "audioProfile": "ma",
+      "videoProfile": "high",
+      "hasVoiceActivity": false,
+      "Part": [
+       {
+        "id": 62023,
+        "key": "/library/parts/62023/1644270344/file.mkv",
+        "duration": 2476480,
+        "file": "REDACTED",
+        "size": 6038236088,
+        "audioProfile": "ma",
+        "container": "mkv",
+        "videoProfile": "high",
+        "Stream": [
+         {
+          "id": 293926,
+          "streamType": 1,
+          "default": true,
+          "codec": "h264",
+          "index": 0,
+          "bitrate": 19506,
+          "language": "English",
+          "languageTag": "en",
+          "languageCode": "eng",
+          "bitDepth": 8,
+          "chromaLocation": "left",
+          "chromaSubsampling": "4:2:0",
+          "codedHeight": 1088,
+          "codedWidth": 1920,
+          "frameRate": 23.976,
+          "hasScalingMatrix": false,
+          "height": 1080,
+          "level": 41,
+          "profile": "high",
+          "refFrames": 2,
+          "scanType": "progressive",
+          "title": "MPEG-4 AVC Video / 16915 kbps / 1080p / 23.976 fps / 16:9 / High Profile 4.1",
+          "width": 1920,
+          "displayTitle": "1080p",
+          "extendedDisplayTitle": "MPEG-4 AVC Video / 16915 kbps / 1080p / 23.976 fps / 16:9 / High Profile 4.1"
+         },
+         {
+          "id": 293927,
+          "streamType": 2,
+          "canNormalizeLoudness": false,
+          "selected": true,
+          "default": true,
+          "codec": "dca",
+          "index": 1,
+          "channels": 6,
+          "bitrate": 2313,
+          "language": "English",
+          "languageTag": "en",
+          "languageCode": "eng",
+          "audioChannelLayout": "5.1(side)",
+          "bitDepth": 16,
+          "profile": "ma",
+          "samplingRate": 48000,
+          "title": "DTS-HD Master Audio / 5.1 / 48 kHz / 2314 kbps / 16-bit (DTS Core: 5.1 / 48 kHz / 1509 kbps / 16-bit)",
+          "displayTitle": "English (DTS-HD MA 5.1)",
+          "extendedDisplayTitle": "DTS-HD Master Audio / 5.1 / 48 kHz / 2314 kbps / 16-bit (DTS Core: 5.1 / 48 kHz / 1509 kbps / 16-bit) (English)"
+         },
+         {
+          "id": 293928,
+          "streamType": 3,
+          "canAutoSync": false,
+          "default": true,
+          "codec": "srt",
+          "index": 2,
+          "bitrate": 0,
+          "language": "English",
+          "languageTag": "en",
+          "languageCode": "eng",
+          "title": "English",
+          "displayTitle": "English",
+          "extendedDisplayTitle": "English (SRT)"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "Image": [
+     {
+      "alt": "Pilot",
+      "type": "coverPoster",
+      "url": "/library/metadata/35773/thumb/1787107952"
+     },
+     {
+      "alt": "Pilot",
+      "type": "snapshot",
+      "url": "/library/metadata/36100/thumb/1774055077"
+     },
+     {
+      "alt": "Pilot",
+      "type": "background",
+      "url": "/library/metadata/35773/art/1787107952"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "482115",
+     "topRight": "121213",
+     "bottomRight": "202321",
+     "bottomLeft": "232423"
+    },
+    "Guid": [
+     {
+      "id": "imdb://tt2341280"
+     },
+     {
+      "id": "tmdb://941767"
+     },
+     {
+      "id": "tvdb://2539071"
+     }
+    ],
+    "Rating": [
+     {
+      "image": "imdb://image.rating",
+      "value": 7.3,
+      "type": "audience"
+     },
+     {
+      "image": "themoviedb://image.rating",
+      "value": 6.7,
+      "type": "audience"
+     }
+    ],
+    "Director": [
+     {
+      "id": 191818,
+      "filter": "director=191818",
+      "tag": "Dag Halloran",
+      "tagKey": "071eca8eb313aad90735d5b1",
+      "thumb": "https://metadata-static.plex.tv/b/people/b0ebb4982418235ac474ec5d9673c6b3.jpg"
+     }
+    ],
+    "Writer": [
+     {
+      "id": 190676,
+      "filter": "writer=190676",
+      "tag": "Kai Ravenscroft",
+      "tagKey": "fb0a04e98f20550d30b69ddd",
+      "thumb": "https://metadata-static.plex.tv/5/people/5191cbebcb704be18b32324c98ada7db.jpg"
+     }
+    ],
+    "Role": [
+     {
+      "id": 190629,
+      "filter": "actor=190629",
+      "tag": "Milo Larkspur",
+      "tagKey": "d51ece5db58a26ef103a8e1d",
+      "role": "Mara Pemberton",
+      "thumb": "https://metadata-static.plex.tv/a/people/af152b1e5439f7fac4446ecc9593f13c.jpg"
+     },
+     {
+      "id": 44179,
+      "filter": "actor=44179",
+      "tag": "Mara Ravenscroft",
+      "tagKey": "a8c7cd336ee084fbe318b035",
+      "role": "Rhea Rosswood",
+      "thumb": "https://metadata-static.plex.tv/7/people/79709001a59a5d228b7ee3b47d1a64f8.jpg"
+     },
+     {
+      "id": 72232,
+      "filter": "actor=72232",
+      "tag": "Lior Underhill",
+      "tagKey": "89564fdc04e8335ca31e1cda",
+      "role": "Alba Dunmore",
+      "thumb": "https://metadata-static.plex.tv/7/people/79deff384b3f62df357246890bd77234.jpg"
+     }
+    ],
+    "Producer": [
+     {
+      "id": 190678,
+      "filter": "producer=190678",
+      "tag": "Anton Fairweather",
+      "tagKey": "12b4bb7be380f382eff06cbf"
+     }
+    ],
+    "Chapter": [
+     {
+      "id": 121,
+      "filter": "thumb=121",
+      "index": 1,
+      "startTimeOffset": 0,
+      "endTimeOffset": 162662,
+      "thumb": "/library/media/62023/chapterImages/1"
+     },
+     {
+      "id": 121,
+      "filter": "thumb=121",
+      "index": 2,
+      "startTimeOffset": 162662,
+      "endTimeOffset": 609108,
+      "thumb": "/library/media/62023/chapterImages/2"
+     },
+     {
+      "id": 121,
+      "filter": "thumb=121",
+      "index": 3,
+      "startTimeOffset": 609108,
+      "endTimeOffset": 1067320,
+      "thumb": "/library/media/62023/chapterImages/3"
+     }
+    ],
+    "Marker": [
+     {
+      "final": true,
+      "id": 8,
+      "type": "credits",
+      "startTimeOffset": 2450832,
+      "endTimeOffset": 2476480,
+      "Attributes": {
+       "id": 8,
+       "version": 4
+      }
+     }
+    ]
+   }
+  ]
+ }
+}

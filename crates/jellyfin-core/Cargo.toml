@@ -1,0 +1,23 @@
+[package]
+name = "jellyfin-core"
+description = "Display-free Jellyfin client core: device identity, MediaBrowser authorization, server info, Quick Connect, password sign-in, ticks, LAN discovery."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+
+# No UI/display dependency is allowed here (same contract as plex-core).
+[dependencies]
+plex-core = { workspace = true }
+ureq = { workspace = true }
+url = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tiny_http = { workspace = true }
+
+[lints]
+workspace = true

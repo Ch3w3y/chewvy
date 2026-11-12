@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- The Chewvy mark: a snow-tipped peak under one star, on a night sky. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#141a3d"/>
+      <stop offset="0.62" stop-color="#3a2a78"/>
+      <stop offset="1" stop-color="#16314a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.68" cy="0.3" r="0.6">
+      <stop offset="0" stop-color="#38e1b8" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#38e1b8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="12" y="12" width="232" height="232" rx="52" fill="url(#sky)"/>
+  <rect x="12" y="12" width="232" height="232" rx="52" fill="url(#glow)"/>
+  <g fill="none" stroke-linejoin="round" stroke-linecap="round" stroke-width="14">
+    <path d="M43 194 L105 92 L139 138 L158 114 L223 194 Z" stroke="#f1f3ff"/>
+    <path d="M88 120 L105 92 L123 116" stroke="#38e1b8"/>
+  </g>
+  <circle cx="180" cy="62" r="14" fill="#38e1b8"/>
+</svg>

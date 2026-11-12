@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Chewvy
+GenericName=Media Player
+Comment=Browse and play your Plex and Jellyfin libraries
+Exec=chewvy
+Icon=io.github.ch3w3y.chewvy
+Terminal=false
+Categories=AudioVideo;Video;Player;
+Keywords=media;video;film;tv;plex;jellyfin;
+StartupWMClass=io.github.ch3w3y.chewvy

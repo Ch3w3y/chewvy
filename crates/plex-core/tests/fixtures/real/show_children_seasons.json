@@ -1,0 +1,180 @@
+{
+ "MediaContainer": {
+  "size": 8,
+  "allowSync": true,
+  "art": "/library/metadata/35773/art/1787107952",
+  "identifier": "com.plexapp.plugins.library",
+  "key": "35773",
+  "librarySectionID": 1,
+  "librarySectionTitle": "TV Programmes",
+  "librarySectionUUID": "REDACTED",
+  "mediaTagPrefix": "/system/bundle/media/flags/",
+  "mediaTagVersion": 1787604119,
+  "nocache": true,
+  "parentIndex": 1,
+  "parentTitle": "The 404",
+  "parentYear": 2014,
+  "summary": "A surveyor returns to the valley she left as a child and finds the maps no longer match the land. An apprentice archivist finds a ledger that records events a week before they happen. The crew of a salvage tug answers a distress call from a ship that sank forty years earlier. The answer, when it comes, is stranger and kinder than anyone expected.",
+  "theme": "/library/metadata/35773/theme/1787107952",
+  "thumb": "/library/metadata/35773/thumb/1787107952",
+  "title1": "TV Programmes",
+  "title2": "The 404",
+  "viewGroup": "season",
+  "viewMode": 65593,
+  "Directory": [
+   {
+    "leafCount": 100,
+    "thumb": "/library/metadata/35773/thumb/1787107952",
+    "viewedLeafCount": 0,
+    "key": "/library/metadata/35773/allLeaves",
+    "title": "All episodes"
+   }
+  ],
+  "Metadata": [
+   {
+    "ratingKey": "36099",
+    "key": "/library/metadata/36099/children",
+    "parentRatingKey": "35773",
+    "guid": "plex://season/aa2300639d4f6d69bb37a805",
+    "parentGuid": "plex://show/292a394cf29f8c6c64fd7fd4",
+    "parentSlug": "the-404",
+    "parentStudio": "Stonecrop Television",
+    "type": "season",
+    "title": "Season 1",
+    "parentKey": "/library/metadata/35773",
+    "parentTitle": "The 404",
+    "summary": "When the night train stops between stations, its passengers discover that nobody remembers boarding. A weather station at the edge of the ice begins receiving forecasts for a town that was never built. What begins as a quiet inquiry becomes a race across the marshes before the tide comes in. Two rival lighthouse keepers are forced to share one lamp through the longest winter on record. Three siblings inherit a hotel with one more room than its floor plan allows.",
+    "index": 1,
+    "parentIndex": 1,
+    "parentYear": 2014,
+    "thumb": "/library/metadata/36099/thumb/1774015269",
+    "art": "/library/metadata/35773/art/1787107952",
+    "parentThumb": "/library/metadata/35773/thumb/1787107952",
+    "parentTheme": "/library/metadata/35773/theme/1787107952",
+    "leafCount": 13,
+    "viewedLeafCount": 0,
+    "addedAt": 1774015267,
+    "updatedAt": 1774015269,
+    "Image": [
+     {
+      "alt": "Season 1",
+      "type": "coverPoster",
+      "url": "/library/metadata/36099/thumb/1774015269"
+     },
+     {
+      "alt": "Season 1",
+      "type": "background",
+      "url": "/library/metadata/35773/art/1787107952"
+     },
+     {
+      "alt": "Season 1",
+      "type": "clearLogo",
+      "url": "/library/metadata/35773/clearLogo/1787107952"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "113338",
+     "topRight": "242b2d",
+     "bottomRight": "204e63",
+     "bottomLeft": "071b25"
+    }
+   },
+   {
+    "ratingKey": "35774",
+    "key": "/library/metadata/35774/children",
+    "parentRatingKey": "35773",
+    "guid": "plex://season/ba572478fda1ba65f81f5f11",
+    "parentGuid": "plex://show/292a394cf29f8c6c64fd7fd4",
+    "parentSlug": "the-404",
+    "parentStudio": "Stonecrop Television",
+    "type": "season",
+    "title": "Season 2",
+    "parentKey": "/library/metadata/35773",
+    "parentTitle": "The 404",
+    "summary": "Old loyalties are tested, and not everyone who set out will see the far shore. When the night train stops between stations, its passengers discover that nobody remembers boarding. A weather station at the edge of the ice begins receiving forecasts for a town that was never built. What begins as a quiet inquiry becomes a race across the marshes before the tide comes in. Two rival lighthouse keepers are forced to share one lamp through the longest winter on record.",
+    "index": 2,
+    "parentIndex": 1,
+    "parentYear": 2014,
+    "thumb": "/library/metadata/35774/thumb/1773779570",
+    "art": "/library/metadata/35773/art/1787107952",
+    "parentThumb": "/library/metadata/35773/thumb/1787107952",
+    "parentTheme": "/library/metadata/35773/theme/1787107952",
+    "leafCount": 16,
+    "viewedLeafCount": 0,
+    "addedAt": 1773779564,
+    "updatedAt": 1773779570,
+    "Image": [
+     {
+      "alt": "Season 2",
+      "type": "coverPoster",
+      "url": "/library/metadata/35774/thumb/1773779570"
+     },
+     {
+      "alt": "Season 2",
+      "type": "background",
+      "url": "/library/metadata/35773/art/1787107952"
+     },
+     {
+      "alt": "Season 2",
+      "type": "clearLogo",
+      "url": "/library/metadata/35773/clearLogo/1787107952"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "30210b",
+     "topRight": "0f0202",
+     "bottomRight": "2d250c",
+     "bottomLeft": "7f522a"
+    }
+   },
+   {
+    "ratingKey": "35791",
+    "key": "/library/metadata/35791/children",
+    "parentRatingKey": "35773",
+    "guid": "plex://season/ffe64292b0869566837746fe",
+    "parentGuid": "plex://show/292a394cf29f8c6c64fd7fd4",
+    "parentSlug": "the-404",
+    "parentStudio": "Stonecrop Television",
+    "type": "season",
+    "title": "Season 3",
+    "parentKey": "/library/metadata/35773",
+    "parentTitle": "The 404",
+    "summary": "The answer, when it comes, is stranger and kinder than anyone expected. The last ferry of the season leaves without its captain, and the crossing takes far longer than it should. A night-shift radio host keeps taking calls from a listener who knows what the next song will be. Nothing in the town is quite what the visitors were promised. A retired clockmaker is asked to repair a machine that should not be able to keep time at all.",
+    "index": 3,
+    "parentIndex": 1,
+    "parentYear": 2014,
+    "thumb": "/library/metadata/35791/thumb/1773783427",
+    "art": "/library/metadata/35773/art/1787107952",
+    "parentThumb": "/library/metadata/35773/thumb/1787107952",
+    "parentTheme": "/library/metadata/35773/theme/1787107952",
+    "leafCount": 16,
+    "viewedLeafCount": 0,
+    "addedAt": 1773783424,
+    "updatedAt": 1773783427,
+    "Image": [
+     {
+      "alt": "Season 3",
+      "type": "coverPoster",
+      "url": "/library/metadata/35791/thumb/1773783427"
+     },
+     {
+      "alt": "Season 3",
+      "type": "background",
+      "url": "/library/metadata/35773/art/1787107952"
+     },
+     {
+      "alt": "Season 3",
+      "type": "clearLogo",
+      "url": "/library/metadata/35773/clearLogo/1787107952"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "282f31",
+     "topRight": "424c52",
+     "bottomRight": "1e2120",
+     "bottomLeft": "41444b"
+    }
+   }
+  ]
+ }
+}

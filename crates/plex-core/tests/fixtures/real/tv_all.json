@@ -1,0 +1,246 @@
+{
+ "MediaContainer": {
+  "size": 3,
+  "totalSize": 222,
+  "offset": 0,
+  "allowSync": true,
+  "art": "/:/resources/show-fanart.jpg",
+  "identifier": "com.plexapp.plugins.library",
+  "librarySectionID": 1,
+  "librarySectionTitle": "TV Programmes",
+  "librarySectionUUID": "REDACTED",
+  "mediaTagPrefix": "/system/bundle/media/flags/",
+  "mediaTagVersion": 1787604119,
+  "nocache": true,
+  "thumb": "/:/resources/show.png",
+  "title1": "TV Programmes",
+  "title2": "All Shows",
+  "viewGroup": "show",
+  "viewMode": 65592,
+  "Metadata": [
+   {
+    "ratingKey": "35773",
+    "key": "/library/metadata/35773/children",
+    "guid": "plex://show/292a394cf29f8c6c64fd7fd4",
+    "slug": "the-404",
+    "studio": "Stonecrop Television",
+    "type": "show",
+    "title": "The 404",
+    "titleSort": "404",
+    "contentRating": "TV-14",
+    "contentRatingAge": 15,
+    "summary": "A surveyor returns to the valley she left as a child and finds the maps no longer match the land. An apprentice archivist finds a ledger that records events a week before they happen. The crew of a salvage tug answers a distress call from a ship that sank forty years earlier. The answer, when it comes, is stranger and kinder than anyone expected.",
+    "index": 1,
+    "audienceRating": 7.9,
+    "year": 2014,
+    "tagline": "The ledger is never wrong. (season 1)",
+    "thumb": "/library/metadata/35773/thumb/1787107952",
+    "art": "/library/metadata/35773/art/1787107952",
+    "theme": "/library/metadata/35773/theme/1787107952",
+    "duration": 2520000,
+    "originallyAvailableAt": "2014-03-19",
+    "leafCount": 100,
+    "viewedLeafCount": 0,
+    "childCount": 7,
+    "addedAt": 1773779564,
+    "updatedAt": 1787107952,
+    "audienceRatingImage": "themoviedb://image.rating",
+    "Image": [
+     {
+      "alt": "The 404",
+      "type": "coverPoster",
+      "url": "/library/metadata/35773/thumb/1787107952"
+     },
+     {
+      "alt": "The 404",
+      "type": "background",
+      "url": "/library/metadata/35773/art/1787107952"
+     },
+     {
+      "alt": "The 404",
+      "type": "clearLogo",
+      "url": "/library/metadata/35773/clearLogo/1787107952"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "4a200b",
+     "topRight": "79350b",
+     "bottomRight": "253b6c",
+     "bottomLeft": "1b1f27"
+    },
+    "Genre": [
+     {
+      "tag": "Drama"
+     },
+     {
+      "tag": "Mystery"
+     }
+    ],
+    "Country": [
+     {
+      "tag": "United States of America"
+     }
+    ],
+    "Role": [
+     {
+      "tag": "Milo Larkspur"
+     },
+     {
+      "tag": "Mara Ravenscroft"
+     },
+     {
+      "tag": "Lior Underhill"
+     }
+    ]
+   },
+   {
+    "ratingKey": "1",
+    "key": "/library/metadata/1/children",
+    "guid": "plex://show/5ead188d9e45b03e4854cc15",
+    "slug": "aphelion-ember",
+    "studio": "Bluebird Reel",
+    "type": "show",
+    "title": "Aphelion: Ember",
+    "contentRating": "TV-MA",
+    "contentRatingAge": 15,
+    "summary": "A night-shift radio host keeps taking calls from a listener who knows what the next song will be. Nothing in the town is quite what the visitors were promised. A retired clockmaker is asked to repair a machine that should not be able to keep time at all.",
+    "index": 1,
+    "audienceRating": 7.3,
+    "year": 2025,
+    "tagline": "Keep to the marked path.",
+    "thumb": "/library/metadata/1/thumb/1786675382",
+    "art": "/library/metadata/1/art/1786675382",
+    "duration": 3300000,
+    "originallyAvailableAt": "2025-08-12",
+    "leafCount": 8,
+    "viewedLeafCount": 0,
+    "childCount": 1,
+    "addedAt": 1754243051,
+    "updatedAt": 1786675382,
+    "audienceRatingImage": "themoviedb://image.rating",
+    "primaryExtraKey": "/library/metadata/6",
+    "Image": [
+     {
+      "alt": "Aphelion: Ember",
+      "type": "coverPoster",
+      "url": "/library/metadata/1/thumb/1786675382"
+     },
+     {
+      "alt": "Aphelion: Ember",
+      "type": "background",
+      "url": "/library/metadata/1/art/1786675382"
+     },
+     {
+      "alt": "Aphelion: Ember",
+      "type": "clearLogo",
+      "url": "/library/metadata/1/clearLogo/1786675382"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "022d5b",
+     "topRight": "13435e",
+     "bottomRight": "0a2f4b",
+     "bottomLeft": "13545f"
+    },
+    "Genre": [
+     {
+      "tag": "Drama"
+     },
+     {
+      "tag": "Horror"
+     }
+    ],
+    "Country": [
+     {
+      "tag": "United States of America"
+     }
+    ],
+    "Role": [
+     {
+      "tag": "Mara Zielinski"
+     },
+     {
+      "tag": "Juno Dunmore"
+     },
+     {
+      "tag": "Vera Marlowe"
+     }
+    ]
+   },
+   {
+    "ratingKey": "31229",
+    "key": "/library/metadata/31229/children",
+    "guid": "plex://show/b06d5c4c3623c67190edfef7",
+    "slug": "all-his-folly",
+    "studio": "Umbra Works",
+    "type": "show",
+    "title": "All His Folly",
+    "contentRating": "TV-MA",
+    "contentRatingAge": 14,
+    "summary": "Three siblings inherit a hotel with one more room than its floor plan allows. A stage magician's assistant realises the trick only works because someone in the audience is helping. A surveyor returns to the valley she left as a child and finds the maps no longer match the land. An apprentice archivist finds a ledger that records events a week before they happen. The crew of a salvage tug answers a distress call from a ship that sank forty years earlier.",
+    "index": 1,
+    "audienceRating": 8.0,
+    "year": 2025,
+    "tagline": "Somebody is still listening.",
+    "thumb": "/library/metadata/31229/thumb/1788494767",
+    "art": "/library/metadata/31229/art/1788494767",
+    "duration": 3600000,
+    "originallyAvailableAt": "2025-11-05",
+    "leafCount": 8,
+    "viewedLeafCount": 0,
+    "childCount": 1,
+    "addedAt": 1763664563,
+    "updatedAt": 1788494767,
+    "audienceRatingImage": "themoviedb://image.rating",
+    "primaryExtraKey": "/library/metadata/31232",
+    "Image": [
+     {
+      "alt": "All His Folly",
+      "type": "coverPoster",
+      "url": "/library/metadata/31229/thumb/1788494767"
+     },
+     {
+      "alt": "All His Folly",
+      "type": "background",
+      "url": "/library/metadata/31229/art/1788494767"
+     },
+     {
+      "alt": "All His Folly",
+      "type": "clearLogo",
+      "url": "/library/metadata/31229/clearLogo/1788494767"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "2f2526",
+     "topRight": "8f3d42",
+     "bottomRight": "4b1f19",
+     "bottomLeft": "582520"
+    },
+    "Genre": [
+     {
+      "tag": "Mystery"
+     },
+     {
+      "tag": "Crime"
+     }
+    ],
+    "Country": [
+     {
+      "tag": "United Kingdom"
+     }
+    ],
+    "Role": [
+     {
+      "tag": "Ida Okonjo"
+     },
+     {
+      "tag": "Milo Carrow"
+     },
+     {
+      "tag": "Enid Easterly"
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,249 @@
+{
+ "MediaContainer": {
+  "size": 2,
+  "totalSize": 1654,
+  "offset": 0,
+  "allowSync": true,
+  "art": "/:/resources/movie-fanart.jpg",
+  "identifier": "com.plexapp.plugins.library",
+  "librarySectionID": 2,
+  "librarySectionTitle": "Films",
+  "librarySectionUUID": "REDACTED",
+  "mediaTagPrefix": "/system/bundle/media/flags/",
+  "mediaTagVersion": 1787604119,
+  "thumb": "/:/resources/movie.png",
+  "title1": "Films",
+  "title2": "All Films",
+  "viewGroup": "movie",
+  "viewMode": 65592,
+  "Metadata": [
+   {
+    "ratingKey": "43718",
+    "key": "/library/metadata/43718",
+    "guid": "plex://movie/c5f1f64b8f2fa5b5d4120139",
+    "slug": "the-cellar-the-storm-made-me-do-it",
+    "studio": "Mistral Productions",
+    "type": "movie",
+    "title": "The Cellar: The Storm Made Me Do It",
+    "titleSort": "Cellar: The Storm Made Me Do It",
+    "contentRating": "gb/15",
+    "contentRatingAge": 16,
+    "summary": "A weather station at the edge of the ice begins receiving forecasts for a town that was never built. What begins as a quiet inquiry becomes a race across the marshes before the tide comes in. Two rival lighthouse keepers are forced to share one lamp through the longest winter on record. Three siblings inherit a hotel with one more room than its floor plan allows. A stage magician's assistant realises the trick only works because someone in the audience is helping.",
+    "rating": 5.6,
+    "audienceRating": 8.3,
+    "year": 2021,
+    "tagline": "Listen for the second bell.",
+    "thumb": "/library/metadata/43718/thumb/1789252742",
+    "art": "/library/metadata/43718/art/1789252742",
+    "duration": 6710144,
+    "originallyAvailableAt": "2021-05-26",
+    "addedAt": 1789252738,
+    "updatedAt": 1789252742,
+    "audienceRatingImage": "rottentomatoes://image.rating.upright",
+    "primaryExtraKey": "/library/metadata/43719",
+    "ratingImage": "rottentomatoes://image.rating.rotten",
+    "Media": [
+     {
+      "id": 74962,
+      "duration": 6710144,
+      "bitrate": 11404,
+      "width": 3840,
+      "height": 1600,
+      "aspectRatio": 2.35,
+      "audioChannels": 6,
+      "audioCodec": "eac3",
+      "videoCodec": "hevc",
+      "videoResolution": "4k",
+      "container": "mkv",
+      "videoFrameRate": "24p",
+      "audioProfile": "dolby digital plus + dolby atmos",
+      "videoProfile": "main 10",
+      "hasVoiceActivity": false,
+      "Part": [
+       {
+        "id": 74962,
+        "key": "/library/parts/74962/1789252642/file.mkv",
+        "duration": 6710144,
+        "file": "REDACTED",
+        "size": 9565115348,
+        "audioProfile": "dolby digital plus + dolby atmos",
+        "container": "mkv",
+        "videoProfile": "main 10"
+       }
+      ]
+     }
+    ],
+    "Image": [
+     {
+      "alt": "The Cellar: The Storm Made Me Do It",
+      "type": "coverPoster",
+      "url": "/library/metadata/43718/thumb/1789252742"
+     },
+     {
+      "alt": "The Cellar: The Storm Made Me Do It",
+      "type": "background",
+      "url": "/library/metadata/43718/art/1789252742"
+     },
+     {
+      "alt": "The Cellar: The Storm Made Me Do It",
+      "type": "clearLogo",
+      "url": "/library/metadata/43718/clearLogo/1789252742"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "150403",
+     "topRight": "1b0604",
+     "bottomRight": "31100b",
+     "bottomLeft": "11030c"
+    },
+    "Genre": [
+     {
+      "tag": "Horror"
+     },
+     {
+      "tag": "Mystery"
+     }
+    ],
+    "Country": [
+     {
+      "tag": "United States of America"
+     }
+    ],
+    "Director": [
+     {
+      "tag": "Pia Ravenscroft"
+     }
+    ],
+    "Writer": [
+     {
+      "tag": "Ida Sternhagen"
+     },
+     {
+      "tag": "Della Zielinski"
+     }
+    ],
+    "Role": [
+     {
+      "tag": "Ines Whitlock"
+     },
+     {
+      "tag": "Juno Fairweather"
+     },
+     {
+      "tag": "Finn Halloran"
+     }
+    ]
+   },
+   {
+    "ratingKey": "43674",
+    "key": "/library/metadata/43674",
+    "guid": "plex://movie/106d9cc219994c8fbc5f7c48",
+    "slug": "the-history-of-gravel",
+    "studio": "Ninth Lamp",
+    "type": "movie",
+    "title": "The History of Gravel",
+    "titleSort": "History of Gravel",
+    "contentRating": "Not Rated",
+    "summary": "Three siblings inherit a hotel with one more room than its floor plan allows. A stage magician's assistant realises the trick only works because someone in the audience is helping.",
+    "rating": 9.8,
+    "audienceRating": 9.3,
+    "year": 2026,
+    "thumb": "/library/metadata/43674/thumb/1789186911",
+    "art": "/library/metadata/43674/art/1789186911",
+    "duration": 6067264,
+    "originallyAvailableAt": "2026-11-27",
+    "addedAt": 1788933530,
+    "updatedAt": 1789186911,
+    "audienceRatingImage": "rottentomatoes://image.rating.upright",
+    "primaryExtraKey": "/library/metadata/43675",
+    "ratingImage": "rottentomatoes://image.rating.ripe",
+    "Media": [
+     {
+      "id": 74861,
+      "duration": 6067264,
+      "bitrate": 9908,
+      "width": 1920,
+      "height": 1080,
+      "aspectRatio": 1.78,
+      "audioChannels": 6,
+      "audioCodec": "eac3",
+      "videoCodec": "h264",
+      "videoResolution": "1080",
+      "container": "mkv",
+      "videoFrameRate": "NTSC",
+      "videoProfile": "high",
+      "hasVoiceActivity": false,
+      "Part": [
+       {
+        "id": 74861,
+        "key": "/library/parts/74861/1788933441/file.mkv",
+        "duration": 6067264,
+        "file": "REDACTED",
+        "size": 7516158454,
+        "container": "mkv",
+        "videoProfile": "high"
+       }
+      ]
+     }
+    ],
+    "Image": [
+     {
+      "alt": "The History of Gravel",
+      "type": "coverPoster",
+      "url": "/library/metadata/43674/thumb/1789186911"
+     },
+     {
+      "alt": "The History of Gravel",
+      "type": "background",
+      "url": "/library/metadata/43674/art/1789186911"
+     },
+     {
+      "alt": "The History of Gravel",
+      "type": "clearLogo",
+      "url": "/library/metadata/43674/clearLogo/1789186911"
+     }
+    ],
+    "UltraBlurColors": {
+     "topLeft": "5c0302",
+     "topRight": "2c657d",
+     "bottomRight": "3e6a40",
+     "bottomLeft": "aa201a"
+    },
+    "Genre": [
+     {
+      "tag": "Documentary"
+     },
+     {
+      "tag": "Comedy"
+     }
+    ],
+    "Country": [
+     {
+      "tag": "United States of America"
+     }
+    ],
+    "Director": [
+     {
+      "tag": "Eli Jessop"
+     }
+    ],
+    "Writer": [
+     {
+      "tag": "Eli Jessop"
+     }
+    ],
+    "Role": [
+     {
+      "tag": "Eli Jessop"
+     },
+     {
+      "tag": "Bea Fairweather"
+     },
+     {
+      "tag": "Una Hawksworth"
+     }
+    ]
+   }
+  ]
+ }
+}

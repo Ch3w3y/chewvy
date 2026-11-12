@@ -1,0 +1,23 @@
+{
+  "MediaContainer": {
+    "size": 3,
+    "totalSize": 3,
+    "Directory": [
+      {
+        "key": "/library/sections/1",
+        "title": "Sample Movies",
+        "type": "movie"
+      },
+      {
+        "key": "/library/sections/2",
+        "title": "Sample Shows",
+        "type": "show"
+      },
+      {
+        "key": "/library/sections/3",
+        "title": "Sample Photos",
+        "type": "photo"
+      }
+    ]
+  }
+}

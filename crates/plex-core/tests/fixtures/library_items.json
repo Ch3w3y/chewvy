@@ -1,0 +1,47 @@
+{
+  "MediaContainer": {
+    "size": 2,
+    "totalSize": 2,
+    "start": 0,
+    "Metadata": [
+      {
+        "ratingKey": "10",
+        "key": "/library/metadata/10",
+        "type": "movie",
+        "title": "Sample Generated Movie",
+        "duration": 600000,
+        "addedAt": 1700000000,
+        "Part": [
+          {
+            "key": "/library/parts/10/1/file.mkv",
+            "container": "mkv",
+            "protocol": "http",
+            "size": 1048576
+          },
+          {
+            "key": "/library/parts/11/1/file.mp4",
+            "container": "mp4",
+            "protocol": "https",
+            "size": 524288
+          }
+        ]
+      },
+      {
+        "ratingKey": "11",
+        "key": "/library/metadata/11",
+        "type": "movie",
+        "title": "Second Sample Generated Movie",
+        "duration": 300000,
+        "addedAt": 1700000100,
+        "Part": [
+          {
+            "key": "/library/parts/12/1/file.m4v",
+            "container": "m4v",
+            "protocol": "http",
+            "size": 262144
+          }
+        ]
+      }
+    ]
+  }
+}
