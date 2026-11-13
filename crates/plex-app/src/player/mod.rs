@@ -128,6 +128,8 @@ pub struct Player {
     repaint: egui::Context,
     request: PlayRequest,
     ended: Option<Ended>,
+    /// A key in the HDR window asked for the next episode.
+    next_asked: bool,
     snapshot: Snapshot,
     slow_poll: Option<Instant>,
     restart: Option<f64>,
@@ -330,6 +332,14 @@ impl Player {
         let (load, loading_since) = if output.is_hdr_window() {
             mpv.command_sync(&["loadfile", &request.source])
                 .map_err(|_| format!("“{}” could not be opened", request.title))?;
+            if request.next.is_some() {
+                let ask = format!("set {} yes", hdr::NEXT_ASKED);
+                for key in hdr::NEXT_KEYS {
+                    if let Err(e) = mpv.command_sync(&["keybind", key, &ask]) {
+                        log::debug!("mpv would not bind {key}: {e}");
+                    }
+                }
+            }
             (LoadState::Loading, Some(Instant::now()))
         } else {
             (LoadState::Pending, None)
@@ -351,6 +361,7 @@ impl Player {
             undecoded_polls: 0,
             loading_since,
             ended: None,
+            next_asked: false,
             request,
         })
     }
@@ -452,6 +463,10 @@ impl Player {
             self.slow_poll = Some(now);
         }
         self.snapshot.refresh(&self.mpv, slow);
+        if self.output.is_hdr_window() && hdr::asked(self.mpv.get_str(hdr::NEXT_ASKED).as_deref()) {
+            self.set(hdr::NEXT_ASKED, "no");
+            self.next_asked = true;
+        }
         if self.request.session.is_some() {
             self.snapshot.duration = self.request.duration.or(self.snapshot.duration);
             let origin = self.request.origin;
@@ -548,6 +563,18 @@ impl Player {
     #[must_use]
     pub fn ended(&self) -> Option<&Ended> {
         self.ended.as_ref()
+    }
+
+    /// Whether a key in the HDR window asked for the next episode since the
+    /// last call.
+    pub fn take_next_asked(&mut self) -> bool {
+        std::mem::take(&mut self.next_asked)
+    }
+
+    /// Show `text` over the picture for `time`. Only the HDR window has no
+    /// other place for a message: this window draws its own.
+    pub fn show_text(&self, text: &str, time: Duration) {
+        self.cmd(&["show-text", text, &time.as_millis().to_string()]);
     }
 
     /// Clear a `Finished` state after the user seeks back into the item.

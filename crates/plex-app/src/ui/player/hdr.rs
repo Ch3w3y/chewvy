@@ -51,7 +51,11 @@ pub(super) fn card(root: &mut egui::Ui, screen: Rect, p: &Player) -> Option<Acti
     painter.text(
         rect.center_top() + vec2(0.0, 62.0),
         Align2::CENTER_TOP,
-        "Space pauses there, F toggles full screen, Q closes it.",
+        if p.request().next.is_some() {
+            "Space pauses there, N plays the next episode, Q closes it."
+        } else {
+            "Space pauses there, F toggles full screen, Q closes it."
+        },
         theme::body(),
         theme::SECONDARY,
     );

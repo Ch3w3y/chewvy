@@ -8,8 +8,8 @@ use egui::{pos2, vec2, Color32, CornerRadius, Painter, Pos2, Rect, Sense};
 use plex_core::library::{Item, Media};
 
 use super::{
-    backdrop, episode_heading, logo, pill_text, play_target, runtime, version_badges, Action, Page,
-    Target,
+    ancestors, backdrop, episode_heading, logo, pill_text, play_target, runtime, version_badges,
+    Action, Ancestor, Page, Target,
 };
 use crate::source::Origin;
 use crate::ui::overlay::{self, Heading, BUTTON};
@@ -111,6 +111,13 @@ fn column_block(
         width,
     );
     let mut y = origin.y;
+    let mut action = None;
+    let above = ancestors(item);
+    if !above.is_empty() {
+        let (height, clicked) = ancestor_links(ui, pos2(origin.x, y), &above);
+        action = clicked;
+        y += height + 12.0;
+    }
     let heading_height = heading.height();
     heading.paint(&painter, pos2(origin.x, y));
     y += heading_height + 16.0;
@@ -140,14 +147,59 @@ fn column_block(
         overlay::shadowed(&painter, pos2(origin.x, y), galley);
         y += height + 20.0;
     }
-    let action = match play_target(page) {
-        Some(target) => buttons(ui, pos2(origin.x, y), page, target, playing),
-        None => None,
-    };
+    if let Some(target) = play_target(page) {
+        action = action.or(buttons(ui, pos2(origin.x, y), page, target, playing));
+    }
     if play_target(page).is_some() {
         y += BUTTON[0];
     }
     (y - origin.y, action)
+}
+
+/// The pages above this one as links, `Show › Season 2`, so an episode
+/// opened from Home or Search leads to its season and its show. Answers the
+/// row's height and a click.
+fn ancestor_links(ui: &mut egui::Ui, origin: Pos2, above: &[Ancestor]) -> (f32, Option<Action>) {
+    let painter = ui.painter().clone();
+    let mut x = origin.x;
+    let mut height: f32 = 0.0;
+    let mut clicked = None;
+    for (index, ancestor) in above.iter().enumerate() {
+        if index > 0 {
+            let mark =
+                painter.layout_no_wrap("›".to_owned(), theme::medium(15.0), overlay::META_TEXT);
+            let width = mark.rect.width();
+            overlay::shadowed(&painter, pos2(x + 8.0, origin.y), mark);
+            x += width + 16.0;
+        }
+        let galley =
+            painter.layout_no_wrap(ancestor.title.clone(), theme::semibold(15.0), theme::TEXT);
+        let rect = Rect::from_min_size(pos2(x, origin.y), galley.rect.size());
+        let link = ui
+            .interact(
+                rect.expand(4.0),
+                ui.id().with(("ancestor", index)),
+                Sense::click(),
+            )
+            .on_hover_cursor(egui::CursorIcon::PointingHand)
+            .on_hover_text(format!("Go to {}", ancestor.title));
+        overlay::shadowed(&painter, rect.min, galley);
+        if link.hovered() {
+            painter.line_segment(
+                [rect.left_bottom(), rect.right_bottom()],
+                egui::Stroke::new(1.0, theme::TEXT),
+            );
+        }
+        if link.clicked() {
+            clicked = Some(Action::Open {
+                rating_key: ancestor.rating_key.clone(),
+                title: ancestor.title.clone(),
+            });
+        }
+        x = rect.right();
+        height = height.max(rect.height());
+    }
+    (height, clicked)
 }
 
 /// `2024 · Science Fiction, Adventure · 2h 47m`: what the answer names.

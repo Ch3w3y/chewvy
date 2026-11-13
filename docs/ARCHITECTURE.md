@@ -53,6 +53,17 @@ Vision items the same in-process mpv core can instead be started with
 (`player/hdr.rs`). The Chewvy window stays open as the remote control. This is
 the one case where video leaves the app's own window.
 
+The HDR window's keys are mpv's. The keys for the next episode are bound to
+set an mpv property the app reads, and the up-next line is shown there with
+mpv's own on-screen text.
+
+A compositor draws no frame for a window it is not showing, and the HDR
+window usually covers this one. The app's playback logic runs in its frame, so
+the window host (`shell/host.rs`) runs the frame without presenting it when a
+frame the app asked for has not been drawn for a quarter of a second. That is
+what lets the next episode start, and the watched position reach the server,
+while only the HDR window is on screen.
+
 ## Threads
 
 - The UI thread owns the window, the GL context and the mpv core (a

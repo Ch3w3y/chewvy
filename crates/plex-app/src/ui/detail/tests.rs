@@ -628,3 +628,56 @@ fn browsing_another_season_keeps_the_shows_next_up() {
         Some("e12")
     );
 }
+
+/// What an episode and a season lead up to, and what is left out when the
+/// answer gives no key to open.
+#[test]
+fn an_episode_leads_to_its_show_and_season_and_a_season_to_its_show() {
+    let episode = Item {
+        kind: Some("episode".to_owned()),
+        parent_index: Some(4),
+        parent_title: Some("Season 4".to_owned()),
+        parent_rating_key: Some("30".to_owned()),
+        grandparent_title: Some("Sync Show".to_owned()),
+        grandparent_rating_key: Some("2".to_owned()),
+        ..Item::default()
+    };
+    let above = |item: &Item| -> Vec<(String, String)> {
+        ancestors(item)
+            .into_iter()
+            .map(|a| (a.title, a.rating_key))
+            .collect()
+    };
+    let pair = |title: &str, key: &str| (title.to_owned(), key.to_owned());
+    assert_eq!(
+        above(&episode),
+        [pair("Sync Show", "2"), pair("Season 4", "30")]
+    );
+    // A season the answer does not title is named by its number.
+    let untitled = Item {
+        parent_title: None,
+        ..episode.clone()
+    };
+    assert_eq!(
+        above(&untitled),
+        [pair("Sync Show", "2"), pair("Season 4", "30")]
+    );
+    // No key, no link: a title alone cannot be opened.
+    let keyless = Item {
+        grandparent_rating_key: None,
+        ..episode.clone()
+    };
+    assert_eq!(above(&keyless), [pair("Season 4", "30")]);
+    let season = Item {
+        kind: Some("season".to_owned()),
+        parent_title: Some("Sync Show".to_owned()),
+        parent_rating_key: Some("2".to_owned()),
+        ..Item::default()
+    };
+    assert_eq!(above(&season), [pair("Sync Show", "2")]);
+    assert!(above(&Item {
+        kind: Some("movie".to_owned()),
+        ..Item::default()
+    })
+    .is_empty());
+}

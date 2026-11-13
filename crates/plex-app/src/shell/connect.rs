@@ -15,8 +15,8 @@ use plex_core::resources::ServerResource;
 /// File holding the remembered `clientIdentifier`, under the app config dir.
 pub const LAST_SERVER: &str = "last-server";
 
-/// File holding the plex.tv account uuid the stored token belongs to — the id
-/// [`plex_core::tokens::TokenKey::plex`] keys the Plex token slot by. A uuid,
+/// File holding the plex.tv account id the stored token belongs to — the id
+/// [`plex_core::tokens::TokenKey::plex`] keys the Plex token slot by. An id,
 /// not a credential, so it lives in plain text like [`LAST_SERVER`].
 pub const PLEX_ACCOUNT: &str = "plex-account-id";
 
@@ -29,21 +29,30 @@ pub fn read_last_server(config_dir: &Path) -> Option<String> {
     sanitize(raw.trim()).map(str::to_owned)
 }
 
-/// The remembered plex.tv account uuid, when the file exists and holds a uuid.
+/// The remembered plex.tv account id, when the file exists and holds one the
+/// token slot can be keyed by.
 pub fn read_plex_account(config_dir: &Path) -> Option<String> {
     let raw = std::fs::read_to_string(config_dir.join(PLEX_ACCOUNT)).ok()?;
     let uuid = raw.trim();
-    plex_core::client_info::is_uuid(uuid).then(|| uuid.to_owned())
+    keys_a_slot(uuid).then(|| uuid.to_owned())
+}
+
+/// Whether the token store can key a slot by `account`. plex.tv calls the id
+/// a uuid but does not send the dashed form, so the slot's own rule is the
+/// test: an id that keys a slot must also be remembered, or the next start
+/// cannot find the token it was stored under.
+fn keys_a_slot(account: &str) -> bool {
+    plex_core::tokens::TokenKey::plex(account).is_ok()
 }
 
 /// Remember which plex.tv account the stored token belongs to.
 ///
 /// # Errors
 ///
-/// Io errors from the config dir, or an id that is not a uuid.
+/// Io errors from the config dir, or an id the token slot cannot be keyed by.
 pub fn remember_plex_account(config_dir: &Path, uuid: &str) -> std::io::Result<()> {
     let uuid = uuid.trim();
-    if !plex_core::client_info::is_uuid(uuid) {
+    if !keys_a_slot(uuid) {
         return Err(std::io::Error::new(
             ErrorKind::InvalidInput,
             "account uuid cannot be remembered verbatim",
@@ -221,6 +230,30 @@ mod tests {
             "the test file must be writable"
         );
         assert_eq!(read_last_server(&dir), None);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// plex.tv sends the account id as sixteen hex digits, not a dashed uuid.
+    /// It keys the token slot, so it has to survive to the next start.
+    #[test]
+    fn the_account_id_plex_tv_sends_is_remembered() {
+        let dir = temp_dir("account");
+        for id in ["0123456789abcdef", "01234567-89ab-cdef-0123-456789abcdef"] {
+            assert!(remember_plex_account(&dir, id).is_ok(), "{id} is kept");
+            assert_eq!(read_plex_account(&dir).as_deref(), Some(id));
+        }
+        assert_eq!(
+            remember_plex_account(&dir, "two words")
+                .err()
+                .map(|err| err.kind()),
+            Some(ErrorKind::InvalidInput),
+            "an id no token slot can be keyed by is refused"
+        );
+        assert!(
+            std::fs::write(dir.join(PLEX_ACCOUNT), "two words\n").is_ok(),
+            "the test file must be writable"
+        );
+        assert_eq!(read_plex_account(&dir), None);
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

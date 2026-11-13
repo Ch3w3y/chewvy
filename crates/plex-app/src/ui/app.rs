@@ -826,7 +826,7 @@ impl Ui {
                 splash::code_tiles(ui, code);
                 ui.add_space(24.0);
                 if splash::primary(ui, "Open plex.tv/link") {
-                    let _ = std::process::Command::new("xdg-open").arg(url).spawn();
+                    ui.ctx().open_url(egui::OpenUrl::new_tab(url));
                 }
                 ui.add_space(8.0);
                 if splash::secondary(ui, "Get a new code") {

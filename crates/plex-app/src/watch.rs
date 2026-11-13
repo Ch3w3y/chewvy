@@ -1210,9 +1210,10 @@ fn start_jellyfin(
         start,
         markers: request::markers(&item.row),
         chapters: request::chapters(&item.row),
-        // One Jellyfin item at a time: the next-episode hand-off reads a Plex
-        // library's season rows, which this path does not have.
-        next: None,
+        next: next_episode(&item.row, &|key, kind| {
+            let (origin, id) = source::split(key);
+            jellyfin.listed(origin.server_id()?, kind, id).ok()
+        }),
         media: request::facts(&item.row),
         // Asked for the file, the server may still answer with its own stream;
         // the menu then shows the stream, which is what is playing.
@@ -1298,7 +1299,7 @@ fn start_playback(
         start: start.filter(|_| session.is_none()),
         markers: request::markers(&item),
         chapters: request::chapters(&item),
-        next: next_episode(client, &item),
+        next: next_episode(&item, &|key, _| client.children(key).ok().map(|c| c.items)),
         media: request::facts(&item),
         quality,
         origin: if session.is_some() {
@@ -1328,21 +1329,21 @@ fn start_playback(
     })
 }
 
-/// The episode after `item`: later in its season, else the next season's first.
-fn next_episode(client: &LiveClient, item: &Item) -> Option<NextUp> {
+/// The episode after `item`: later in its season, else the next season's
+/// first. `children` lists what is under a `"show"` or a `"season"`, whichever
+/// source the item came from.
+fn next_episode(item: &Item, children: &dyn Fn(&str, &str) -> Option<Vec<Item>>) -> Option<NextUp> {
     if item.kind.as_deref() != Some("episode") {
         return None;
     }
-    let season = client.children(item.parent_rating_key.as_deref()?).ok()?;
-    if let Some(next) = request::next_in(item, &season.items) {
+    let season = children(item.parent_rating_key.as_deref()?, "season")?;
+    if let Some(next) = request::next_in(item, &season) {
         return Some(next);
     }
-    let seasons = client
-        .children(item.grandparent_rating_key.as_deref()?)
-        .ok()?;
-    let following = request::next_season(item.parent_index?, &seasons.items)?;
-    let episodes = client.children(following.rating_key.as_deref()?).ok()?;
-    request::first_of(&episodes.items)
+    let seasons = children(item.grandparent_rating_key.as_deref()?, "show")?;
+    let following = request::next_season(item.parent_index?, &seasons)?;
+    let episodes = children(following.rating_key.as_deref()?, "season")?;
+    request::first_of(&episodes)
 }
 
 /// A fresh server stream session id (random, hex).
@@ -1361,6 +1362,50 @@ fn session_id() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn row(kind: &str, key: &str, index: u64) -> Item {
+        Item {
+            kind: Some(kind.to_owned()),
+            rating_key: Some(key.to_owned()),
+            title: Some(format!("{kind} {index}")),
+            index: Some(index),
+            ..Item::default()
+        }
+    }
+
+    fn episode(key: &str, season: (&str, u64), index: u64) -> Item {
+        Item {
+            parent_rating_key: Some(season.0.to_owned()),
+            parent_index: Some(season.1),
+            grandparent_rating_key: Some("show".to_owned()),
+            ..row("episode", key, index)
+        }
+    }
+
+    /// A show of two seasons, listed the way either source lists one: a show
+    /// answers its seasons, a season its episodes.
+    fn two_seasons(key: &str, kind: &str) -> Option<Vec<Item>> {
+        match (key, kind) {
+            ("show", "show") => Some(vec![row("season", "s4", 4), row("season", "s5", 5)]),
+            ("s4", "season") => Some(vec![
+                episode("e9", ("s4", 4), 9),
+                episode("e10", ("s4", 4), 10),
+            ]),
+            ("s5", "season") => Some(vec![episode("e1", ("s5", 5), 1)]),
+            _ => None,
+        }
+    }
+
+    #[test]
+    fn the_next_episode_follows_in_its_season_then_opens_the_next_season() {
+        let key = |item: &Item| next_episode(item, &two_seasons).map(|next| next.rating_key);
+        assert_eq!(key(&episode("e9", ("s4", 4), 9)).as_deref(), Some("e10"));
+        // The last of a season leads to the first of the season after it.
+        assert_eq!(key(&episode("e10", ("s4", 4), 10)).as_deref(), Some("e1"));
+        // The last episode of the last season leads nowhere, and so does a film.
+        assert_eq!(key(&episode("e1", ("s5", 5), 1)), None);
+        assert_eq!(key(&row("movie", "m", 1)), None);
+    }
 
     fn playing(enabled: bool) -> Playing {
         Playing {

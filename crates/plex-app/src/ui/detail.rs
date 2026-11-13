@@ -43,7 +43,8 @@ pub enum Action {
     Play(Target),
     /// Read this season's episodes into the show page.
     Season { rating_key: String },
-    /// Open this episode's own overview page.
+    /// Open another item's page: an episode's own, or the show or season
+    /// above this one.
     Open { rating_key: String, title: String },
 }
 
@@ -483,6 +484,42 @@ pub fn backdrop(item: &Item) -> Option<String> {
 #[must_use]
 pub fn episode_heading(item: &Item) -> Option<String> {
     (item.kind.as_deref() == Some("episode")).then(|| home::episode_caption(item))
+}
+
+/// A page above this one: the show an episode or a season belongs to, or an
+/// episode's season.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Ancestor {
+    pub rating_key: String,
+    pub title: String,
+}
+
+/// The pages above this one, outermost first: an episode's show and season, a
+/// season's show. Only the ones the answer gave a key for, so every entry can
+/// be opened.
+#[must_use]
+pub fn ancestors(item: &Item) -> Vec<Ancestor> {
+    let step = |key: &Option<String>, title: Option<String>| {
+        key.clone()
+            .zip(title)
+            .map(|(rating_key, title)| Ancestor { rating_key, title })
+    };
+    match item.kind.as_deref() {
+        Some("episode") => {
+            let season = item
+                .parent_title
+                .clone()
+                .or_else(|| item.parent_index.map(|n| format!("Season {n}")));
+            let show = step(&item.grandparent_rating_key, item.grandparent_title.clone());
+            show.into_iter()
+                .chain(step(&item.parent_rating_key, season))
+                .collect()
+        }
+        Some("season") => step(&item.parent_rating_key, item.parent_title.clone())
+            .into_iter()
+            .collect(),
+        _ => Vec::new(),
+    }
 }
 
 /// The title logo: the answer's own `Image` of type `clearLogo`.

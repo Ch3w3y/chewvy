@@ -80,7 +80,7 @@ impl Ui {
             ui.label(theme::secondary(
                 "Your TV shows HDR, not its own Dolby Vision mode. Turn HDR on for the \
                  display in your system settings. In that window: Space pauses, F toggles \
-                 full screen, Q closes it. Chewvy shows a card with a button to close it \
+                 full screen, N plays the next episode, Q closes it. Chewvy shows a card with a button to close it \
                  and keep playing here.",
             ));
             ui.add_space(12.0);

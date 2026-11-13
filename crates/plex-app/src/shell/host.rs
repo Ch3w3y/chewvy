@@ -472,12 +472,18 @@ impl HostProgress {
 /// The app UI drawn into the window each frame.
 pub type AppUi<'a> = Box<dyn FnMut(&mut egui::Ui) + 'a>;
 
+/// How long a frame the app asked for may stay undrawn before its UI is run
+/// without one.
+const UNDRAWN_GRACE: std::time::Duration = std::time::Duration::from_millis(250);
+
 struct HostApp<'a> {
     proxy: winit::event_loop::EventLoopProxy<UserEvent>,
     gl_window: Option<GlutinWindowContext>,
     gl: Option<Arc<glow::Context>>,
     egui_glow: Option<egui_glow::EguiGlow>,
     repaint_delay: std::time::Duration,
+    /// When the frame egui last asked for is due, until one has been run.
+    repaint_due: Option<std::time::Instant>,
     clear_color: [f32; 3],
     /// `Some(n)`: exit after n painted frames. `None`: run until the window
     /// is closed, repainting at egui's requested delay.
@@ -555,6 +561,7 @@ impl<'a> HostApp<'a> {
             gl: None,
             egui_glow: None,
             repaint_delay: std::time::Duration::MAX,
+            repaint_due: None,
             clear_color: [0.1, 0.1, 0.1],
             smoke_frames,
             frames_painted: 0,
@@ -605,40 +612,52 @@ impl<'a> HostApp<'a> {
         event_loop.exit();
     }
 
+    /// Run the app's UI once: its input, its logic and its layout. `presented`
+    /// says a frame follows; without one the result is only kept for the next
+    /// frame that is drawn. Answers `false` when the app asked to quit.
+    fn run_ui(&mut self, presented: bool) -> bool {
+        self.repaint_due = None;
+        let (Some(gl_window), Some(egui_glow)) = (self.gl_window.as_ref(), self.egui_glow.as_mut())
+        else {
+            return true;
+        };
+        let window = gl_window.window();
+        // A scripted run's steps belong to the frames it can capture.
+        if let Some(driver) = self.driver.as_mut().filter(|_| presented) {
+            let ppp = egui_glow.egui_ctx.pixels_per_point();
+            driver.before_frame(egui_glow.egui_winit.egui_input_mut(), ppp);
+        }
+        // The app draws its own title bar, so it needs the window's real
+        // maximised / fullscreen state each frame.
+        let ctx = egui_glow.egui_ctx.clone();
+        let input = egui_glow.egui_winit.egui_input_mut();
+        let info = input.viewports.entry(egui::ViewportId::ROOT).or_default();
+        egui_winit::update_viewport_info(info, &ctx, window, false);
+        let app_ui = &mut self.ui;
+        egui_glow.run(window, |ui| {
+            if let Some(draw) = app_ui.as_mut() {
+                draw(ui);
+            } else {
+                egui::CentralPanel::default().show(ui, |ui| {
+                    ui.heading("Chewvy window host");
+                    ui.label("egui overlay painted through egui_glow");
+                });
+            }
+        });
+        !crate::ui::chrome::take_quit()
+    }
+
     /// One frame: clear, draw (one egui label via `egui_glow`), swap buffers,
     /// then decide whether the event loop keeps going (upstream `redraw` closure).
     fn redraw(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
+        if !self.run_ui(true) {
+            event_loop.exit();
+            return;
+        }
         let Some(gl_window) = self.gl_window.as_mut() else {
             return;
         };
         let window = gl_window.window();
-        if let Some(egui_glow) = self.egui_glow.as_mut() {
-            if let Some(driver) = self.driver.as_mut() {
-                let ppp = egui_glow.egui_ctx.pixels_per_point();
-                driver.before_frame(egui_glow.egui_winit.egui_input_mut(), ppp);
-            }
-            // The app draws its own title bar, so it needs the window's real
-            // maximised / fullscreen state each frame.
-            let ctx = egui_glow.egui_ctx.clone();
-            let input = egui_glow.egui_winit.egui_input_mut();
-            let info = input.viewports.entry(egui::ViewportId::ROOT).or_default();
-            egui_winit::update_viewport_info(info, &ctx, window, false);
-            let app_ui = &mut self.ui;
-            egui_glow.run(window, |ui| {
-                if let Some(draw) = app_ui.as_mut() {
-                    draw(ui);
-                } else {
-                    egui::CentralPanel::default().show(ui, |ui| {
-                        ui.heading("Chewvy window host");
-                        ui.label("egui overlay painted through egui_glow");
-                    });
-                }
-            });
-            if crate::ui::chrome::take_quit() {
-                event_loop.exit();
-                return;
-            }
-        }
 
         {
             let Some(gl) = self.gl.as_mut() else { return };
@@ -671,6 +690,11 @@ impl<'a> HostApp<'a> {
                 driver.after_paint(gl, [size.width, size.height]);
             }
             // draw things on top of egui here
+            // On Wayland this makes the next `RedrawRequested` wait for the
+            // compositor to want a frame, so a window it is not showing is
+            // not drawn, and a driver that blocks a swap for a hidden surface
+            // is never asked for one.
+            gl_window.window().pre_present_notify();
             if let Err(err) = gl_window.swap_buffers() {
                 self.failure = Some(Box::from(format!("swap_buffers failed: {err}")));
                 event_loop.exit();
@@ -1061,6 +1085,7 @@ impl winit::application::ApplicationHandler<UserEvent> for HostApp<'_> {
         match event {
             UserEvent::Redraw(delay) => {
                 self.repaint_delay = delay;
+                self.repaint_due = std::time::Instant::now().checked_add(delay);
                 // A request from another thread (a new video frame, a loaded
                 // poster) must wake the loop now, not at the next idle deadline.
                 if delay.is_zero() {
@@ -1075,13 +1100,46 @@ impl winit::application::ApplicationHandler<UserEvent> for HostApp<'_> {
 
     fn new_events(
         &mut self,
-        _event_loop: &winit::event_loop::ActiveEventLoop,
+        event_loop: &winit::event_loop::ActiveEventLoop,
         cause: winit::event::StartCause,
     ) {
         if let winit::event::StartCause::ResumeTimeReached { .. } = &cause {
             if let Some(gl_window) = self.gl_window.as_mut() {
                 gl_window.window().request_redraw();
             }
+            // The redraw sets the next wake when it runs. Until then a
+            // deadline already in the past would wake the loop without pause.
+            if self.ui.is_some() && self.smoke_frames.is_none() {
+                event_loop.set_control_flow(winit::event_loop::ControlFlow::Wait);
+            }
+        }
+    }
+
+    /// A frame the app asked for that was not drawn in [`UNDRAWN_GRACE`] is
+    /// run without one. A compositor draws no frame for a window it is not
+    /// showing, and the app still has work there while something plays in
+    /// the HDR window: the next episode, and the position a server is told.
+    fn about_to_wait(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
+        use winit::event_loop::ControlFlow;
+        if self.ui.is_none() || self.smoke_frames.is_some() {
+            return;
+        }
+        let Some(late) = self
+            .repaint_due
+            .and_then(|due| due.checked_add(UNDRAWN_GRACE))
+        else {
+            return;
+        };
+        if std::time::Instant::now() >= late {
+            if !self.run_ui(false) {
+                event_loop.exit();
+            }
+            return;
+        }
+        match event_loop.control_flow() {
+            ControlFlow::Poll => {}
+            ControlFlow::WaitUntil(at) if at <= late => {}
+            _ => event_loop.set_control_flow(ControlFlow::WaitUntil(late)),
         }
     }
 

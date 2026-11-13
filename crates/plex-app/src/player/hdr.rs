@@ -58,6 +58,21 @@ impl Output {
     }
 }
 
+/// The HDR window's keys for the next episode: `N`, and the keys mpv itself
+/// uses for the next file.
+pub const NEXT_KEYS: [&str; 5] = ["n", "N", ">", "ENTER", "NEXT"];
+
+/// The mpv property those keys set. The HDR window's keys are mpv's own, so
+/// a key press reaches the app as a property it reads.
+pub const NEXT_ASKED: &str = "user-data/chewvy/next";
+
+/// Whether [`NEXT_ASKED`] reads as set. mpv keeps such a value as data and
+/// reads it back as JSON, so the text arrives in quotes.
+#[must_use]
+pub fn asked(value: Option<&str>) -> bool {
+    value.is_some_and(|text| text.trim_matches('"') == "yes")
+}
+
 /// Whether the decoded video is HDR or Dolby Vision: the files the HDR window
 /// is for. mpv reports this from the stream itself, so it holds for Plex and
 /// Jellyfin alike, whatever the server's metadata says.
@@ -93,6 +108,15 @@ mod tests {
         assert!(is_dolby_vision(&video(Some("pq"), Some("dolbyvision"))));
         assert!(!is_hdr(&video(Some("bt.1886"), Some("bt.709"))));
         assert!(!is_hdr(&video(None, None)));
+    }
+
+    /// The two forms mpv 0.41 gave for the property the next-episode keys set.
+    #[test]
+    fn a_next_episode_key_reads_as_asked_in_either_form() {
+        assert!(asked(Some("\"yes\"")));
+        assert!(asked(Some("yes")));
+        assert!(!asked(Some("\"no\"")));
+        assert!(!asked(None));
     }
 
     #[test]

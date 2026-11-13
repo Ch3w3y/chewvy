@@ -70,6 +70,8 @@ pub struct Overlay {
     autoplay_at: Option<Instant>,
     /// The user dismissed the up-next card for this item.
     up_next_dismissed: bool,
+    /// The up-next line last shown in the HDR window, so each is sent once.
+    hdr_up_next: Option<String>,
     /// The seek bar is being dragged to this position.
     pub(crate) scrub: Option<f64>,
     /// A quality picked in the settings popover, applied after this frame.
@@ -87,6 +89,7 @@ impl Default for Overlay {
             prefs: Prefs::default(),
             autoplay_at: None,
             up_next_dismissed: false,
+            hdr_up_next: None,
             scrub: None,
             requality: None,
         }
@@ -135,6 +138,11 @@ impl Overlay {
         }
         if let Some(action) = self.keys(root.ctx(), p) {
             return action;
+        }
+        if p.take_next_asked() {
+            if let Some(next) = p.request().next.clone() {
+                return Action::Next(next);
+            }
         }
         self.track_activity(root.ctx());
         self.sleep_timer(p);
@@ -437,6 +445,9 @@ impl Overlay {
         let countdown = self
             .autoplay_at
             .map(|at| at.saturating_duration_since(Instant::now()).as_secs() + 1);
+        if p.output().is_hdr_window() {
+            self.up_next_in_hdr_window(p, &next, countdown);
+        }
         match bar::up_next(root, screen, &next, countdown, artwork, visible) {
             Some(true) => Action::Next(next),
             Some(false) => {
@@ -444,6 +455,27 @@ impl Overlay {
                 Action::Stay
             }
             None => Action::Stay,
+        }
+    }
+}
+
+impl Overlay {
+    /// The up-next card is in this window, which the HDR window may cover:
+    /// say the same over the picture there, once per line.
+    fn up_next_in_hdr_window(&mut self, p: &Player, next: &NextUp, countdown: Option<u64>) {
+        let (line, time) = match countdown {
+            Some(seconds) => (
+                format!("Up next in {seconds} · {} · N plays it now", next.label),
+                Duration::from_millis(1500),
+            ),
+            None => (
+                format!("Up next · {} · N plays it now", next.label),
+                Duration::from_secs(6),
+            ),
+        };
+        if self.hdr_up_next.as_deref() != Some(line.as_str()) {
+            p.show_text(&line, time);
+            self.hdr_up_next = Some(line);
         }
     }
 }

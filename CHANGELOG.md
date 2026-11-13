@@ -4,6 +4,28 @@ All notable changes to Chewvy are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-11-13
+
+### Added
+
+- An episode's page links to its show and its season, and a season's page to
+  its show, above the title.
+- In the HDR window, N (or Enter, or >) plays the next episode, and the
+  up-next line is shown over the picture there.
+- Jellyfin shows play on into the next episode, as Plex shows do, and from
+  the last episode of a season into the first of the next.
+
+### Fixed
+
+- A Plex sign-in was asked for again at every start: the account's token was
+  stored but could not be found again. A sign-in made with this version is
+  kept; one made with an earlier version has to be made once more.
+- "Open plex.tv/link" did nothing on Windows and macOS. It now opens the
+  system's default browser on every platform.
+- With the HDR window covering Chewvy's own window, the next episode did not
+  start by itself, and the watched position stopped reaching the server,
+  until Chewvy's window was shown again.
+
 ## [0.1.3] - 2026-11-12
 
 ### Added
