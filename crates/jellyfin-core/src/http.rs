@@ -169,37 +169,12 @@ impl Http {
             }
         }
         let url = url.as_str().to_owned();
-        let response: HttpResponse = match method {
-            // ureq 3.3.0 types a bodyless request differently from one with a
-            // body, so each verb is built and sent in its own arm (mirrors
-            // `plex_core::http::Http::send`).
-            "GET" => {
-                let mut request = self.agent.get(&url);
-                if let Some(value) = authorization {
-                    request = request.header(crate::header::AUTHORIZATION_HEADER, value);
-                }
-                request.call()
+        let response = match self.call(method, &url, authorization, body) {
+            // See [`dropped_unanswered`]: sent once more, on a new connection.
+            Err(error) if dropped_unanswered(&error) => {
+                self.call(method, &url, authorization, body)
             }
-            "POST" => {
-                let mut request = self.agent.post(&url);
-                if let Some(value) = authorization {
-                    request = request.header(crate::header::AUTHORIZATION_HEADER, value);
-                }
-                match body {
-                    Some(text) => request
-                        .header("Content-Type", "application/json")
-                        .send(text.to_owned()),
-                    None => request.send_empty(),
-                }
-            }
-            "DELETE" => {
-                let mut request = self.agent.delete(&url);
-                if let Some(value) = authorization {
-                    request = request.header(crate::header::AUTHORIZATION_HEADER, value);
-                }
-                request.call()
-            }
-            _ => return Err(JfError::InvalidInput),
+            answer => answer,
         }
         .map_err(map_ureq_error)?;
 
@@ -218,6 +193,49 @@ impl Http {
             body: read_body(response)?,
         })
     }
+
+    /// Put one request on the wire.
+    fn call(
+        &self,
+        method: &str,
+        url: &str,
+        authorization: Option<&str>,
+        body: Option<&str>,
+    ) -> Result<HttpResponse, ureq::Error> {
+        match method {
+            // ureq 3.3.0 types a bodyless request differently from one with a
+            // body, so each verb is built and sent in its own arm (mirrors
+            // `plex_core::http::Http::send`).
+            "GET" => {
+                let mut request = self.agent.get(url);
+                if let Some(value) = authorization {
+                    request = request.header(crate::header::AUTHORIZATION_HEADER, value);
+                }
+                request.call()
+            }
+            "POST" => {
+                let mut request = self.agent.post(url);
+                if let Some(value) = authorization {
+                    request = request.header(crate::header::AUTHORIZATION_HEADER, value);
+                }
+                match body {
+                    Some(text) => request
+                        .header("Content-Type", "application/json")
+                        .send(text.to_owned()),
+                    None => request.send_empty(),
+                }
+            }
+            "DELETE" => {
+                let mut request = self.agent.delete(url);
+                if let Some(value) = authorization {
+                    request = request.header(crate::header::AUTHORIZATION_HEADER, value);
+                }
+                request.call()
+            }
+            // Mapped to `JfError::InvalidInput`, like a URL that cannot be sent.
+            _ => Err(ureq::Error::BadUri(String::new())),
+        }
+    }
 }
 
 fn read_body(mut response: HttpResponse) -> Result<Vec<u8>, JfError> {
@@ -231,6 +249,25 @@ fn read_body(mut response: HttpResponse) -> Result<Vec<u8>, JfError> {
         .read_to_end(&mut buf)
         .map_err(|_| JfError::ResponseShape)?;
     Ok(buf)
+}
+
+/// Whether the peer closed the connection without answering.
+///
+/// A server, or the proxy in front of it, lets go of a kept-alive connection
+/// it has left idle, and ureq 3.3.0 reuses a pooled connection whatever its
+/// age. A request that leaves just as the far side closes is never read and
+/// comes back as this error, so [`Http::send`] sends it once more; the pool
+/// then finds the connection closed and opens a new one. An answer of any
+/// status is never sent again.
+fn dropped_unanswered(error: &ureq::Error) -> bool {
+    use std::io::ErrorKind::{BrokenPipe, ConnectionAborted, ConnectionReset, UnexpectedEof};
+    matches!(
+        error,
+        ureq::Error::Io(io) if matches!(
+            io.kind(),
+            BrokenPipe | ConnectionAborted | ConnectionReset | UnexpectedEof
+        )
+    )
 }
 
 fn map_ureq_error(error: ureq::Error) -> JfError {

@@ -70,3 +70,6 @@ pub(crate) mod art_cache;
 
 /// The playing screen's control overlay over the embedded video.
 pub(crate) mod player;
+
+/// Watching together on screen: the panel a detail page opens and the notices.
+pub(crate) mod together;

@@ -28,6 +28,8 @@ use jellyfin_core::dto::{Item as JfItem, QueryResult, User};
 use jellyfin_core::header::media_browser_header;
 use jellyfin_core::http::Http;
 use jellyfin_core::playback::{Delivery, SessionBody};
+use jellyfin_core::socket::Socket;
+use jellyfin_core::JfError;
 use plex_core::library::{Hub, Item};
 use plex_core::secret::SecretString;
 use plex_core::tokens::{load_plex_token, TokenStore};
@@ -398,9 +400,32 @@ pub(crate) struct Server {
     device: DeviceInfo,
     token: SecretString,
     user_id: String,
+    /// The signed-in user's name, as the registry row recorded it.
+    user_name: Option<String>,
 }
 
 impl Server {
+    /// The id `sources.json` keys this server by.
+    pub(crate) fn id(&self) -> &str {
+        &self.id
+    }
+
+    /// The signed-in user's name, when the registry row recorded one.
+    pub(crate) fn user_name(&self) -> Option<&str> {
+        self.user_name.as_deref().filter(|name| !name.is_empty())
+    }
+
+    /// The client a group session calls through. Its errors stay the
+    /// server's own, which is what tells a refusal from a lost connection.
+    pub(crate) fn api(&self) -> Result<Client<'_>, JfError> {
+        Client::new(&self.http, &self.device, &self.token, &self.user_id)
+    }
+
+    /// This device's session socket on the server.
+    pub(crate) fn socket(&self) -> Result<Socket, JfError> {
+        Socket::connect(self.base(), &self.device, &self.token)
+    }
+
     /// The address this server's own links come back relative to, with no
     /// trailing slash: what a stream URL has to be joined to.
     fn base(&self) -> &str {
@@ -483,6 +508,7 @@ impl Server {
             device: device.clone(),
             token,
             user_id,
+            user_name: row.user_name.clone(),
         })
     }
 

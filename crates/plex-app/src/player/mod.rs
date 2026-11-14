@@ -35,6 +35,7 @@ use plex_player::render_link::{GlFbo, RenderApi, RenderContext, RenderOptions};
 use winit::raw_window_handle::RawDisplayHandle;
 
 use crate::gl::GlutinResolver;
+use crate::together::follow::Request;
 use hdr::Output;
 
 /// Everything the UI needs to open one item.
@@ -143,6 +144,9 @@ pub struct Player {
     loading_since: Option<Instant>,
     /// Where the picture is presented.
     output: Output,
+    /// While watching together: the person's own play, pause and seek, held
+    /// as requests for the group instead of acting here.
+    group: Option<Vec<Request>>,
 }
 
 thread_local! {
@@ -361,6 +365,7 @@ impl Player {
             undecoded_polls: 0,
             loading_since,
             ended: None,
+            group: None,
             next_asked: false,
             request,
         })
@@ -596,9 +601,23 @@ impl Player {
         }
     }
 
-    /// Flip pause.
-    pub fn toggle_pause(&self) {
+    /// Flip pause, or ask the group to.
+    pub fn toggle_pause(&mut self) {
+        let paused = self.snapshot.paused;
+        if let Some(asks) = &mut self.group {
+            asks.push(if paused {
+                Request::Unpause
+            } else {
+                Request::Pause
+            });
+            return;
+        }
         self.cmd(&["cycle", "pause"]);
+    }
+
+    /// Pause or play, whatever the player was doing.
+    pub fn set_paused(&self, paused: bool) {
+        self.set("pause", if paused { "yes" } else { "no" });
     }
 
     /// Seek by `secs` (negative goes back), to the nearest keyframe.
@@ -608,6 +627,12 @@ impl Player {
             return;
         };
         let target = position + secs;
+        if let Some(asks) = &mut self.group {
+            asks.push(Request::Seek {
+                position: target.max(0.0),
+            });
+            return;
+        }
         if target < self.request.origin {
             return self.seek_to(target, false);
         }
@@ -621,6 +646,20 @@ impl Player {
     /// seek is left in [`Player::take_restart`] for the screen to reopen at.
     pub fn seek_to(&mut self, secs: f64, exact: bool) {
         let secs = secs.max(0.0);
+        if let Some(asks) = &mut self.group {
+            asks.push(Request::Seek { position: secs });
+            return;
+        }
+        self.place(secs, exact);
+    }
+
+    /// Seek exactly where the group is: the group's own moves never go back
+    /// to it as requests.
+    pub fn align(&mut self, secs: f64) {
+        self.place(secs.max(0.0), true);
+    }
+
+    fn place(&mut self, secs: f64, exact: bool) {
         if self.request.session.is_some() && secs < self.request.origin {
             self.restart = Some(secs);
             return;
@@ -745,8 +784,36 @@ impl Player {
         }
     }
 
+    /// Follow a group: the person's play, pause and seek become requests
+    /// ([`Player::take_requests`]) until `false` gives the controls back.
+    pub fn follow_group(&mut self, on: bool) {
+        self.group = on.then(Vec::new);
+        // A group needs every seek on the spot. In a file with no index an
+        // exact seek past the cache can land on the next keyframe instead
+        // (half a second late in an MPEG stream); starting the demuxer a
+        // second early leaves the decoder room to reach the frame asked for.
+        self.set("hr-seek-demuxer-offset", if on { "1" } else { "0" });
+    }
+
+    /// Whether the controls belong to a group.
+    #[must_use]
+    pub fn in_group(&self) -> bool {
+        self.group.is_some()
+    }
+
+    /// The requests the person made since the last call.
+    pub fn take_requests(&mut self) -> Vec<Request> {
+        self.group.as_mut().map(std::mem::take).unwrap_or_default()
+    }
+
     /// Jump to a chapter by index.
     pub fn set_chapter(&mut self, index: usize) {
+        if let Some(asks) = &mut self.group {
+            if let Some((start, _)) = self.snapshot.chapters.get(index) {
+                asks.push(Request::Seek { position: *start });
+            }
+            return;
+        }
         self.resume_after_end();
         self.set("chapter", &index.to_string());
     }

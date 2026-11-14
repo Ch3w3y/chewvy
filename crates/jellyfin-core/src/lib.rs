@@ -18,6 +18,9 @@
 //! * an item is played through [`playback`]: the client's own
 //!   [`playback::DeviceProfile`] decides what a server offers, and only a
 //!   source the server hands over untouched is asked for,
+//! * a group of players is kept in step by the server's SyncPlay
+//!   ([`syncplay`]), whose commands arrive over the session socket
+//!   ([`socket`]), authorized by the same header,
 //! * positions are 100 ns ticks ([`ticks`]).
 //!
 //! The one deliberate deviation from the plex-core "no secrets in URLs"
@@ -37,6 +40,8 @@ pub mod http;
 pub mod playback;
 pub mod quickconnect;
 pub mod server;
+pub mod socket;
+pub mod syncplay;
 pub mod ticks;
 
 pub use browse::{

@@ -1,7 +1,7 @@
 # Jellyfin integration notes
 
-How Chewvy talks to a Jellyfin server: sign-in, discovery, browsing, playback
-and progress reporting. Endpoints and field names were read from the Jellyfin
+How Chewvy talks to a Jellyfin server: sign-in, discovery, browsing, playback,
+progress reporting and SyncPlay. Endpoints and field names were read from the Jellyfin
 server source on the `master` branch (12.x line; 12.4 was the latest stable
 release) unless noted, and the browse and playback shapes were then pinned
 against captures from a disposable local 12.4.0 server (§3.1). Access date for
@@ -534,6 +534,228 @@ per item).
 
 ---
 
+## 6. SyncPlay
+
+SyncPlay is the server's own way of keeping several players in step. A group
+lives on the server; its members ask for changes over REST, and the server
+tells every member, the one who asked included, over each member's session
+socket. A member therefore never acts on its own play, pause or seek button
+while in a group: it asks, then follows what its socket says.
+
+`jellyfin_core::syncplay` holds the calls (on `Client`), the message types
+(`syncplay::message`) and the clock arithmetic (`syncplay::clock`);
+`jellyfin_core::socket` holds the socket. Everything below was observed on
+2026-11-12 against a disposable local 12.4.0 server, with two and three
+signed-in devices (two users, one of them on two devices) and a third user
+whose SyncPlay access was `None`. The frames are kept as fixtures in
+`tests/fixtures/live-12.4/ws_*.json`, and `tests/syncplay_live.rs` replays the
+two-member flow against a live server.
+
+### 6.1 The session socket
+
+- **Address and authorization.** `GET /socket` upgraded to a WebSocket, with
+  the same `Authorization: MediaBrowser …` header as every other call. The
+  server takes the device id from that header, so the URL carries no query at
+  all: no `deviceId` and no `api_key`. A handshake with no header, or with a
+  token the server does not know, is answered `403 Forbidden`. The token
+  therefore never travels in a URL here either.
+- **Keep-alive.** The first frame is `{"MessageType":"ForceKeepAlive","Data":60}`:
+  the server drops a socket it has not heard from for 60 s. The client sends
+  `{"MessageType":"KeepAlive"}` at half that interval, and the server echoes
+  every keep-alive back as a `KeepAlive` frame. `Socket::read` sends them when
+  due and swallows both frames.
+- **Frames.** Every frame is JSON text `{MessageType, MessageId, Data}`. Only
+  `ForceKeepAlive`, `KeepAlive`, `SyncPlayCommand` and `SyncPlayGroupUpdate`
+  are read; any other type is passed on by name and never ends the session.
+- **Transport.** Plain TCP for an `http://` server, rustls with the ring
+  provider over it for `https://`. The socket trusts the same Mozilla root
+  bundle as the HTTP transport, so a server that answers one answers the
+  other.
+
+### 6.2 Calls
+
+All `POST` with a JSON body unless noted; all answer `204` unless noted.
+
+| Call | Body | Answer |
+|---|---|---|
+| `GET /SyncPlay/List` | | `[GroupInfoDto]` |
+| `GET /SyncPlay/{id}` | | `GroupInfoDto` |
+| `/SyncPlay/New` | `{GroupName}` | `200` with the new `GroupInfoDto` (the API also allows `204`) |
+| `/SyncPlay/Join` | `{GroupId}` | `204`, even for a group that does not exist |
+| `/SyncPlay/Leave` | none | |
+| `/SyncPlay/SetNewQueue` | `{PlayingQueue:[itemId], PlayingItemPosition, StartPositionTicks}` | |
+| `/SyncPlay/Unpause`, `/Pause`, `/Stop` | none | |
+| `/SyncPlay/Seek` | `{PositionTicks}` | |
+| `/SyncPlay/Buffering`, `/Ready` | `{When, PositionTicks, IsPlaying, PlaylistItemId}` | |
+| `/SyncPlay/Ping` | `{Ping}`, milliseconds | |
+| `/SyncPlay/SetIgnoreWait` | `{IgnoreWait}` | |
+| `GET /GetUtcTime` | | `{RequestReceptionTime, ResponseTransmissionTime}`; needs no token |
+
+`GroupInfoDto` is `{GroupId, GroupName, State, Participants, LastUpdatedAt}`.
+`Participants` holds user names, each once however many of that user's
+devices joined. `State` is `Idle`, `Waiting`, `Paused` or `Playing`.
+
+**Refusals.** A user whose `Policy.SyncPlayAccess` is `None` gets `403` with an
+empty body from `List`, `New` and `Join`. A session in no group gets the same
+`403` from the calls that need a group (`Leave`, `Pause`, …). The two cannot be
+told apart from the answer; a client that knows whether it is in a group can.
+A rejected token is `401`, as everywhere else. A `Join` to a group that does
+not exist answers `204`, and the socket then says `GroupDoesNotExist`. A
+`Ping` from a session in no group also answers `204`, and the socket says
+`NotInGroup`.
+
+Instants (`When`, `EmittedAt`, `LastUpdatedAt`, …) are ISO 8601 UTC with
+seven fractional digits, `2026-11-12T22:04:12.8632449Z`: exactly one tick.
+
+### 6.3 Messages
+
+| `MessageType` | `Data` |
+|---|---|
+| `SyncPlayCommand` | `{GroupId, PlaylistItemId, When, PositionTicks, Command, EmittedAt}`; `Command` is `Unpause`, `Pause`, `Stop` or `Seek` |
+| `SyncPlayGroupUpdate` | `{GroupId, Type, Data}` |
+
+| `Type` | `Data` |
+|---|---|
+| `GroupJoined` | `GroupInfoDto`; sent to the device that joined (or created) |
+| `UserJoined`, `UserLeft` | the user's name; sent to the other members, not to the one joining or leaving |
+| `GroupLeft` | the group id, written with hyphens (the only place it is) |
+| `NotInGroup`, `GroupDoesNotExist`, `LibraryAccessDenied` | a string, empty in every capture |
+| `StateUpdate` | `{State, Reason}`; `Reason` is the request that moved it (`Ready`, `Buffer`, `Seek`, `Pause`, `Unpause`) |
+| `PlayQueue` | `{Reason, LastUpdate, Playlist:[{ItemId, PlaylistItemId}], PlayingItemIndex, StartPositionTicks, IsPlaying, ShuffleMode, RepeatMode}` |
+
+`GroupJoined` is followed straight away by a `Stop` command: before a queue is
+set its `PlaylistItemId` is all zeros.
+
+### 6.4 Behaviour a client has to follow
+
+1. **The socket takes the header.** Confirmed: see 6.1. No `deviceId` query
+   is needed and none is sent.
+2. **`When` is server-clock time; `PositionTicks` is the position at that
+   time.** Confirmed, with one qualification per command:
+   - `Unpause`: `When` is in the future, 1.0 s after `EmittedAt` in every
+     capture (with reported pings of 3 to 12 ms). `PositionTicks` is where
+     every member must be at `When`.
+   - `Pause`: `When` is the moment the server handled the request, and
+     `PositionTicks` the group's position then, which the server works out
+     from the last start (a pause 1.0166 s after a start at 0 said
+     `PositionTicks: 10166349`).
+   - `Seek`: `PositionTicks` is the target. `When` is when the seek was asked
+     for, and a `Seek` re-sent later to one member keeps that original `When`,
+     so it is not a schedule.
+   - `Stop`: the group's position when it stopped.
+3. **After `Seek` and after a new queue, the server waits for every member's
+   `Ready` before `Unpause`.** Confirmed. After `SetNewQueue` the group is
+   `Waiting`; after `Seek` every member gets `StateUpdate Waiting/Seek`. Each
+   `Ready` before the last one is answered to that member alone with a `Pause`
+   at the position (hold), and the last one sends `Unpause` to all. A `Ready`
+   at a position too far from the group's is not counted: that member alone
+   gets a `Seek` to the group's position and the group keeps waiting. Paused
+   at 10 s, a `Ready` at 10.4 s was accepted and one at 10.6 s was not. With
+   `IsPlaying: true` the server first adds the time since `When` to the
+   reported position, so a client must report `When` accurately on the
+   server's clock.
+4. **`Buffering` from one member moves the group to `Waiting` for all.**
+   Confirmed. Every member gets `StateUpdate Waiting/Buffer`, and the other
+   members get a `Pause` at the group's position. The stalled member itself
+   gets no command, only the `StateUpdate`. How the group resumes depends on
+   the stalled member's `Ready`:
+   - With `IsPlaying: false` at the held position, everyone gets `Unpause`
+     scheduled 1 s ahead (as little as 15 ms ahead was also seen).
+   - With `IsPlaying: true`, the stalled member gets no command at all and
+     the others get an `Unpause` timed to meet it. A member that stalled at
+     13.29 s and reported `Ready` at 13.37 s while playing left the others
+     paused at 13.877 s; their `Unpause` said 13.877 s at a `When` 0.507 s
+     after the `Ready`, the moment the stalled member reached them. The
+     group's timeline then runs from the stalled member's playback, so a
+     client must not chase the position the group had before the stall.
+5. **A member joining a playing group.** Corrected: the joiner does not chase
+   a moving group. The join pauses everyone: the existing members get a
+   `Pause` at the current position (no `StateUpdate`), and the joiner gets
+   `GroupJoined` (still saying `Playing`) and then `PlayQueue` with
+   `StartPositionTicks` at that position and `IsPlaying: false`. The joiner
+   loads the item there and reports `Ready`; then all members get `Unpause`
+   scheduled 1 s ahead and `StateUpdate Playing/Ready`.
+6. **Capabilities or a playing item are not needed.** Sessions that had only
+   signed in and opened a socket, never calling `/Sessions/Capabilities` or
+   `/Sessions/Playing`, received every SyncPlay message.
+
+Leaving: the leaver gets `GroupLeft`; the others get `UserLeft`, and a group
+left with one member carries on with that member alone.
+
+A dropped socket is a leave. The server takes the member out of the group as
+soon as its socket closes, and the others get `UserLeft` at once; there is no
+grace period. A `Join` on a new socket puts it back: `GroupJoined`, then
+`PlayQueue` at the group's position with `IsPlaying: false`, as for any
+member joining.
+
+### 6.5 Clock
+
+`GET /GetUtcTime` gives two server instants. With the device's own send and
+receive times the four make the usual estimate: offset
+`((t1 - t0) + (t2 - t3)) / 2`, round trip `(t3 - t0) - (t2 - t1)`. The sample
+with the smallest round trip is the one kept (`clock::best`); the round trip
+is what `/SyncPlay/Ping` reports. On the local test server the offset was
+about 1 ms and the round trip about 3 ms.
+
+### 6.6 How Chewvy follows a group
+
+"Watch together" on a Jellyfin item's page lists the server's groups, starts
+one or joins one. In a group, the player's own play, pause and seek (keys,
+buttons, the seek bar and chapters) become requests to the group, and the
+player then follows what the group says. The speed control is hidden: the
+group's clock sets the pace, and a speed changed in the HDR window is put
+back. Leaving gives the controls and the person's own speed back.
+
+- **One session thread per group** owns the socket, makes the calls and
+  samples the clock: eight `GetUtcTime` samples on joining and one a minute,
+  the round trip of the best one reported with `Ping`. Commands for a
+  `PlaylistItemId` other than the current one are ignored.
+- **The follower** turns commands into player actions. An `Unpause` is
+  started at its `When` (the window redraws on time for it), and a start
+  more than 0.5 s off is sought; that check waits until the player is seen
+  moving, as a player that has just opened (the HDR window, for one) can
+  hold its start position for a second without saying it is stalled. A
+  `Pause` holds at its position; a `Seek` holds paused there and reports
+  `Ready` once the player has landed within 0.1 s, sending the seek once
+  more if it has not, and accepting the second landing within 0.5 s. While playing, drift under
+  0.1 s is left alone, drift up to 2 s is closed by playing 5 % faster or
+  slower until it is under 0.05 s, and more than 2 s is one exact seek. A
+  stall longer than 0.5 s is reported as `Buffering`; its end as `Ready`
+  with `IsPlaying: true`, after which the follower takes its own position
+  as the group's (6.4 point 4).
+- **Requests the server never answers** stop holding the player after 4 s:
+  it goes back to where the group is.
+- **The end of the title** is not a pause: the player holds its last frame
+  and nothing is asked of the group.
+- **A dropped socket** is rejoined once, on a new socket; if that fails, the
+  app says so and plays on alone. Closing the app leaves the group first.
+- **Exact seeks** use mpv's `hr-seek-demuxer-offset` of 1 s while in a
+  group. Without it, an exact seek beyond the cache in an MPEG transport
+  stream landed on the next keyframe, 0.35 to 0.43 s late, for a member
+  opening a title mid-way.
+
+Measured on 2026-11-12 against the local 12.4.0 server, the app's position
+compared once a second with a scripted member following the same commands
+on the same clock (offset 1 ms, round trip 4 ms): a start within 0.04 s;
+pause, play and seek from either side followed within 0.05 s; a member
+joining mid-title within 0.02 s of the group on its first second of play;
+after a 6 s network stall, both resumed within 0.02 s of each other; after a
+dropped socket, everyone played again 1.3 s later. Moved to the HDR window
+mid-title, the app was within 0.11 s on its first second there and within
+0.05 s after that; the group's pause reached the player 14 ms after the
+socket did, and its start 6 ms after `When`. The app reads its position
+once per window frame, so each figure can be off by up to one frame, about
+17 ms.
+
+With the Jellyfin web client (12.4.0, headless Chromium) as the other
+member, a group started in Chewvy was joined from the web client's own
+SyncPlay menu; play and pause from the web client and a seek from Chewvy
+moved both. The web client ran a steady 0.09 to 0.16 s behind the group's
+schedule and did not correct it, while Chewvy stayed within 0.05 s, so the
+two were 0.13 to 0.21 s apart.
+
+---
+
 ## Open questions
 
 - **Whether a real 12.x server records what this client reports.** The three
@@ -550,6 +772,10 @@ per item).
   session timeout. Whether a stale id is dropped silently or answered `404` is
   unmeasured; either way the report is non-fatal, so the symptom is lost
   progress rather than a stalled item.
+- **Private certificate authorities.** Both the HTTP transport and the
+  session socket check a server's certificate against the compiled-in Mozilla
+  root bundle, not the operating system's store. A server whose certificate
+  chains to a private authority installed on the system is refused by both.
 - **Does `static=true` respect a `MaxStaticBitrate` the profile declares**?
   The profile sets 1 Gbps deliberately above every fixture file, so the field is
   exercised only as a wire shape.

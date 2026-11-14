@@ -251,7 +251,7 @@ pub fn stream_path(item_id: &str, media_source_id: &str) -> Option<String> {
 /// borrowed by every call.
 #[derive(Debug, Clone)]
 pub struct Client<'a> {
-    http: &'a Http,
+    pub(crate) http: &'a Http,
     device: &'a DeviceInfo,
     token: &'a SecretString,
     user_id: &'a str,
@@ -561,13 +561,13 @@ impl<'a> Client<'a> {
     }
 
     /// The `MediaBrowser` header value for this identity and token.
-    fn authorization(&self) -> String {
+    pub(crate) fn authorization(&self) -> String {
         media_browser_header(self.device, Some(self.token))
     }
 
     /// The single read path every browse call goes through: `GET`, then parse
     /// the answer as the type the endpoint promises.
-    fn get_json<T: serde::de::DeserializeOwned>(
+    pub(crate) fn get_json<T: serde::de::DeserializeOwned>(
         &self,
         path: &str,
         query: &[(&str, &str)],

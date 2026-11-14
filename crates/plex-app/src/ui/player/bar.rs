@@ -242,7 +242,7 @@ fn transport(ov: &mut Overlay, root: &mut egui::Ui, screen: Rect, y: f32, p: &mu
     if icon_button(root, at(x), Icon::Forward10, "Forward 10 s (→)", false) {
         p.seek_by(10.0);
     }
-    if let Some(next) = p.request().next.clone() {
+    if let Some(next) = ov.next_up(p) {
         x += BTN + 8.0;
         let label = format!("Next: {}", next.label);
         if icon_button(root, at(x), Icon::Next, &label, false) {
@@ -322,12 +322,18 @@ fn volume(root: &mut egui::Ui, icon_rect: Rect, p: &Player) {
 fn right_buttons(ov: &mut Overlay, root: &mut egui::Ui, screen: Rect, y: f32, p: &Player) {
     let snap = p.snapshot();
     let mut entries: Vec<(Icon, &str, Option<Menu>)> = Vec::new();
+    if ov.group.is_some() {
+        entries.push((Icon::Group, "Watching together", Some(Menu::Together)));
+    }
     if snap.chapters.len() > 1 {
         entries.push((Icon::Chapters, "Chapters", Some(Menu::Chapters)));
     }
     entries.push((Icon::Audio, "Audio (A)", Some(Menu::Audio)));
     entries.push((Icon::Subtitles, "Subtitles (C)", Some(Menu::Subtitles)));
-    entries.push((Icon::Speed, "Speed ([ / ])", Some(Menu::Speed)));
+    // In a group the group's clock sets the pace.
+    if ov.group.is_none() {
+        entries.push((Icon::Speed, "Speed ([ / ])", Some(Menu::Speed)));
+    }
     entries.push((Icon::Quality, "Quality", Some(Menu::Quality)));
     entries.push((Icon::Settings, "Settings", Some(Menu::Settings)));
     entries.push((Icon::Info, "Info (I)", None));
@@ -353,7 +359,11 @@ fn right_buttons(ov: &mut Overlay, root: &mut egui::Ui, screen: Rect, y: f32, p:
             Some(m) => ov.menu == Some(m),
             None => ov.info,
         };
-        if icon_button(root, rect, icon, hint, on) {
+        let clicked = icon_button(root, rect, icon, hint, on);
+        if let Some(group) = ov.group.as_ref().filter(|_| menu == Some(Menu::Together)) {
+            super::together::count(root, rect, group.members.len());
+        }
+        if clicked {
             match menu {
                 Some(m) => ov.menu = if on { None } else { Some(m) },
                 None => {

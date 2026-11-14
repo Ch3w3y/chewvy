@@ -102,6 +102,7 @@ Decoded in software by FFmpeg and played through the system audio server.
 | Automatic fallback when direct play fails | yes: the item reopens at the position it reached as a server remux, then as the 1080p 20 Mbps transcode, then stops with an error naming the last step. "Fails" means mpv ended the file with an error, dropped a video or audio track it could not decode, or showed no first frame within 30 seconds. Not detected: a decoder that starts and then fails on every frame, and a picture that decodes with wrong colours. **Measured against a mock server only** (unreadable file, undecodable video, undecodable audio, nothing served); what a real Plex Media Server's remux does for each case is unmeasured. |
 | Resume position, watched state, progress reports | yes, through `/:/timeline` and `/:/scrobble`; can be switched off |
 | Audio and subtitle track choice | yes, applied in the player |
+| Watch together (Plex Watch Together) | yes, for films and episodes: start a room from the title's page and invite Home users and friends, join a room listed there or under the server's libraries, invite more from the room's panel in the player, leave it, or remove it from the list. Joining a room whose title is on another of the account's servers connects to that server first; a room on a server the account does not have is listed without Join. Play, pause and seek from anyone move everyone, here and in Plex's web app; someone joining a room under way starts where it is. Plex does not check that the people invited can reach the server. A room is one title for three hours. Playback speed and the next-episode hand-off are off in a room. The HDR window follows a room, and a pause or seek made with its own keys moves everyone. Plex's other apps no longer offer the feature. **Measured against Plex's live service** with disposable servers: a pause, play or seek reaches the other side 0.1 to 1 s later, from Chewvy or from Plex's web app, because each sends a change with its once-a-second answer to the service; against a scripted participant Chewvy held within 0.18 s (median under 0.01 s), and a Windows and a Linux Chewvy played 0.04 s apart. Plex's web app ran a steady 0.95 s ahead and left it, inside its own looser tolerance; see [PLEX_WATCH_TOGETHER.md](PLEX_WATCH_TOGETHER.md) 4. |
 | Several Plex accounts, Plex Home users | **not implemented** |
 | Music and photo libraries | **not implemented**: films and television only |
 
@@ -123,7 +124,8 @@ the measured shapes above, and the server's answer to that profile decides.
 | Quick Connect and password sign-in, LAN discovery, several servers | yes |
 | Used on its own, with no Plex account | yes: the app opens on the server's libraries. Sign-in from the first-start screen was run with Quick Connect against a Jellyfin 12.4.0 test server; the password path from that screen was not. |
 | Search | yes: films, shows and episodes by title (`GET /Items?searchTerm=`), shown as one group per server after the Plex server's groups. People are not searched. |
-| Live TV, music, SyncPlay | **not implemented** |
+| Watch together (SyncPlay) | yes: start or join a group from an item's page; play, pause and seek from anyone move everyone; a member that stalls holds the group until it catches up; a member that joins mid-title starts where the group is. One title at a time: no shared queue, repeat, shuffle, next or previous, and no chat. Playback speed is not offered in a group. **Measured on a Jellyfin 12.4.0 test server** against a scripted second member (within 0.05 s, 0.11 s just after moving to the HDR window) and against the Jellyfin web client in a headless browser (within 0.21 s, the web client's own lag included); see [JELLYFIN.md](JELLYFIN.md) 6.6. |
+| Live TV, music | **not implemented** |
 
 ## Unverified behaviour
 
@@ -155,6 +157,13 @@ build answers. Source comments marked **[U]** point here.
   unknown.
 - **HTTP 429 is surfaced once.** No retry, no backoff, no `Retry-After`
   handling, on every route.
+- **A request the server never read is sent once more.** A server closes a
+  kept-alive connection it has left idle (Plex's room service after 20 s),
+  and a request that leaves at that moment gets no answer. It is sent again
+  once, on a new connection, whatever its verb; a request that does get an
+  answer is never repeated. Tested against a host that closes the connection
+  unanswered. A server that acts on a request and then drops the connection
+  before answering would see it twice; none has been observed to.
 
 ### Library and metadata shapes
 

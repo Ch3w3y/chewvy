@@ -44,6 +44,15 @@ pub(super) fn popover(ov: &mut Overlay, root: &egui::Ui, p: &mut Player, menu: M
                 ui.spacing_mut().slider_width = 150.0;
                 ui.spacing_mut().item_spacing.y = 4.0;
                 ui.set_width(if menu == Menu::Settings { 340.0 } else { 300.0 });
+                // The group panel changes while it is open (people join, an
+                // Invite button appears), and a scroll area keeps the height
+                // it opened with: this one panel sizes itself instead.
+                if menu == Menu::Together {
+                    if let Some(group) = &ov.group {
+                        ov.pick = super::together::panel(ui, group);
+                    }
+                    return;
+                }
                 egui::ScrollArea::vertical()
                     .scroll_source(
                         egui::scroll_area::ScrollSource::SCROLL_BAR
@@ -57,6 +66,7 @@ pub(super) fn popover(ov: &mut Overlay, root: &egui::Ui, p: &mut Player, menu: M
                         Menu::Chapters => chapters(ui, p),
                         Menu::Quality => quality(ui, ov, p),
                         Menu::Settings => settings(ui, ov, p),
+                        Menu::Together => {}
                     });
             });
         });

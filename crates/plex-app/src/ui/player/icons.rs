@@ -26,6 +26,7 @@ pub enum Icon {
     ArrowLeft,
     Check,
     Quality,
+    Group,
 }
 
 fn stroke(rect: Rect, color: Color32) -> Stroke {
@@ -141,6 +142,15 @@ pub fn paint(painter: &Painter, icon: Icon, rect: Rect, color: Color32) {
             for (i, h) in heights.iter().enumerate() {
                 let x = r.left() + w * (0.1 + 0.2 * i as f32);
                 painter.line_segment([pos2(x, c.y - w * h / 2.0), pos2(x, c.y + w * h / 2.0)], s);
+            }
+        }
+        Icon::Group => {
+            // Two people, the one behind smaller.
+            for (dx, scale) in [(0.2, 0.8), (-0.12, 1.0)] {
+                let head = pos2(c.x + w * dx, c.y - w * 0.16 * scale);
+                painter.circle_stroke(head, w * 0.14 * scale, s);
+                let shoulders = pos2(c.x + w * dx, c.y + w * 0.42);
+                painter.add(Shape::line(arc(shoulders, w * 0.28 * scale, PI, TAU), s));
             }
         }
         Icon::Speed => {

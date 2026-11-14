@@ -4,8 +4,10 @@
 use std::time::{Duration, Instant};
 
 use crate::player::{self, quality, PlayRequest};
+use crate::ui::player::together::Pick;
 use crate::ui::player::{Action, Overlay};
 use crate::ui::theme;
+use crate::ui::together::Choice;
 use crate::watch::Cmd;
 
 use super::Ui;
@@ -33,6 +35,7 @@ impl Ui {
                 self.overlay = Some(Overlay::default());
                 self.status.clear();
                 self.error = None;
+                self.player_opened();
             }
             Err(e) => self.error = Some(e),
         }
@@ -41,11 +44,15 @@ impl Ui {
     /// The playing screen: [`Overlay`] over the video the host renders behind it.
     pub(super) fn draw_playback(&mut self, root: &mut egui::Ui) {
         self.report_progress(root.ctx());
+        let badge = self.together.badge();
         let overlay = self.overlay.get_or_insert_with(Overlay::default);
+        overlay.group = badge;
         match overlay.show(root, &mut self.artwork) {
             Action::Stay => self.auto_hdr(root.ctx()),
             Action::Output { hdr, at } => self.request_output(hdr, at, root.ctx()),
             Action::Back(failure) => {
+                // Leaving the player leaves the group: it would wait for this one.
+                self.leave_group(Some("You left the group"));
                 self.end_playback();
                 self.reset_output();
                 if failure.is_some() {
@@ -53,6 +60,9 @@ impl Ui {
                 }
             }
             Action::Unplayable(why) => self.fall_back(why, root.ctx()),
+            Action::Group(Pick::Leave) => self.leave_group(Some("You left the group")),
+            Action::Group(Pick::Tick(id)) => self.room_choice(Choice::Tick(id)),
+            Action::Group(Pick::Invite) => self.room_choice(Choice::Invite),
             Action::Next(next) => {
                 self.end_playback();
                 self.handoff = Some(format!("Up next · {}", next.label));
@@ -82,6 +92,7 @@ impl Ui {
                 });
             }
         }
+        self.follow_group(root.ctx());
         self.draw_hdr_prompt(root.ctx());
     }
 
@@ -105,6 +116,7 @@ impl Ui {
         self.end_playback();
         let Some((next, line)) = quality::fallback(index) else {
             self.reset_output();
+            self.leave_group(Some("You left the group: this title cannot play here"));
             self.error = Some(if fell_back {
                 format!(
                     "{why}, after falling back to {}",

@@ -9,6 +9,7 @@ mod bar;
 pub(crate) mod hdr;
 mod icons;
 mod menus;
+pub(crate) mod together;
 
 use std::time::{Duration, Instant};
 
@@ -36,6 +37,8 @@ pub enum Action {
     /// Reopen the same item at `at` seconds in the HDR window (`hdr`) or back
     /// in this one.
     Output { hdr: bool, at: f64 },
+    /// A choice in the watch-together panel.
+    Group(together::Pick),
 }
 
 /// Which popover is open.
@@ -47,6 +50,7 @@ pub(crate) enum Menu {
     Chapters,
     Quality,
     Settings,
+    Together,
 }
 
 /// Choices mpv does not report back, so the overlay remembers them.
@@ -76,6 +80,10 @@ pub struct Overlay {
     pub(crate) scrub: Option<f64>,
     /// A quality picked in the settings popover, applied after this frame.
     pub(crate) requality: Option<usize>,
+    /// The watch-together group the player follows, as the app last saw it.
+    pub(crate) group: Option<together::Badge>,
+    /// What was chosen in the group panel this frame.
+    pub(crate) pick: Option<together::Pick>,
 }
 
 impl Default for Overlay {
@@ -92,6 +100,8 @@ impl Default for Overlay {
             hdr_up_next: None,
             scrub: None,
             requality: None,
+            group: None,
+            pick: None,
         }
     }
 }
@@ -140,7 +150,7 @@ impl Overlay {
             return action;
         }
         if p.take_next_asked() {
-            if let Some(next) = p.request().next.clone() {
+            if let Some(next) = self.next_up(p) {
                 return Action::Next(next);
             }
         }
@@ -194,6 +204,12 @@ impl Overlay {
         if let Some(menu) = self.menu {
             menus::popover(self, root, p, menu);
         }
+        if let Some(pick) = self.pick.take() {
+            if pick == together::Pick::Leave {
+                self.menu = None;
+            }
+            return Action::Group(pick);
+        }
         if self.info {
             menus::info_sheet(root, p);
         }
@@ -229,7 +245,7 @@ impl Overlay {
             || self.last_activity.elapsed() < HIDE_AFTER
     }
 
-    fn sleep_timer(&mut self, p: &Player) {
+    fn sleep_timer(&mut self, p: &mut Player) {
         if let Some((at, _)) = self.prefs.sleep {
             if Instant::now() >= at {
                 self.prefs.sleep = None;
@@ -282,12 +298,13 @@ impl Overlay {
             Key::M => p.set_mute(!muted),
             Key::F => self.toggle_fullscreen(ctx),
             Key::I => self.info = !self.info,
-            Key::OpenBracket => p.set_speed(step_speed(speed, -1)),
-            Key::CloseBracket => p.set_speed(step_speed(speed, 1)),
+            // A group sets the pace while in one.
+            Key::OpenBracket if self.group.is_none() => p.set_speed(step_speed(speed, -1)),
+            Key::CloseBracket if self.group.is_none() => p.set_speed(step_speed(speed, 1)),
             Key::C => cycle_subtitles(p),
             Key::A => cycle_audio(p),
             Key::S => skip_marker(p),
-            Key::N => return p.request().next.clone().map(Action::Next),
+            Key::N => return self.next_up(p).map(Action::Next),
             Key::Escape => {
                 if self.menu.take().is_some() || std::mem::take(&mut self.info) {
                     return None;
@@ -405,8 +422,9 @@ impl Overlay {
         visible: bool,
     ) -> Action {
         let finished = p.ended() == Some(&Ended::Finished);
-        let Some(next) = p.request().next.clone() else {
-            return if finished {
+        let Some(next) = self.next_up(p) else {
+            // In a group the last frame stays up: the group may seek back.
+            return if finished && self.group.is_none() {
                 Action::Back(None)
             } else {
                 Action::Stay
@@ -460,6 +478,13 @@ impl Overlay {
 }
 
 impl Overlay {
+    /// The episode this player would hand over to. None while it follows a
+    /// group: the group starts its titles together, and a hand-off here
+    /// would take this player out of step with it.
+    pub(super) fn next_up(&self, p: &Player) -> Option<NextUp> {
+        p.request().next.clone().filter(|_| self.group.is_none())
+    }
+
     /// The up-next card is in this window, which the HDR window may cover:
     /// say the same over the picture there, once per line.
     fn up_next_in_hdr_window(&mut self, p: &Player, next: &NextUp, countdown: Option<u64>) {

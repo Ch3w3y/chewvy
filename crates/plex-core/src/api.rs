@@ -33,6 +33,7 @@ struct UserWire {
     #[serde(rename = "authToken")]
     auth_token: Option<String>,
     uuid: Option<String>,
+    id: Option<u64>,
     #[serde(rename = "rememberExpiresAt")]
     remember_expires_at: Option<i64>,
     #[serde(rename = "twoFactorEnabled")]
@@ -47,6 +48,9 @@ struct UserWire {
 pub struct Account {
     /// The Plex account uuid (device-identifying, not a secret).
     pub uuid: String,
+    /// The numeric plex.tv user id, which Watch Together rooms name people
+    /// by; `None` when the answer omits it.
+    pub id: Option<u64>,
     /// The account-wide bearer token, if the response carried one.
     token: Option<SecretString>,
     /// `rememberExpiresAt`: unix seconds after which Plex stops remembering
@@ -123,6 +127,7 @@ pub fn fetch_account(http: &Http, token: &SecretString) -> Result<Account, CoreE
         .ok_or(CoreError::ResponseShape)?;
     Ok(Account {
         uuid,
+        id: wire.id,
         token: wire
             .auth_token
             .filter(|t| !t.is_empty())

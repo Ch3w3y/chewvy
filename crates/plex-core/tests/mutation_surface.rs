@@ -134,9 +134,18 @@ const CRATES: [&str; 5] = [
 ///   and 1 `.delete(`: `/Videos/ActiveEncodings`, which ends the encode behind
 ///   a stream this client itself opened and touches no library data.
 /// * `jellyfin-core/src/quickconnect.rs` - 2 `.post(`: initiate and authenticate.
+/// * `jellyfin-core/src/syncplay.rs` - 2 `.post(`: the one helper every
+///   SyncPlay call goes through, with and without a body. These change a
+///   watch group the user chose to create or join and touch no library data.
 /// * `plex-app/src/sources/worker.rs` - 1 `.delete(`: forgetting a source deletes
 ///   its token slot on this device, which is the only write this screen does.
-const PINNED_WRITE_ROWS: [(&str, &str, usize); 18] = [
+/// * `plex-core/src/together/room.rs` - 2 `.post(`: creating a Watch Together
+///   room and inviting people to it; and 1 `.delete(`: leaving one. These
+///   change a watch room the user chose to create or join on
+///   `together.plex.tv` and touch no library data and no server.
+/// * `plex-core/src/together/people.rs` - 1 `.post(`: the friends list, a
+///   GraphQL query that changes nothing but is only accepted as a `POST`.
+const PINNED_WRITE_ROWS: [(&str, &str, usize); 22] = [
     ("plex-core/src/api.rs", ".delete(", 1),
     ("plex-core/src/tokens.rs", ".delete(", 1),
     ("plex-core/src/auth.rs", ".post(", 1),
@@ -154,7 +163,11 @@ const PINNED_WRITE_ROWS: [(&str, &str, usize); 18] = [
     ("jellyfin-core/src/http.rs", "\"POST\"", 2),
     ("jellyfin-core/src/http.rs", "\"DELETE\"", 2),
     ("jellyfin-core/src/quickconnect.rs", ".post(", 2),
+    ("jellyfin-core/src/syncplay.rs", ".post(", 2),
     ("plex-app/src/sources/worker.rs", ".delete(", 1),
+    ("plex-core/src/together/room.rs", ".post(", 2),
+    ("plex-core/src/together/room.rs", ".delete(", 1),
+    ("plex-core/src/together/people.rs", ".post(", 1),
 ];
 
 /// The **explicit zero** rows: `(file, needle)` pairs that must be observed as

@@ -212,39 +212,10 @@ impl Http {
         }
         let url = url.as_str().to_owned();
         let headers = headers_for(&self.client, token);
-        let response: HttpResponse = match method {
-            // ureq 3.3.0 models a request that has not been given a body as a
-            // different typestate than one that has, so each verb is built and
-            // sent inside its own arm instead of sharing a `RequestBuilder`.
-            // `RequestBuilder<WithoutBody>` (GET/DELETE) is sent with `call()`;
-            // `send_empty()` only exists on `RequestBuilder<WithBody>`.
-            "GET" => {
-                let mut request = self.agent.get(&url);
-                for header in &headers {
-                    request = request.header(&header.name, &header.value);
-                }
-                request.call()
-            }
-            "DELETE" => {
-                let mut request = self.agent.delete(&url);
-                for header in &headers {
-                    request = request.header(&header.name, &header.value);
-                }
-                request.call()
-            }
-            "POST" => {
-                let mut request = self.agent.post(&url);
-                for header in &headers {
-                    request = request.header(&header.name, &header.value);
-                }
-                match body {
-                    Some(text) => request
-                        .header("Content-Type", "application/json")
-                        .send(text.to_owned()),
-                    None => request.send_empty(),
-                }
-            }
-            _ => return Err(CoreError::InvalidInput),
+        let response = match self.call(method, &url, &headers, body) {
+            // See [`dropped_unanswered`]: sent once more, on a new connection.
+            Err(error) if dropped_unanswered(&error) => self.call(method, &url, &headers, body),
+            answer => answer,
         }
         .map_err(map_ureq_error)?;
 
@@ -261,6 +232,51 @@ impl Http {
             status,
             body: body_bytes,
         })
+    }
+
+    /// Put one request on the wire.
+    fn call(
+        &self,
+        method: &str,
+        url: &str,
+        headers: &[crate::client_info::Header],
+        body: Option<&str>,
+    ) -> Result<HttpResponse, ureq::Error> {
+        match method {
+            // ureq 3.3.0 models a request that has not been given a body as a
+            // different typestate than one that has, so each verb is built and
+            // sent inside its own arm instead of sharing a `RequestBuilder`.
+            // `RequestBuilder<WithoutBody>` (GET/DELETE) is sent with `call()`;
+            // `send_empty()` only exists on `RequestBuilder<WithBody>`.
+            "GET" => {
+                let mut request = self.agent.get(url);
+                for header in headers {
+                    request = request.header(&header.name, &header.value);
+                }
+                request.call()
+            }
+            "DELETE" => {
+                let mut request = self.agent.delete(url);
+                for header in headers {
+                    request = request.header(&header.name, &header.value);
+                }
+                request.call()
+            }
+            "POST" => {
+                let mut request = self.agent.post(url);
+                for header in headers {
+                    request = request.header(&header.name, &header.value);
+                }
+                match body {
+                    Some(text) => request
+                        .header("Content-Type", "application/json")
+                        .send(text.to_owned()),
+                    None => request.send_empty(),
+                }
+            }
+            // Mapped to `CoreError::InvalidInput`, like a URL that cannot be sent.
+            _ => Err(ureq::Error::BadUri(String::new())),
+        }
     }
 }
 
@@ -291,6 +307,25 @@ fn read_body(mut response: HttpResponse) -> Result<Vec<u8>, CoreError> {
         .read_to_end(&mut buf)
         .map_err(|_| CoreError::ResponseShape)?;
     Ok(buf)
+}
+
+/// Whether the peer closed the connection without answering.
+///
+/// A server lets go of a kept-alive connection it has left idle (Plex's room
+/// service after 20 s), and ureq 3.3.0 reuses a pooled connection whatever its
+/// age. A request that leaves just as the server closes is never read and
+/// comes back as this error, so [`Http::send`] sends it once more; the pool
+/// then finds the connection closed and opens a new one. An answer of any
+/// status is never sent again.
+fn dropped_unanswered(error: &ureq::Error) -> bool {
+    use std::io::ErrorKind::{BrokenPipe, ConnectionAborted, ConnectionReset, UnexpectedEof};
+    matches!(
+        error,
+        ureq::Error::Io(io) if matches!(
+            io.kind(),
+            BrokenPipe | ConnectionAborted | ConnectionReset | UnexpectedEof
+        )
+    )
 }
 
 fn map_ureq_error(error: ureq::Error) -> CoreError {

@@ -4,6 +4,35 @@ All notable changes to Chewvy are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-11-14
+
+### Added
+
+- Watch together for Jellyfin items: a "Watch together" button on an item's
+  page starts a SyncPlay group or joins one the server lists. In a group,
+  play, pause and seek from anyone move everyone; the player waits for a
+  member whose connection stalls, and someone joining mid-title starts where
+  the group is. The player shows the group's members and state, and Leave
+  gives back the usual controls and playback speed.
+- Watch together for Plex films and episodes, through Plex's Watch Together
+  service. "Watch together" on the title's page starts a room and invites
+  people from the account's Home and friends; rooms for the title are listed
+  there to join, and while the account is in any room a "Watch together"
+  entry under the Plex server's libraries lists them all. Play, pause and
+  seek move everyone, here and in Plex's web app. The player shows who is in
+  the room and who is ready, and its room panel invites more people; Leave
+  keeps playing alone and keeps the room on the list, and Remove takes it
+  off. Joining a room whose title is on another of the account's servers
+  connects to that server first. The HDR window follows a room as this
+  window does, and a pause or seek made with its own keys moves everyone.
+  Plex does not check that the people invited can reach the server.
+
+### Fixed
+
+- A request to Plex or to a Jellyfin server could fail once with "could not
+  be reached" when it left on a connection the server had just closed for
+  being idle. Such a request is now sent once more on a new connection.
+
 ## [0.1.4] - 2026-11-13
 
 ### Added

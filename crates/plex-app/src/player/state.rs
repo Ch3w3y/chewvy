@@ -116,6 +116,9 @@ pub struct Snapshot {
     pub paused: bool,
     /// Waiting for the network cache.
     pub buffering: bool,
+    /// Not advancing although it should: waiting for the cache, or a seek or
+    /// the first frame not yet shown.
+    pub stalled: bool,
     /// Seconds of media buffered ahead of the position.
     pub cached_ahead: Option<f64>,
     /// Played to the end (`keep-open` holds the last frame).
@@ -201,6 +204,10 @@ impl Snapshot {
         self.duration = num("duration");
         self.paused = flag("pause");
         self.buffering = flag("paused-for-cache");
+        // `seeking` stays on until a seek's (or the file's) first frame is
+        // shown, paused or not; `core-idle` cannot help, as it is on whenever
+        // the player is paused.
+        self.stalled = self.buffering || flag("seeking");
         self.cached_ahead = num("demuxer-cache-duration");
         self.eof = flag("eof-reached");
         self.volume = num("volume").unwrap_or(100.0);

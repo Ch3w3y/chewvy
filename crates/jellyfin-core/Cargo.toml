@@ -1,6 +1,6 @@
 [package]
 name = "jellyfin-core"
-description = "Display-free Jellyfin client core: device identity, MediaBrowser authorization, server info, Quick Connect, password sign-in, ticks, LAN discovery."
+description = "Display-free Jellyfin client core: device identity, MediaBrowser authorization, server info, Quick Connect, password sign-in, ticks, LAN discovery, SyncPlay and the session socket."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -15,6 +15,9 @@ url = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+rustls = { workspace = true }
+webpki-roots = { workspace = true }
+tungstenite = { workspace = true }
 
 [dev-dependencies]
 tiny_http = { workspace = true }

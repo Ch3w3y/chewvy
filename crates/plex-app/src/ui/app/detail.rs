@@ -8,9 +8,11 @@
 use plex_core::library::Item;
 
 use crate::player;
+use crate::source::{self, Origin};
 use crate::ui::detail::{self, Action};
 use crate::watch::Cmd;
 
+use super::together::Subject;
 use super::Ui;
 
 impl Ui {
@@ -37,14 +39,19 @@ impl Ui {
         self.detail = Some(page);
         match action {
             Some(Action::Play(target)) => {
-                self.status = format!("Opening “{}”…", target.title);
-                self.send(Cmd::Play {
-                    rating_key: target.rating_key,
-                    title: target.title,
-                    start: target.start,
-                    quality: None,
-                    wakeup: ui.ctx().clone(),
-                });
+                self.start_title(target.rating_key, target.title, target.start, ui.ctx());
+            }
+            Some(Action::Together { target, anchor }) => {
+                match source::split(&target.rating_key).0 {
+                    Origin::Jellyfin(server) => self.open_together(server, anchor),
+                    Origin::Plex => self.open_rooms(
+                        Subject::Title {
+                            rating_key: target.rating_key,
+                            title: target.title,
+                        },
+                        anchor,
+                    ),
+                }
             }
             Some(Action::Season { rating_key }) => {
                 if let Some(page) = &mut self.detail {

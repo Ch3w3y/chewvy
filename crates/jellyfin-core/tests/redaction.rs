@@ -20,15 +20,27 @@ fn crate_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
 
+/// Every `.rs` file under `src/`, module folders included.
+fn source_files() -> Vec<PathBuf> {
+    let mut pending = vec![crate_root().join("src")];
+    let mut files = Vec::new();
+    while let Some(dir) = pending.pop() {
+        for entry in std::fs::read_dir(&dir).expect("src dir") {
+            let path = entry.expect("entry").path();
+            if path.is_dir() {
+                pending.push(path);
+            } else if path.extension().and_then(|e| e.to_str()) == Some("rs") {
+                files.push(path);
+            }
+        }
+    }
+    files
+}
+
 #[test]
 fn every_secret_unwrap_is_a_known_call_site() {
-    let src = crate_root().join("src");
     let mut found = Vec::new();
-    for entry in std::fs::read_dir(&src).expect("src dir") {
-        let path: PathBuf = entry.expect("entry").path();
-        if path.extension().and_then(|e| e.to_str()) != Some("rs") {
-            continue;
-        }
+    for path in source_files() {
         let text = std::fs::read_to_string(&path).expect("readable source");
         let hits = text.matches(".expose()").count();
         if hits > 0 {
@@ -48,9 +60,7 @@ fn no_source_file_names_a_real_token_shape() {
     // Structural guard for the convention: real Jellyfin access tokens are
     // base64-ish blobs; the sources and tests must only ever contain the
     // mock-prefixed literals.
-    let dir = crate_root().join("src");
-    for entry in std::fs::read_dir(&dir).expect("src dir") {
-        let path = entry.expect("entry").path();
+    for path in source_files() {
         let text = std::fs::read_to_string(&path).expect("readable source");
         assert!(
             !text.contains("jfn-") && !text.contains("JFN_"),

@@ -106,6 +106,9 @@ pub struct LiveClient {
     claim: Option<String>,
     account: Option<SecretString>,
     server: Option<Server>,
+    /// The connected server's machine identifier, which names it in a
+    /// Watch Together room.
+    machine: Option<String>,
     /// Part keys the server reported, keyed by (rating key, part index), so
     /// [`LiveClient::resolve`] never invents a key.
     parts: HashMap<CacheKey, String>,
@@ -128,6 +131,7 @@ impl LiveClient {
             claim: None,
             account: None,
             server: None,
+            machine: None,
             parts: HashMap::new(),
             last_play: None,
         })
@@ -137,6 +141,34 @@ impl LiveClient {
     #[must_use]
     pub fn client_identifier(&self) -> &str {
         &self.client.client_identifier
+    }
+
+    /// The identity every request presents.
+    #[must_use]
+    pub fn client_info(&self) -> &ClientInfo {
+        &self.client
+    }
+
+    /// The plex.tv transport, for account-wide reads.
+    #[must_use]
+    pub fn plex_tv(&self) -> &Http {
+        &self.plex_tv
+    }
+
+    /// The connected server's machine identifier.
+    #[must_use]
+    pub fn machine_identifier(&self) -> Option<&str> {
+        self.machine.as_deref()
+    }
+
+    /// The numeric plex.tv user id for the current token; `None` when plex.tv
+    /// cannot be asked or does not say.
+    #[must_use]
+    pub fn account_id(&self) -> Option<u64> {
+        let token = self.account.as_ref()?;
+        plex_core::api::fetch_account(&self.plex_tv, token)
+            .ok()
+            .and_then(|account| account.id)
     }
 
     /// `POST /api/v2/pins`: the 4-character code and the plex.tv/link claim URL.
@@ -270,6 +302,7 @@ impl LiveClient {
         };
         let base = server.base_url().to_owned();
         self.server = Some(server);
+        self.machine = Some(resource.client_identifier().to_owned());
         Ok(base)
     }
 

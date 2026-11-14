@@ -71,6 +71,7 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | autocfg | 1.5.1 | license: Apache-2.0 OR MIT | transitive | crates.io |
 | base64 | 0.22.1 | license: MIT OR Apache-2.0 | plex-core (dependencies) | crates.io |
 | bitflags | 2.13.2 | license: MIT OR Apache-2.0 | transitive | crates.io |
+| block-buffer | 0.12.1 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | blocking | 1.7.0 | license: Apache-2.0 OR MIT | transitive | crates.io |
 | bytemuck | 1.25.2 | license: Zlib OR Apache-2.0 OR MIT | transitive | crates.io |
 | bytemuck_derive | 1.12.0 | license: Zlib OR Apache-2.0 OR MIT | transitive | crates.io |
@@ -83,6 +84,7 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | cc | 1.4.5 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | cfg-if | 1.0.4 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | cfg_aliases | 0.2.2 | license: MIT | transitive | crates.io |
+| chacha20 | 0.10.2 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | chunked_transfer | 1.5.0 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | clap | 4.6.6 | license: MIT OR Apache-2.0 | plex-cli (dependencies) | crates.io |
 | clap_builder | 4.6.6 | license: MIT OR Apache-2.0 | transitive | crates.io |
@@ -91,10 +93,15 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | color | 0.3.3 | license: Apache-2.0 OR MIT | transitive | crates.io |
 | colorchoice | 1.0.5 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | concurrent-queue | 2.5.0 | license: Apache-2.0 OR MIT | transitive | crates.io |
+| const-oid | 0.10.3 | license: Apache-2.0 OR MIT | transitive | crates.io |
+| cpufeatures | 0.3.1 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | crc32fast | 1.5.1 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | crossbeam-utils | 0.8.22 | license: MIT OR Apache-2.0 | transitive | crates.io |
+| crypto-common | 0.2.2 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | cursor-icon | 1.2.0 | license: MIT OR Apache-2.0 OR Zlib | transitive | crates.io |
+| data-encoding | 2.11.1 | license: MIT | transitive | crates.io |
 | data-url | 0.3.2 | license: MIT OR Apache-2.0 | transitive | crates.io |
+| digest | 0.11.3 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | dirs-sys | 0.5.0 | license: MIT OR Apache-2.0 | plex-core (dependencies) | crates.io |
 | displaydoc | 0.2.7 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | dlib | 0.5.3 | license: MIT | transitive | crates.io |
@@ -148,6 +155,7 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | http | 1.5.0 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | httparse | 1.10.1 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | httpdate | 1.0.3 | license: MIT OR Apache-2.0 | transitive | crates.io |
+| hybrid-array | 0.4.15 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | icu_collections | 2.3.0 | license: Unicode-3.0 | transitive | crates.io |
 | icu_locale_core | 2.3.0 | license: Unicode-3.0 | transitive | crates.io |
 | icu_normalizer | 2.3.0 | license: Unicode-3.0 | transitive | crates.io |
@@ -163,7 +171,7 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | is_terminal_polyfill | 1.70.2 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | itertools | 0.15.0 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | itoa | 1.0.18 | license: MIT OR Apache-2.0 | transitive | crates.io |
-| jellyfin-core | 0.1.4 | GPL-3.0-or-later | workspace member target | workspace member (path) |
+| jellyfin-core | 0.2.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
 | jiff | 0.2.31 | license: Unlicense OR MIT | transitive | crates.io |
 | khronos_api | 3.1.0 | license: Apache-2.0 | transitive | crates.io |
 | kurbo | 0.13.1 | license: Apache-2.0 OR MIT | transitive | crates.io |
@@ -196,10 +204,10 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | pin-project-lite | 0.2.17 | license: Apache-2.0 OR MIT | transitive | crates.io |
 | piper | 0.2.5 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | pkg-config | 0.3.34 | license: MIT OR Apache-2.0 | plex-cli (build-dependencies), plex-player (build-dependencies) | crates.io |
-| plex-app | 0.1.4 | GPL-3.0-or-later | workspace member target | workspace member (path) |
-| plex-cli | 0.1.4 | GPL-3.0-or-later | workspace member target | workspace member (path) |
-| plex-core | 0.1.4 | GPL-3.0-or-later | workspace member target | workspace member (path) |
-| plex-player | 0.1.4 | GPL-3.0-or-later | workspace member target | workspace member (path) |
+| plex-app | 0.2.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
+| plex-cli | 0.2.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
+| plex-core | 0.2.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
+| plex-player | 0.2.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
 | png | 0.18.1 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | polling | 3.11.0 | license: Apache-2.0 OR MIT | transitive | crates.io |
 | polycool | 0.4.0 | license: MIT OR Apache-2.0 | transitive | crates.io |
@@ -210,6 +218,8 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | pxfm | 0.1.30 | license: BSD-3-Clause OR Apache-2.0 | transitive | crates.io |
 | quick-xml | 0.41.0 | license: MIT | transitive | crates.io |
 | quote | 1.0.47 | license: MIT OR Apache-2.0 | transitive | crates.io |
+| rand | 0.10.3 | license: MIT OR Apache-2.0 | transitive | crates.io |
+| rand_core | 0.10.1 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | raw-window-handle | 0.6.2 | license: MIT OR Apache-2.0 OR Zlib | plex-player (dependencies) | crates.io |
 | read-fonts | 0.41.0 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | regex | 1.13.1 | license: MIT OR Apache-2.0 | transitive | crates.io |
@@ -221,7 +231,7 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | roxmltree | 0.21.1 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | rustix | 0.38.44 | license: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT | transitive | crates.io |
 | rustix | 1.1.4 | license: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT | transitive | crates.io |
-| rustls | 0.23.44 | license: Apache-2.0 OR ISC OR MIT | plex-core (dependencies) | crates.io |
+| rustls | 0.23.44 | license: Apache-2.0 OR ISC OR MIT | jellyfin-core (dependencies), plex-core (dependencies) | crates.io |
 | rustls-native-certs | 0.8.4 | license: Apache-2.0 OR ISC OR MIT | plex-core (dependencies) | crates.io |
 | rustls-pki-types | 1.15.1 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | rustls-webpki | 0.103.15 | license: ISC | transitive | crates.io |
@@ -234,6 +244,7 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | serde_derive | 1.0.229 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | serde_json | 1.0.151 | license: MIT OR Apache-2.0 | jellyfin-core (dependencies), plex-app (dependencies), plex-cli (dependencies), plex-core (dependencies) | crates.io |
 | serde_repr | 0.1.21 | license: MIT OR Apache-2.0 | transitive | crates.io |
+| sha1 | 0.11.0 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | shlex | 2.0.1 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | signal-hook-registry | 1.4.8 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | simd-adler32 | 0.3.10 | license: MIT | transitive | crates.io |
@@ -271,6 +282,8 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | tracing-attributes | 0.1.31 | license: MIT | transitive | crates.io |
 | tracing-core | 0.1.36 | license: MIT | transitive | crates.io |
 | ttf-parser | 0.25.1 | license: MIT OR Apache-2.0 | transitive | crates.io |
+| tungstenite | 0.30.0 | license: MIT OR Apache-2.0 | jellyfin-core (dependencies) | crates.io |
+| typenum | 1.20.1 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | unicode-general-category | 1.1.0 | license: Apache-2.0 | transitive | crates.io |
 | unicode-ident | 1.0.24 | license: (MIT OR Apache-2.0) AND Unicode-3.0 | transitive | crates.io |
 | unicode-segmentation | 1.13.3 | license: MIT OR Apache-2.0 | transitive | crates.io |
@@ -299,7 +312,7 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | wayland-sys | 0.31.11 | license: MIT | transitive | crates.io |
 | web-time | 1.1.0 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | webbrowser | 1.2.4 | license: MIT OR Apache-2.0 | transitive | crates.io |
-| webpki-roots | 1.0.8 | license: CDLA-Permissive-2.0 | transitive | crates.io |
+| webpki-roots | 1.0.8 | license: CDLA-Permissive-2.0 | jellyfin-core (dependencies) | crates.io |
 | winit | 0.30.13 | license: Apache-2.0 | plex-app (dependencies) | crates.io |
 | winnow | 1.0.4 | license: MIT | transitive | crates.io |
 | writeable | 0.6.4 | license: Unicode-3.0 | transitive | crates.io |

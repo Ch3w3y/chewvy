@@ -70,3 +70,8 @@ pub mod library;
 /// this client makes that change what a server remembers, off by default. A
 /// disabled update performs no transport at all.
 pub mod progress;
+
+/// Watch Together: the rooms on `together.plex.tv`, the people who can be
+/// invited to one, and the Syncplay socket that keeps the room's players in
+/// step.
+pub mod together;

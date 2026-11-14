@@ -236,20 +236,44 @@ fn buttons(
     if !playing && play.clicked() {
         return Some(Action::Play(target));
     }
+    let mut right = play.rect.max.x;
     if target.start.is_some() {
         let from_start = overlay::secondary(
             ui,
-            pos2(play.rect.max.x + 12.0, origin.y),
+            pos2(right + 12.0, origin.y),
             id.with("start"),
             None,
             "Play from start",
             !playing,
         );
+        right = from_start.rect.max.x;
         if !playing && from_start.clicked() {
             return Some(Action::Play(Target {
                 start: None,
                 ..target
             }));
+        }
+    }
+    // Jellyfin servers group any title; a Plex room plays one film or
+    // episode.
+    let shared = match crate::source::split(&target.rating_key).0 {
+        Origin::Jellyfin(_) => true,
+        Origin::Plex => matches!(page.item.kind.as_deref(), Some("movie" | "episode")),
+    };
+    if shared {
+        let together = overlay::secondary(
+            ui,
+            pos2(right + 12.0, origin.y),
+            id.with("together"),
+            None,
+            "Watch together",
+            !playing,
+        );
+        if !playing && together.clicked() {
+            return Some(Action::Together {
+                target,
+                anchor: together.rect,
+            });
         }
     }
     None

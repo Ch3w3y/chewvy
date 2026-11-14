@@ -154,6 +154,8 @@ pub struct Ui {
     add: Option<crate::add_source::AddFlow>,
     /// The Sources screen is asking which kind of source to add.
     choosing: bool,
+    /// Watching together: the group, its follower, panel and notices.
+    together: together::Together,
 }
 
 impl Ui {
@@ -202,6 +204,7 @@ impl Ui {
             sources: crate::sources::load(),
             add: None,
             choosing: false,
+            together: together::Together::default(),
         }
     }
 
@@ -299,6 +302,7 @@ impl Ui {
                 }
             }
             Ev::Jf(answer) => self.apply_jellyfin(answer),
+            Ev::Together(news) => self.apply_together(news),
             Ev::SignedOut | Ev::NoPlex => self.open_without_plex(),
         }
     }
@@ -514,6 +518,7 @@ impl Ui {
         if let Some(request) = self.pending_play.take() {
             self.begin_playback(*request, root.ctx());
         }
+        self.together_frame(root.ctx());
         // A playing item owns the window: no rail, no status strip, only the
         // video behind and its controls on top.
         if player::is_active() {
@@ -563,6 +568,7 @@ impl Ui {
                 crate::ui::backdrop::release_sharp();
                 let libraries = self.libraries();
                 let entries = rail::entries(&libraries);
+                let rooms = self.room_count();
                 let held: Vec<rail::SwitcherServer> = self
                     .sources
                     .jellyfin
@@ -598,12 +604,16 @@ impl Ui {
                     &self.jellyfin_notes,
                     &switcher,
                     &mut field,
+                    rooms,
                 );
                 // The field reports its own focus, which is what gates this
                 // frame's card selection and the next frame's Browse keys.
                 self.typing |= field.typed;
                 match selection {
                     Some(rail::Choice::Go(entry)) => self.go(entry),
+                    Some(rail::Choice::Rooms(row)) => {
+                        self.open_rooms(together::Subject::Rooms, row);
+                    }
                     Some(rail::Choice::Connect(index)) => {
                         if let Some(name) = self.server_choices.get(index) {
                             self.status = format!("Connecting to {name}…");
@@ -684,14 +694,7 @@ impl Ui {
                     };
                     self.go(to);
                 } else if let Some(resume) = resume {
-                    self.status = format!("Opening “{}”…", resume.title);
-                    self.send(Cmd::Play {
-                        rating_key: resume.rating_key,
-                        title: resume.title,
-                        start: resume.start,
-                        quality: None,
-                        wakeup: ui.ctx().clone(),
-                    });
+                    self.start_title(resume.rating_key, resume.title, resume.start, ui.ctx());
                 }
             }
             Some(Entry::Settings) => self.draw_settings(ui),
@@ -911,6 +914,15 @@ mod app_settings;
 #[path = "app/sources.rs"]
 mod app_sources;
 
+#[path = "app/together.rs"]
+mod together;
+
+#[path = "app/rooms.rs"]
+mod rooms;
+
+#[cfg(test)]
+#[path = "app/room_tests.rs"]
+mod room_tests;
 #[cfg(test)]
 #[path = "app/tests.rs"]
 mod tests;

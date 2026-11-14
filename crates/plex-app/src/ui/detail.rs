@@ -46,6 +46,9 @@ pub enum Action {
     /// Open another item's page: an episode's own, or the show or season
     /// above this one.
     Open { rating_key: String, title: String },
+    /// Open the watch-together panel for this title, under the button at
+    /// `anchor`: its Jellyfin server's groups, or its Plex rooms.
+    Together { target: Target, anchor: egui::Rect },
 }
 
 /// One thing the page can put in the player.

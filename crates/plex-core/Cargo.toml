@@ -28,6 +28,10 @@ dirs-sys = { workspace = true }
 rustls = { workspace = true }
 rustls-native-certs = { workspace = true }
 zbus = { workspace = true }
+# Watch Together's sync socket: the TCP/TLS stream is opened here with the
+# rustls above and the same Mozilla root bundle ureq compiles in.
+tungstenite = { workspace = true }
+webpki-roots = { workspace = true }
 
 [dev-dependencies]
 tiny_http = { workspace = true }

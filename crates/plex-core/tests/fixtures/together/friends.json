@@ -1,0 +1,1 @@
+{"data":{"allFriendsV2":[{"user":{"avatar":"https://example.invalid/users/fakeuuid00000003/avatar","displayName":"Friend One","id":"fakeuuid00000003","username":"friend-one","idRaw":1000003},"createdAt":"2024-01-01T00:00:00Z"},{"user":{"avatar":null,"displayName":null,"id":"fakeuuid00000004","username":"friend-two","idRaw":"1000004"},"createdAt":"2024-01-02T00:00:00Z"}]}}

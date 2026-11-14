@@ -112,7 +112,7 @@ fn locked_versions(lock: &str, crate_name: &str) -> Vec<String> {
 
 #[test]
 fn workspace_version_and_license_are_pinned() {
-    assert_eq!(env!("CARGO_PKG_VERSION"), "0.1.4");
+    assert_eq!(env!("CARGO_PKG_VERSION"), "0.2.0");
     assert_eq!(env!("CARGO_PKG_LICENSE"), "GPL-3.0-or-later");
 }
 

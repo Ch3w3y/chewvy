@@ -70,5 +70,9 @@ pub mod add_source;
 /// of its Jellyfin servers — and the ids that say so.
 pub mod source;
 
+/// Watching together: the follower that keeps this player in step with a
+/// group, and the estimate of the group's clock it runs on.
+pub mod together;
+
 /// Sign-in, browse and play: the end-to-end app flow.
 pub mod watch;

@@ -183,6 +183,8 @@ pub enum Choice {
     Server(String),
     /// Open the Sources screen with its add panel up.
     AddSource,
+    /// Open the Plex rooms panel beside this row.
+    Rooms(Rect),
 }
 
 /// Draw the sidebar as a fixed-width left panel. Answers with what the user
@@ -192,6 +194,8 @@ pub enum Choice {
 /// `section` is the row to light up, which for a drill-in is the library or
 /// home screen it was reached from. `libraries` groups the library rows by
 /// source, and `notes` names a source that has libraries this frame cannot list.
+/// `rooms` counts the Plex Watch Together rooms the account is in; while there
+/// are any, a row under the Plex server's libraries opens them.
 #[allow(clippy::too_many_arguments)]
 pub fn show(
     root: &mut Ui,
@@ -202,6 +206,7 @@ pub fn show(
     notes: &[String],
     switcher: &Switcher<'_>,
     field: &mut Field<'_>,
+    rooms: usize,
 ) -> Option<Choice> {
     let mut choice = None;
     egui::Panel::left("plex-nav")
@@ -229,7 +234,7 @@ pub fn show(
                     .layout(egui::Layout::top_down(egui::Align::Min)),
             );
             choice = contents(
-                &mut child, entries, current, section, libraries, notes, switcher, field,
+                &mut child, entries, current, section, libraries, notes, switcher, field, rooms,
             );
         });
     choice
@@ -246,6 +251,7 @@ fn contents(
     notes: &[String],
     switcher: &Switcher<'_>,
     field: &mut Field<'_>,
+    rooms: usize,
 ) -> Option<Choice> {
     let mut choice = None;
     ui.spacing_mut().item_spacing.y = ROW_GAP;
@@ -276,12 +282,25 @@ fn contents(
         .filter(|e| matches!(e, Entry::Section { .. }))
         .collect();
     let headers = headers(libraries);
+    let mut opened = None;
     for index in 0..libraries.len() {
         if let Some((_, origin, server)) = headers.iter().find(|(start, _, _)| *start == index) {
             caption(ui, origin, server);
         }
         if let Some(entry) = rows.get(index) {
             go(entry, sub_row(ui, entry.label(), section == Some(entry)));
+        }
+        let last_plex = libraries
+            .get(index)
+            .is_some_and(|l| l.origin == Origin::Plex)
+            && libraries
+                .get(index + 1)
+                .is_none_or(|next| next.origin != Origin::Plex);
+        if last_plex && rooms > 0 {
+            let row = sub_response(ui, &format!("Watch together · {rooms}"), false);
+            if row.clicked() {
+                opened = Some(Choice::Rooms(row.rect));
+            }
         }
     }
     let jellyfin_headered = headers
@@ -308,7 +327,7 @@ fn contents(
             nav_row(ui, entry.label(), marks::icon::GEAR, section == Some(entry)),
         );
     }
-    choice
+    choice.or(opened)
 }
 
 /// The source switcher: one row naming the server in front, which opens the
@@ -536,6 +555,11 @@ fn nav_row(ui: &mut Ui, label: &str, icon: marks::Logo, selected: bool) -> bool 
 
 /// A library row under its server's caption.
 fn sub_row(ui: &mut Ui, label: &str, selected: bool) -> bool {
+    sub_response(ui, label, selected).clicked()
+}
+
+/// A row drawn as a library row is, answering its response.
+fn sub_response(ui: &mut Ui, label: &str, selected: bool) -> egui::Response {
     let response = ui.allocate_response(vec2(ui.available_width(), SUB_HEIGHT), Sense::click());
     let response = crate::ui::cards::pointer(response);
     let rect = response.rect;
@@ -563,7 +587,7 @@ fn sub_row(ui: &mut Ui, label: &str, selected: bool) -> bool {
         theme::body(),
         color,
     );
-    response.clicked()
+    response
 }
 
 /// The small capitals over a source's libraries: the service's mark (or a letter

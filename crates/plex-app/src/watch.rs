@@ -34,6 +34,7 @@ use crate::source::{self, Library, Origin};
 use crate::sources::browse;
 use crate::sources::worker::Desk;
 use crate::sources::{JellyfinServer, Sources};
+use crate::together::{self, rooms::Groups};
 use crate::ui::app;
 use crate::ui::detail;
 use crate::ui::grid;
@@ -137,6 +138,10 @@ pub(crate) enum Cmd {
     Jf(JfCmd),
     /// What one of those steps' helper thread answered with.
     JfAnswer(JfAnswer),
+    /// Watching together: the panel's asks, and the player's for its group.
+    Together(together::Ask),
+    /// The window has closed: leave any group, then answer.
+    Quit(Sender<()>),
 }
 
 /// A step of adding a Jellyfin source. Every Jellyfin call blocks, so the worker
@@ -344,6 +349,8 @@ pub(crate) enum Ev {
     },
     /// What one of the Sources screen's own steps answered with.
     Jf(JfEv),
+    /// What a watch-together group said.
+    Together(together::News),
     SignedOut,
     /// No Plex account is linked and none is being linked: the window decides
     /// between the first-run choice and the Jellyfin servers already on file.
@@ -394,8 +401,15 @@ pub fn run() -> Result<(), Box<dyn Error>> {
             // window uses.
             worker(&cmd_rx, &worker_ev, &self_cmd)
         })?;
+    let quit = cmd_tx.clone();
     let mut ui = app::Ui::new(cmd_tx, ev_rx);
-    run_host_ui(Box::new(move |root| ui.draw(root)))
+    let shown = run_host_ui(Box::new(move |root| ui.draw(root)));
+    // A group this device leaves without saying so would wait for its player.
+    let (left, done) = mpsc::channel();
+    if quit.send(Cmd::Quit(left)).is_ok() {
+        let _ = done.recv_timeout(together::jellyfin::CLOSE_WAIT);
+    }
+    shown
 }
 
 /// `chewvy --diagnose-servers`: print a redacted server report and exit.
@@ -521,6 +535,8 @@ fn worker(cmds: &Receiver<Cmd>, ev: &Sender<Ev>, out: &Sender<Cmd>) {
     let mut plex = false;
     // When the sign-in code on screen was issued, while one is waiting.
     let mut pairing: Option<Instant> = None;
+    // The watch-together group or room this device is in, and the Plex rooms.
+    let mut groups = Groups::default();
     match stored {
         Some(token) => {
             // Resolve the account id once so a pre-keying token migrates into
@@ -529,6 +545,7 @@ fn worker(cmds: &Receiver<Cmd>, ev: &Sender<Ev>, out: &Sender<Cmd>) {
             client.set_account(token);
             send(Ev::Status("Signed in. Finding your servers…".into()));
             plex = list_servers(&mut client, ev, &mut servers);
+            groups.plex_account(plex_rooms(&client, &servers), ev);
         }
         // Signing in to Plex is the user's choice, not the app's first move.
         None => send(Ev::NoPlex),
@@ -555,6 +572,7 @@ fn worker(cmds: &Receiver<Cmd>, ev: &Sender<Ev>, out: &Sender<Cmd>) {
                             desk.sync_plex(store.as_deref(), plex_account_id(), ev);
                             servers.clear();
                             plex = list_servers(&mut client, ev, &mut servers);
+                            groups.plex_account(plex_rooms(&client, &servers), ev);
                         }
                     }
                     continue;
@@ -564,7 +582,10 @@ fn worker(cmds: &Receiver<Cmd>, ev: &Sender<Ev>, out: &Sender<Cmd>) {
         match cmd {
             Cmd::Pair => pairing = start_pairing(&mut client, ev),
             Cmd::CancelPair => pairing = None,
-            Cmd::Connect(i) => plex |= connect(&mut client, ev, &servers, i),
+            Cmd::Connect(i) => {
+                plex |= connect(&mut client, ev, &servers, i);
+                groups.plex_account(plex_rooms(&client, &servers), ev);
+            }
             Cmd::Home => {
                 let mut hubs = Vec::new();
                 if plex {
@@ -796,6 +817,7 @@ fn worker(cmds: &Receiver<Cmd>, ev: &Sender<Ev>, out: &Sender<Cmd>) {
                 playing = None;
                 plex = false;
                 pairing = None;
+                groups.plex_account(None, ev);
                 send(Ev::SignedOut);
             }
             Cmd::Jf(step) => {
@@ -813,6 +835,32 @@ fn worker(cmds: &Receiver<Cmd>, ev: &Sender<Ev>, out: &Sender<Cmd>) {
                 if desk.jellyfin().len() != held {
                     jellyfin = open_jellyfin(&desk, store.as_deref(), ev);
                 }
+            }
+            // A room whose title is on another of the account's servers:
+            // that server is connected first, as the switcher would.
+            Cmd::Together(together::Ask::Enter {
+                room,
+                server: Some(machine),
+            }) => {
+                let index = servers
+                    .iter()
+                    .position(|server| server.client_identifier() == machine);
+                if index.is_some_and(|index| connect(&mut client, ev, &servers, index)) {
+                    plex = true;
+                    groups.plex_account(plex_rooms(&client, &servers), ev);
+                    groups.handle(&jellyfin, together::Ask::Enter { room, server: None }, ev);
+                } else {
+                    send(Ev::Together(together::News::Left {
+                        why: Some(
+                            "The server this room's title is on could not be reached.".into(),
+                        ),
+                    }));
+                }
+            }
+            Cmd::Together(ask) => groups.handle(&jellyfin, ask, ev),
+            Cmd::Quit(done) => {
+                groups.close();
+                let _ = done.send(());
             }
         }
     }
@@ -970,6 +1018,24 @@ fn season(client: &LiveClient, ev: &Sender<Ev>, rating_key: &str) {
             let _ = ev.send(Ev::Error(format!("could not load this season: {e}")));
         }
     }
+}
+
+/// What the Plex rooms need of the signed-in account, or `None` when no
+/// account is signed in. Costs one plex.tv read, for the account's user id.
+fn plex_rooms(client: &LiveClient, servers: &[ServerResource]) -> Option<together::rooms::Account> {
+    let token = client.account()?;
+    together::rooms::Account::new(
+        token,
+        client.client_info(),
+        client.plex_tv().clone(),
+        client.account_id(),
+        client.machine_identifier().map(str::to_owned),
+        servers
+            .iter()
+            .map(|server| (server.client_identifier().to_owned(), server.display_name()))
+            .collect(),
+    )
+    .ok()
 }
 
 /// The plex.tv account uuid this install remembered, if plex.tv ever named one:

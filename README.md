@@ -43,6 +43,9 @@ video is rendered to.
   presets from 1080p 20 Mbps down to 240p, for Plex and Jellyfin.
 - **An HDR window.** HDR10, HLG and Dolby Vision can play in a separate mpv
   `gpu-next` window that sends HDR to the display.
+- **Watch together.** Start or join a SyncPlay group on Jellyfin, or a
+  Watch Together room for a Plex film or episode, and a play, pause or seek
+  by anyone moves everyone, Plex's web app included.
 - **Watch progress stays in step with the server**, and can be switched off.
 - **Tokens stay in the system keyring** (Secret Service on Linux). They are
   sent as request headers and never appear in a URL or a log line.
