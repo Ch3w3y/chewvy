@@ -1,6 +1,8 @@
 //! The hero's text block, hung from the bottom of the hero: the title art (or
 //! the title), the meta row with its rating and format marks, the episode line,
 //! the summary, the Resume and Details buttons, then which server it is from.
+//! The title opens its page (an episode's show) and the episode line opens the
+//! episode, so only Resume plays.
 //!
 //! Every part is measured before anything is drawn, so the stack can be hung
 //! from the bottom edge and a tall logo pushes the block up instead of into the
@@ -11,6 +13,7 @@ use egui::{pos2, Color32, Id, Painter, Pos2, Rect};
 use plex_core::library::Item;
 
 use crate::source::Origin;
+use crate::ui::home::Pick;
 use crate::ui::overlay::{self, Heading, Progress, BUTTON, META_HEIGHT};
 use crate::ui::{detail, home, images, marks, theme};
 
@@ -29,12 +32,6 @@ const ROW_GAP: f32 = 16.0;
 
 const SOURCE_TEXT: Color32 = Color32::from_rgb(0xc4, 0xc8, 0xe4);
 
-/// What the block's buttons answered this frame.
-pub struct Pressed {
-    pub play: bool,
-    pub details: bool,
-}
-
 /// Draw the block for `item` inside `hero`, hung [`BOTTOM`] above its bottom.
 pub fn show(
     ui: &mut egui::Ui,
@@ -44,13 +41,18 @@ pub fn show(
     artwork: &mut images::Artwork,
     playable: bool,
     source: (Origin, &str),
-) -> Pressed {
+) -> Option<Pick> {
     let painter = ui.painter().clone();
     let left = hero.min.x;
     let width = WIDTH.min(hero.width());
+    // An episode's heading is its show; the episode line names the episode.
+    let title = match item.kind.as_deref() {
+        Some("episode") => item.grandparent_title.as_deref().or(item.title.as_deref()),
+        _ => item.title.as_deref(),
+    };
     let heading = Heading::new(
         &painter,
-        item,
+        title.unwrap_or("(untitled)"),
         home::hero_logo(item),
         artwork,
         LOGO_BOX,
@@ -86,20 +88,57 @@ pub fn show(
     let block = rows.iter().sum::<f32>() + ROW_GAP * (present - 1.0) + 6.0;
     let mut top = (hero.max.y - BOTTOM - block).max(hero.min.y + theme::PAGE_TOP);
 
-    let heading_height = heading.height();
-    heading.paint(&painter, pos2(left, top));
-    top += heading_height + ROW_GAP;
+    let heading_rect = Rect::from_min_size(pos2(left, top), heading.size());
+    heading.paint(&painter, heading_rect.min);
+    let mut pick = link(
+        ui,
+        heading_rect,
+        id.with("hero-title"),
+        home::title_page(item),
+        playable,
+    );
+    top += heading_rect.height() + ROW_GAP;
     top += overlay::meta_row(&painter, pos2(left, top), width, meta, item) + ROW_GAP;
-    for galley in [episode, summary].into_iter().flatten() {
+    if let Some(galley) = episode {
+        let rect = Rect::from_min_size(pos2(left, top), galley.rect.size());
+        overlay::shadowed(&painter, rect.min, galley);
+        let page = home::episode_page(item);
+        pick = pick.or(link(ui, rect, id.with("hero-episode"), page, playable));
+        top += rect.height() + ROW_GAP;
+    }
+    if let Some(galley) = summary {
         let height = galley.rect.height();
         overlay::shadowed(&painter, pos2(left, top), galley);
         top += height + ROW_GAP;
     }
     top += 6.0;
-    let pressed = buttons(ui, pos2(left, top), id, item, playable);
+    pick = pick.or(buttons(ui, pos2(left, top), id, item, playable));
     top += BUTTON[0] + ROW_GAP - 4.0;
     source_line(&painter, pos2(left, top), &source.0, source.1);
-    pressed
+    pick
+}
+
+/// `rect` as a link to `page`, underlined while pointed at; answers the page
+/// when clicked. Nothing links while something else is playing.
+fn link(ui: &mut egui::Ui, rect: Rect, id: Id, page: Option<home::Page>, on: bool) -> Option<Pick> {
+    let page = page.filter(|_| on)?;
+    let response = ui
+        .interact(rect, id, egui::Sense::click())
+        .on_hover_cursor(egui::CursorIcon::PointingHand)
+        .on_hover_text(format!("Go to {}", page.title));
+    if response.hovered() {
+        underline(ui.painter(), rect);
+    }
+    response.clicked().then_some(Pick::Open(page))
+}
+
+/// The line under a pointed-at link.
+fn underline(painter: &Painter, rect: Rect) {
+    let y = rect.bottom() + 1.0;
+    painter.line_segment(
+        [pos2(rect.left(), y), pos2(rect.right(), y)],
+        egui::Stroke::new(1.0, theme::TEXT),
+    );
 }
 
 /// `Movie · 2024 · 2h 47m · Science Fiction`: what the answer names, in order.
@@ -116,7 +155,7 @@ pub fn meta_text(item: &Item) -> String {
 }
 
 /// Resume (or Play) and Details, side by side from `origin`.
-fn buttons(ui: &mut egui::Ui, origin: Pos2, id: Id, item: &Item, playable: bool) -> Pressed {
+fn buttons(ui: &mut egui::Ui, origin: Pos2, id: Id, item: &Item, playable: bool) -> Option<Pick> {
     let start = home::resume_start(item);
     let progress = start
         .and(home::progress_fraction(item.view_offset, item.duration))
@@ -141,9 +180,14 @@ fn buttons(ui: &mut egui::Ui, origin: Pos2, id: Id, item: &Item, playable: bool)
         "Details",
         playable,
     );
-    Pressed {
-        play: playable && play.clicked(),
-        details: playable && details.clicked(),
+    if !playable {
+        None
+    } else if play.clicked() {
+        Some(Pick::play(item))
+    } else if details.clicked() {
+        home::item_page(item).map(Pick::Open)
+    } else {
+        None
     }
 }
 

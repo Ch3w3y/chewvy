@@ -36,6 +36,9 @@ image = { workspace = true }
 ring = { workspace = true }
 xdg = { workspace = true }
 resvg = { version = "0.47", default-features = false }
+# In-app updates: the GitHub release list and the package download
+# (`src/update.rs`), with the same rustls/ring stack the core crates use.
+ureq = { workspace = true }
 
 # Only for the startup failure dialog: a GUI-subsystem exe launched from the
 # shell has no console to read an error line from. Path and signatures confirmed

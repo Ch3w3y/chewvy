@@ -61,15 +61,71 @@ pub struct Resume {
     pub title: String,
     /// Seconds into the item from its `viewOffset`; `None` plays from the start.
     pub start: Option<f64>,
-    /// Open the item's overview page instead of playing it: every shelf but
-    /// continue watching and on deck, whose cards resume straight away.
-    pub overview: bool,
+}
+
+/// A page a card's or the hero's link opens.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Page {
+    pub rating_key: String,
+    pub title: String,
+}
+
+/// What a click on Home asked for.
+pub enum Pick {
+    /// Play or resume this item.
+    Play(Resume),
+    /// Open this page: the item itself, or the show an episode belongs to.
+    Open(Page),
+}
+
+impl Pick {
+    /// Play `item` from where the server says it was left.
+    #[must_use]
+    pub fn play(item: &Item) -> Self {
+        Pick::Play(Resume {
+            rating_key: item.rating_key.clone().unwrap_or_default(),
+            title: play_title(item),
+            start: resume_start(item),
+        })
+    }
 }
 
 /// Whether a shelf's cards play at once (continue watching, on deck) rather
 /// than opening the item's overview first.
 fn plays_directly(hub: &Hub) -> bool {
     matches(hub.hub_id.as_ref(), &CONTINUE_IDS) || matches(hub.hub_id.as_ref(), &DECK_IDS)
+}
+
+/// The item's own page.
+#[must_use]
+pub fn item_page(item: &Item) -> Option<Page> {
+    let rating_key = item.rating_key.clone()?;
+    let title = item
+        .title
+        .clone()
+        .unwrap_or_else(|| "(untitled)".to_owned());
+    Some(Page { rating_key, title })
+}
+
+/// The page a card's or the hero's title opens. An episode's title is its
+/// show's name, so it opens the show; anything else opens itself. An episode
+/// whose show the answer gave no key for links nowhere rather than to itself.
+#[must_use]
+pub fn title_page(item: &Item) -> Option<Page> {
+    if item.kind.as_deref() != Some("episode") {
+        return item_page(item);
+    }
+    let rating_key = item.grandparent_rating_key.clone()?;
+    let title = item.grandparent_title.clone()?;
+    Some(Page { rating_key, title })
+}
+
+/// The page an episode line opens: the episode's own. Only an episode has one.
+#[must_use]
+pub fn episode_page(item: &Item) -> Option<Page> {
+    (item.kind.as_deref() == Some("episode"))
+        .then(|| item_page(item))
+        .flatten()
 }
 
 // ------------------------------------------------------------- label rules
@@ -400,7 +456,7 @@ pub fn show(
     artwork: &mut images::Artwork,
     playable: bool,
     servers: crate::source::Servers<'_>,
-) -> Option<Resume> {
+) -> Option<Pick> {
     if hubs.is_empty() {
         ui.label(theme::secondary("Your server gave no home shelves yet."));
         return None;
@@ -414,8 +470,8 @@ pub fn show(
         .show(ui, |ui| {
             let pool = hero_pool(hubs);
             if !pool.is_empty() {
-                if let Some(resume) = hero::show(ui, &pool, artwork, playable, servers) {
-                    play = Some(resume);
+                if let Some(pick) = hero::show(ui, &pool, artwork, playable, servers) {
+                    play = Some(pick);
                 }
                 ui.add_space(ROW_GAP);
             }
@@ -433,9 +489,8 @@ pub fn show(
                 } else {
                     None
                 };
-                if let Some(resume) = shelf(ui, hub, artwork, row_shape(hub), row, hidden, playable)
-                {
-                    play = Some(resume);
+                if let Some(pick) = shelf(ui, hub, artwork, row_shape(hub), row, hidden, playable) {
+                    play = Some(pick);
                 }
                 ui.add_space(ROW_GAP);
             }
@@ -470,7 +525,7 @@ fn shelf(
     row: usize,
     hidden: Option<&str>,
     playable: bool,
-) -> Option<Resume> {
+) -> Option<Pick> {
     let title = hub
         .title
         .clone()
@@ -528,13 +583,15 @@ fn shelf(
             // every card in the row hangs from the same line.
             ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
                 for (ordinal, item) in visible.iter().enumerate() {
-                    let fresh = shape == RowShape::Poster && recent_hub(hub) && unseen(item);
+                    let flags = card::Flags {
+                        fresh: shape == RowShape::Poster && recent_hub(hub) && unseen(item),
+                        playable,
+                        direct: plays_directly(hub),
+                    };
                     let card_id = id.with(("card", ordinal));
-                    let (resume, response) =
-                        card::show(ui, artwork, item, shape, card_id, fresh, playable);
-                    if let Some(mut resume) = resume {
-                        resume.overview = !plays_directly(hub);
-                        play = Some(resume);
+                    let (pick, response) = card::show(ui, artwork, item, shape, card_id, flags);
+                    if pick.is_some() {
+                        play = pick;
                     }
                     // Keyboard focus must not land on a card the band cannot
                     // show: pull the row to it.
@@ -617,14 +674,14 @@ pub fn time_left(minutes: u64) -> String {
     format!("{}h {:02}m left", minutes / 60, minutes % 60)
 }
 
-/// A wide card's second line: `S2 · E7 · 22 min left` for an episode, the year
+/// A wide card's second line: `S2 E7 · Title · 22 min left` for an episode, the year
 /// for anything else, then the time left where the server gave a resume point.
 #[must_use]
 pub fn wide_subtitle(item: &Item) -> String {
     let mut parts: Vec<String> = Vec::new();
     if item.kind.as_deref() == Some("episode") {
-        parts.extend(item.parent_index.map(|season| format!("S{season}")));
-        parts.extend(item.index.map(|number| format!("E{number}")));
+        // The episode's own name is the line's link to the episode page.
+        parts.push(episode_caption(item));
     } else {
         parts.extend(item.year.map(|year| year.to_string()));
     }

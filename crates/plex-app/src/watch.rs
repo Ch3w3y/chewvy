@@ -404,6 +404,9 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let quit = cmd_tx.clone();
     let mut ui = app::Ui::new(cmd_tx, ev_rx);
     let shown = run_host_ui(Box::new(move |root| ui.draw(root)));
+    // The window is gone: an update the user restarted for opens now, while
+    // this process finishes closing.
+    crate::update::relaunch();
     // A group this device leaves without saying so would wait for its player.
     let (left, done) = mpsc::channel();
     if quit.send(Cmd::Quit(left)).is_ok() {

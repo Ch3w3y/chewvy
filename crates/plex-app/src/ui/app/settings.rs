@@ -34,6 +34,7 @@ impl Ui {
                 self.playback_section(ui);
                 self.hdr_section(ui);
                 self.interface_section(ui);
+                self.updates_section(ui);
                 about_section(ui);
                 ui.add_space(theme::GAP);
             });
@@ -41,7 +42,7 @@ impl Ui {
 
     /// Record one Settings edit and write it back at once, so a restart keeps
     /// what the user last chose.
-    fn set_settings(&mut self, edit: impl FnOnce(&mut settings::Settings)) {
+    pub(super) fn set_settings(&mut self, edit: impl FnOnce(&mut settings::Settings)) {
         edit(&mut self.settings);
         settings::save(self.settings);
     }
@@ -187,7 +188,7 @@ pub(super) fn chip(ui: &mut egui::Ui, label: &str, hover: &str) -> bool {
 /// One setting as a row of its panel: label and one-line description at the
 /// left, its switch at the right edge. The whole row is the control and answers
 /// whether it was clicked.
-fn setting_row(ui: &mut egui::Ui, label: &str, note: &str, on: bool) -> bool {
+pub(super) fn setting_row(ui: &mut egui::Ui, label: &str, note: &str, on: bool) -> bool {
     let row = ui
         .allocate_response(Vec2::new(ui.available_width(), ROW_HEIGHT), Sense::click())
         .on_hover_cursor(CursorIcon::PointingHand);

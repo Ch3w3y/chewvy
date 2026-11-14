@@ -171,7 +171,7 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | is_terminal_polyfill | 1.70.2 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | itertools | 0.15.0 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | itoa | 1.0.18 | license: MIT OR Apache-2.0 | transitive | crates.io |
-| jellyfin-core | 0.2.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
+| jellyfin-core | 0.3.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
 | jiff | 0.2.31 | license: Unlicense OR MIT | transitive | crates.io |
 | khronos_api | 3.1.0 | license: Apache-2.0 | transitive | crates.io |
 | kurbo | 0.13.1 | license: Apache-2.0 OR MIT | transitive | crates.io |
@@ -204,10 +204,10 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | pin-project-lite | 0.2.17 | license: Apache-2.0 OR MIT | transitive | crates.io |
 | piper | 0.2.5 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | pkg-config | 0.3.34 | license: MIT OR Apache-2.0 | plex-cli (build-dependencies), plex-player (build-dependencies) | crates.io |
-| plex-app | 0.2.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
-| plex-cli | 0.2.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
-| plex-core | 0.2.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
-| plex-player | 0.2.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
+| plex-app | 0.3.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
+| plex-cli | 0.3.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
+| plex-core | 0.3.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
+| plex-player | 0.3.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
 | png | 0.18.1 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | polling | 3.11.0 | license: Apache-2.0 OR MIT | transitive | crates.io |
 | polycool | 0.4.0 | license: MIT OR Apache-2.0 | transitive | crates.io |
@@ -288,7 +288,7 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | unicode-ident | 1.0.24 | license: (MIT OR Apache-2.0) AND Unicode-3.0 | transitive | crates.io |
 | unicode-segmentation | 1.13.3 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | untrusted | 0.9.0 | license: ISC | transitive | crates.io |
-| ureq | 3.3.0 | license: MIT OR Apache-2.0 | jellyfin-core (dependencies), plex-core (dependencies) | crates.io |
+| ureq | 3.3.0 | license: MIT OR Apache-2.0 | jellyfin-core (dependencies), plex-app (dependencies), plex-core (dependencies) | crates.io |
 | ureq-proto | 0.6.0 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | url | 2.5.8 | license: MIT OR Apache-2.0 | jellyfin-core (dependencies), plex-core (dependencies) | crates.io |
 | usvg | 0.47.0 | license: Apache-2.0 OR MIT | transitive | crates.io |

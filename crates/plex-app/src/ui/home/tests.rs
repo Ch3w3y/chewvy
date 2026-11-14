@@ -52,6 +52,7 @@ fn wire_item(row: &Value) -> Item {
         parent_title: text(row, "parentTitle"),
         parent_rating_key: text(row, "parentRatingKey"),
         grandparent_title: text(row, "grandparentTitle"),
+        grandparent_rating_key: text(row, "grandparentRatingKey"),
         grandparent_art: text(row, "grandparentArt"),
         parent_thumb: text(row, "parentThumb"),
         grandparent_thumb: text(row, "grandparentThumb"),
@@ -154,7 +155,7 @@ fn remaining_time_is_the_nearest_whole_minute() {
 fn a_card_caption_skips_an_index_the_answer_did_not_name() {
     let episode = row(&home(), "43492");
     assert_eq!(episode_caption(&episode), "S4 E2 · Blue Rafter");
-    assert_eq!(wide_subtitle(&episode), "S4 · E2 · 32 min left");
+    assert_eq!(wide_subtitle(&episode), "S4 E2 · Blue Rafter · 32 min left");
 
     let mut season_less = episode.clone();
     season_less.parent_index = None;
@@ -162,7 +163,7 @@ fn a_card_caption_skips_an_index_the_answer_did_not_name() {
     season_less.index = None;
     season_less.content_rating = None;
     assert_eq!(episode_caption(&season_less), "Blue Rafter");
-    assert_eq!(wide_subtitle(&season_less), "32 min left");
+    assert_eq!(wide_subtitle(&season_less), "Blue Rafter · 32 min left");
 }
 
 #[test]
@@ -586,4 +587,34 @@ fn a_second_source_fills_the_rows_it_names_the_same_way() {
             .as_deref(),
         Some("home.continue")
     );
+}
+
+#[test]
+fn an_episode_s_title_opens_its_show_and_its_line_opens_the_episode() {
+    let episode = row(&home(), "43492");
+    let show = title_page(&episode).unwrap_or_else(|| panic!("the capture names the show"));
+    assert_eq!(
+        Some(show.rating_key.as_str()),
+        episode.grandparent_rating_key.as_deref()
+    );
+    assert_eq!(
+        Some(show.title.as_str()),
+        episode.grandparent_title.as_deref()
+    );
+    let own = episode_page(&episode).unwrap_or_else(|| panic!("an episode has its own page"));
+    assert_eq!(own.rating_key, "43492");
+
+    // A show the answer gave no key for is not a link to the episode instead.
+    let mut keyless = episode.clone();
+    keyless.grandparent_rating_key = None;
+    assert_eq!(title_page(&keyless), None);
+
+    // A film's title is its own page, and it has no episode line to link.
+    let mut film = episode;
+    film.kind = Some("movie".to_owned());
+    assert_eq!(
+        title_page(&film).map(|p| p.rating_key),
+        Some("43492".to_owned())
+    );
+    assert_eq!(episode_page(&film), None);
 }

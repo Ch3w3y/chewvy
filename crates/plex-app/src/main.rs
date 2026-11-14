@@ -496,6 +496,7 @@ fn main() {
     init_logging();
     let argv: Vec<String> = std::env::args().skip(1).collect();
     if argv.is_empty() {
+        plex_app::update::tidy();
         if let Err(e) = plex_app::watch::run() {
             eprintln!("chewvy: {e}");
             std::process::exit(1);

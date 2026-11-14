@@ -68,7 +68,6 @@ pub struct Overlay {
     pointer: Option<egui::Pos2>,
     pub(crate) menu: Option<Menu>,
     pub(crate) info: bool,
-    fullscreen: bool,
     pub(crate) prefs: Prefs,
     /// When the item finished with an episode queued: autoplay deadline.
     autoplay_at: Option<Instant>,
@@ -93,7 +92,6 @@ impl Default for Overlay {
             pointer: None,
             menu: None,
             info: false,
-            fullscreen: false,
             prefs: Prefs::default(),
             autoplay_at: None,
             up_next_dismissed: false,
@@ -124,10 +122,9 @@ impl Overlay {
             p.tick();
             self.frame(root, screen, p, artwork)
         });
+        // Fullscreen is the window's, not this item's: the next episode, another
+        // quality and the screen the player returns to all keep it.
         let action = action.unwrap_or(Action::Back(None));
-        if !matches!(action, Action::Stay) && self.fullscreen {
-            ctx.send_viewport_cmd(egui::ViewportCommand::Fullscreen(false));
-        }
         ctx.request_repaint_after(Duration::from_millis(250));
         action
     }
@@ -257,8 +254,7 @@ impl Overlay {
     }
 
     fn toggle_fullscreen(&mut self, ctx: &egui::Context) {
-        self.fullscreen = !self.fullscreen;
-        ctx.send_viewport_cmd(egui::ViewportCommand::Fullscreen(self.fullscreen));
+        toggle_fullscreen(ctx);
     }
 
     /// Keyboard shortcuts; `Some` when a key leaves the player.
@@ -309,7 +305,7 @@ impl Overlay {
                 if self.menu.take().is_some() || std::mem::take(&mut self.info) {
                     return None;
                 }
-                if self.fullscreen {
+                if is_fullscreen(ctx) {
                     self.toggle_fullscreen(ctx);
                     return None;
                 }
@@ -503,6 +499,19 @@ impl Overlay {
             self.hdr_up_next = Some(line);
         }
     }
+}
+
+/// Whether the window is fullscreen, as the window itself last reported. Read
+/// from the window rather than kept here, so a new overlay (the next episode,
+/// another quality) and the browsing screens agree with what is on screen.
+pub(crate) fn is_fullscreen(ctx: &egui::Context) -> bool {
+    ctx.input(|i| i.viewport().fullscreen.unwrap_or(false))
+}
+
+/// Enter or leave fullscreen.
+pub(crate) fn toggle_fullscreen(ctx: &egui::Context) {
+    let on = is_fullscreen(ctx);
+    ctx.send_viewport_cmd(egui::ViewportCommand::Fullscreen(!on));
 }
 
 /// A 44 pt glass circle with an icon; `true` when clicked.

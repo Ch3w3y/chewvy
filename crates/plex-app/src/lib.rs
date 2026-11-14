@@ -76,3 +76,7 @@ pub mod together;
 
 /// Sign-in, browse and play: the end-to-end app flow.
 pub mod watch;
+
+/// In-app updates from the project's GitHub releases: the check, the verified
+/// download and the per-platform install.
+pub mod update;

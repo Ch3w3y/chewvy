@@ -4,6 +4,37 @@ All notable changes to Chewvy are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.3.0] - 2026-11-14
+
+### Added
+
+- Updates from inside the app. Chewvy checks GitHub for a newer published
+  release when it starts (Settings > Updates turns this off, and has "Check
+  now"). A notice says when one is out; clicking it opens the update prompt,
+  where "Update now" downloads the package this copy was installed from,
+  refuses it unless it matches the release's `SHA256SUMS`, and installs it,
+  showing the progress of each. "Restart now" then reopens Chewvy in the new
+  version. This works for the AppImage, the Windows installer and zip, and
+  the macOS app (the macOS one has not been tried yet); a copy built from
+  source or installed by a package manager is told a release is out and
+  where to get it. The notice also shows before any server is added.
+- F11 enters and leaves full screen on every screen.
+
+### Changed
+
+- Home's cards and hero have separate targets: the show's name opens the
+  show, the episode's name opens the episode, and the play button over the
+  art plays or resumes it. A Continue Watching card's art still resumes it.
+  A wide card's second line now names the episode.
+
+### Fixed
+
+- Starting the next episode, changing quality, switching to or from the HDR
+  window, or leaving the player no longer drops the window out of full
+  screen. While browsing in full screen, the window's middle button leaves it.
+
 ## [0.2.0] - 2026-11-14
 
 ### Added

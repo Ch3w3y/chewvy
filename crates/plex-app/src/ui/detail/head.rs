@@ -104,7 +104,7 @@ fn column_block(
     let painter = ui.painter().clone();
     let heading = Heading::new(
         &painter,
-        item,
+        item.title.as_deref().unwrap_or("(untitled)"),
         logo(item).as_deref(),
         artwork,
         LOGO_BOX,

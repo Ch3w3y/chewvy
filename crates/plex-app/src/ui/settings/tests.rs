@@ -51,6 +51,7 @@ fn a_written_settings_file_reads_back_with_its_modes() {
         hdr_auto: true,
         hdr_fullscreen: false,
         hdr_explained: true,
+        check_updates: true,
     };
     save_to(&dir.0, wanted).unwrap_or_else(|e| panic!("settings test io: {e}"));
     #[cfg(unix)]

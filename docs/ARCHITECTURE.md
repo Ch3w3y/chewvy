@@ -145,6 +145,58 @@ query parameter are not. `docs/JELLYFIN.md` has the endpoints and sources.
   cache in the matching cache directory. A folder left by a build from before
   the app was named Chewvy (`plex-rust-client`) is renamed on first start.
 
+## Updates
+
+`update.rs` reads `https://api.github.com/repos/Ch3w3y/chewvy/releases/latest`
+(at start unless Settings turns it off, and on "Check now"). A draft or a
+pre-release is never offered. The request carries only a `User-Agent` naming
+the app and its version. An install downloads the package this copy was set
+up from and the release's `SHA256SUMS`, over https only, and refuses a package
+whose SHA-256 is not the listed one: the same check `install.sh` makes, and
+the same trust in the GitHub release it implies.
+
+How the package is put in place (`update/install.rs`):
+
+- **AppImage** (`$APPIMAGE` is set): written beside the running file and
+  renamed over it.
+- **Windows installer** (`uninstall.exe` beside the program): Windows lets a
+  running program's files be renamed but not overwritten, so the app renames
+  its own `.exe` and `.dll` files to `*.old` and runs the new installer
+  silently (`/S /D=<this folder>`) while it keeps running. A failed install
+  renames them back; after a good one, any file the installer did not write
+  again (a library the user put there) is renamed back too.
+- **Windows zip**: unpacked with the `tar.exe` Windows ships; each file it
+  replaces is renamed to `*.old` and the new one copied in.
+- **macOS bundle**: the disk image is attached, its app copied beside this
+  one with `ditto`, and the two swapped by renaming.
+
+Either Windows case deletes the `*.old` files on the next start.
+
+The last install step starts the new version once with `--help`. A new,
+unsigned program's first start is when Windows Defender scans it: about ten
+seconds for `chewvy.exe` in the test VM, against 0.15 s for a start after
+that. Doing it under the install progress is what lets "Restart now" open the
+new version at once.
+
+Every install goes through the same screens (`ui/app/update.rs`), on every
+screen except the player, sign-in included: a notice says a release is out; clicking it opens the update prompt; "Update now"
+downloads, then installs, with the progress shown in the prompt (and in small
+on the notice if the prompt is hidden); the prompt then offers "Restart now".
+The restart closes the window and starts the new version straight away,
+before the rest of the shutdown (`watch::run`).
+
+Anything else (a build from source, a distribution package) gets the same
+notice and prompt, which say why it cannot update itself and link to the
+release page.
+
+What has been run: the AppImage path end to end (the ignored `live_` test in
+`update/tests.rs`), and both Windows paths in a Windows 11 virtual machine,
+driven through the real screens with `PLEX_APP_DRIVE`: a 0.1.9 build of this
+code, installed by the installer and unpacked from the zip, found the
+published 0.2.0, downloaded, verified and installed it while running, and
+"Restart now" started the published 0.2.0 `chewvy.exe` (same SHA-256). The
+macOS path has not been run.
+
 ## What the app never does
 
 - It never changes library metadata, deletes media or alters server settings.
@@ -152,3 +204,5 @@ query parameter are not. `docs/JELLYFIN.md` has the endpoints and sources.
   `crates/plex-core/tests/mutation_surface.rs` pins the exact set of non-GET
   requests the source contains.
 - It never sends a token or password anywhere except the service it belongs to.
+- Besides the user's own servers and Plex's account service, the only host
+  it contacts is GitHub, for the update check and download.

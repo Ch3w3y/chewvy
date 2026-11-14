@@ -41,6 +41,11 @@ const GLYPH_SHADOW: Color32 = Color32::from_rgba_premultiplied(0, 0, 0, 120);
 /// Set by the close button; the host exits its event loop when it reads it.
 static QUIT: AtomicBool = AtomicBool::new(false);
 
+/// Close the window, as the close button does.
+pub fn request_quit() {
+    QUIT.store(true, Ordering::Relaxed);
+}
+
 /// Whether the close button was pressed since the last call.
 pub fn take_quit() -> bool {
     QUIT.swap(false, Ordering::Relaxed)
@@ -136,11 +141,10 @@ pub fn controls(ctx: &egui::Context, shown: bool) {
     if DECORATED || !shown {
         return;
     }
-    let maximized = ctx.input(|i| i.viewport().maximized.unwrap_or(false));
     let fullscreen = ctx.input(|i| i.viewport().fullscreen.unwrap_or(false));
-    if fullscreen {
-        return;
-    }
+    // Fullscreen outlives the player, so the browsing screens keep the
+    // buttons; there the middle one draws as restore and leaves fullscreen.
+    let maximized = fullscreen || ctx.input(|i| i.viewport().maximized.unwrap_or(false));
     let screen = ctx.content_rect();
     egui::Area::new(Id::new("chrome-controls"))
         .order(Order::Foreground)
@@ -163,6 +167,9 @@ pub fn controls(ctx: &egui::Context, shown: bool) {
                 if button(ui, cell, kind, maximized) {
                     match kind {
                         Kind::Minimise => ctx.send_viewport_cmd(ViewportCommand::Minimized(true)),
+                        Kind::Maximise if fullscreen => {
+                            ctx.send_viewport_cmd(ViewportCommand::Fullscreen(false))
+                        }
                         Kind::Maximise => {
                             ctx.send_viewport_cmd(ViewportCommand::Maximized(!maximized))
                         }

@@ -156,6 +156,12 @@ pub struct Ui {
     choosing: bool,
     /// Watching together: the group, its follower, panel and notices.
     together: together::Together,
+    /// In-app updates: what the last check found and the install under way.
+    updater: crate::update::Updater,
+    /// The update notice was put away for this run.
+    update_dismissed: bool,
+    /// The update prompt is open.
+    update_prompt: bool,
 }
 
 impl Ui {
@@ -205,6 +211,9 @@ impl Ui {
             add: None,
             choosing: false,
             together: together::Together::default(),
+            updater: crate::update::Updater::default(),
+            update_dismissed: false,
+            update_prompt: false,
         }
     }
 
@@ -509,7 +518,17 @@ impl Ui {
         let near_top = root
             .ctx()
             .input(|i| i.pointer.hover_pos().is_some_and(|p| p.y < 96.0));
-        crate::ui::chrome::controls(root.ctx(), !player::is_active() || near_top);
+        // A fullscreen player has its own way out (its button, F, Esc), so the
+        // window buttons stay off the picture there.
+        let fullscreen = crate::ui::player::is_fullscreen(root.ctx());
+        crate::ui::chrome::controls(
+            root.ctx(),
+            !player::is_active() || (near_top && !fullscreen),
+        );
+        // F11 is fullscreen on every screen; the player also answers F.
+        if root.ctx().input(|i| i.key_pressed(egui::Key::F11)) {
+            crate::ui::player::toggle_fullscreen(root.ctx());
+        }
 
         // These keys are read before any field of this frame is drawn, so they
         // are judged against the focus the frame before reported.
@@ -518,6 +537,7 @@ impl Ui {
         if let Some(request) = self.pending_play.take() {
             self.begin_playback(*request, root.ctx());
         }
+        self.update_at_start();
         self.together_frame(root.ctx());
         // A playing item owns the window: no rail, no status strip, only the
         // video behind and its controls on top.
@@ -538,7 +558,10 @@ impl Ui {
 
         // The browsing keyboard is read before its screens draw, so Back and
         // Search do not depend on what egui happened to lay out.
-        self.browse_keys(root.ctx(), typed_before);
+        // The update prompt takes Escape for itself.
+        if !self.update_prompt_open() {
+            self.browse_keys(root.ctx(), typed_before);
+        }
 
         // The strip is a message, not chrome: with nothing to say it is left off
         // entirely so the screen gets the height back.
@@ -664,6 +687,8 @@ impl Ui {
                     .show(root, |ui| self.center(ui));
             }
         }
+        // Every screen but the player can offer an update, sign-in included.
+        self.update_overlays(root.ctx());
     }
 
     /// The central panel for the selected rail entry.
@@ -685,16 +710,17 @@ impl Ui {
                     plex: &self.server,
                     jellyfin: &self.sources.jellyfin,
                 };
-                let resume = home::show(ui, &hubs, &mut self.artwork, idle, servers);
+                let pick = home::show(ui, &hubs, &mut self.artwork, idle, servers);
                 self.hubs = hubs;
-                if let Some(resume) = resume.as_ref().filter(|r| r.overview) {
-                    let to = Entry::Detail {
-                        id: resume.rating_key.clone(),
-                        title: resume.title.clone(),
-                    };
-                    self.go(to);
-                } else if let Some(resume) = resume {
-                    self.start_title(resume.rating_key, resume.title, resume.start, ui.ctx());
+                match pick {
+                    Some(home::Pick::Open(page)) => self.go(Entry::Detail {
+                        id: page.rating_key,
+                        title: page.title,
+                    }),
+                    Some(home::Pick::Play(resume)) => {
+                        self.start_title(resume.rating_key, resume.title, resume.start, ui.ctx());
+                    }
+                    None => {}
                 }
             }
             Some(Entry::Settings) => self.draw_settings(ui),
@@ -919,6 +945,9 @@ mod together;
 
 #[path = "app/rooms.rs"]
 mod rooms;
+
+#[path = "app/update.rs"]
+mod app_update;
 
 #[cfg(test)]
 #[path = "app/room_tests.rs"]

@@ -338,7 +338,7 @@ fn right_buttons(ov: &mut Overlay, root: &mut egui::Ui, screen: Rect, y: f32, p:
     entries.push((Icon::Settings, "Settings", Some(Menu::Settings)));
     entries.push((Icon::Info, "Info (I)", None));
     let mut x = screen.right() - SIDE - BTN / 2.0;
-    let fs_icon = if ov.fullscreen {
+    let fs_icon = if super::is_fullscreen(root.ctx()) {
         Icon::ExitFullscreen
     } else {
         Icon::Fullscreen

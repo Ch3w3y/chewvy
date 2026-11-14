@@ -57,6 +57,8 @@ pub struct Settings {
     pub hdr_fullscreen: bool,
     /// The HDR window's explanation has been read, so it is not shown again.
     pub hdr_explained: bool,
+    /// Ask GitHub for a newer release when the app starts.
+    pub check_updates: bool,
 }
 
 impl Default for Settings {
@@ -68,6 +70,7 @@ impl Default for Settings {
             hdr_auto: false,
             hdr_fullscreen: true,
             hdr_explained: false,
+            check_updates: true,
         }
     }
 }
@@ -83,6 +86,7 @@ struct Stored {
     hdr_auto: bool,
     hdr_fullscreen: bool,
     hdr_explained: bool,
+    check_updates: bool,
 }
 
 // A field the file leaves out takes the app's default (hardware decoding on),
@@ -102,6 +106,7 @@ impl From<Settings> for Stored {
             hdr_auto: value.hdr_auto,
             hdr_fullscreen: value.hdr_fullscreen,
             hdr_explained: value.hdr_explained,
+            check_updates: value.check_updates,
         }
     }
 }
@@ -115,6 +120,7 @@ impl From<Stored> for Settings {
             hdr_auto: value.hdr_auto,
             hdr_fullscreen: value.hdr_fullscreen,
             hdr_explained: value.hdr_explained,
+            check_updates: value.check_updates,
         }
     }
 }

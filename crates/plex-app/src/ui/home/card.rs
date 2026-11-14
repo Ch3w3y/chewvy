@@ -1,7 +1,8 @@
 //! One shelf card: rounded artwork with a soft drop shadow, then two caption
 //! lines. A wide card carries its show's title art, the service it comes from
 //! and a resume track; a poster in a recently-added row carries a dot while
-//! nothing of it has been watched.
+//! nothing of it has been watched. The play button over the art and the two
+//! caption lines are separate targets (play, the show, the episode).
 
 use egui::epaint::Shadow;
 use egui::text::LayoutJob;
@@ -9,9 +10,9 @@ use egui::{pos2, vec2, Color32, CornerRadius, Direction, Rect, Sense, Shape};
 use plex_core::library::Item;
 
 use super::{
-    card_art, card_size, episode_caption, hero_logo, play_title, poster_subtitle,
-    progress_fraction, resume_start, wide_subtitle, Resume, RowShape, CAPTION_HEIGHT,
-    PROGRESS_HEIGHT,
+    card_art, card_size, episode_caption, episode_page, hero_logo, item_page, play_title,
+    poster_subtitle, progress_fraction, resume_label, resume_start, title_page, wide_subtitle,
+    Page, Pick, RowShape, CAPTION_HEIGHT, PROGRESS_HEIGHT,
 };
 use crate::ui::{cards, images, marks, theme};
 
@@ -37,18 +38,34 @@ const LOGO_ART: [u32; 2] = [360, 120];
 /// The "new" dot's radius and its inset from the poster's top-right corner.
 const DOT: [f32; 2] = [4.5, 12.5];
 
-/// One card at its row's shape. Returns what a click asks the player to open,
-/// and the interaction it answered so the row can page to a card the keyboard
-/// focus landed on.
+/// How one card behaves, besides what it shows.
+#[derive(Clone, Copy)]
+pub struct Flags {
+    /// A poster in a recently-added row that nothing of has been watched.
+    pub fresh: bool,
+    /// Nothing else is playing, so the card answers clicks at all.
+    pub playable: bool,
+    /// A click on the art plays the item (continue watching, on deck) rather
+    /// than opening its page.
+    pub direct: bool,
+}
+
+/// The play button's diameter over a card's art.
+const PLAY: f32 = 46.0;
+
+/// One card at its row's shape. Each part answers for itself: the play button
+/// over the art plays, the title opens its page (an episode's show), the
+/// episode line opens the episode, and the rest of the art plays or opens the
+/// item as the row decides. Also answers the art's interaction, so the row can
+/// page to a card the keyboard focus landed on.
 pub fn show(
     ui: &mut egui::Ui,
     artwork: &mut images::Artwork,
     item: &Item,
     shape: RowShape,
     id: egui::Id,
-    fresh: bool,
-    playable: bool,
-) -> (Option<Resume>, egui::Response) {
+    flags: Flags,
+) -> (Option<Pick>, egui::Response) {
     let ([width, height], [art_w, art_h]) = card_size(shape);
     let heading = item
         .grandparent_title
@@ -59,8 +76,13 @@ pub fn show(
         RowShape::Poster => poster_subtitle(item),
         RowShape::Wide => wide_subtitle(item),
     };
+    let links = Links {
+        title: title_page(item).filter(|_| flags.playable),
+        episode: episode_page(item).filter(|_| flags.playable),
+    };
     let mut art = Rect::NOTHING;
-    let inner = ui.allocate_ui_with_layout(
+    let mut opened = None;
+    ui.allocate_ui_with_layout(
         vec2(width, height + CAPTION_HEIGHT),
         egui::Layout::top_down(egui::Align::Min),
         |ui| {
@@ -70,54 +92,106 @@ pub fn show(
             // Cards scrolled out of a row's view ask the loader for nothing.
             if ui.is_rect_visible(rect) {
                 artwork_box(ui, artwork, item, shape, rect, (art_w, art_h));
-                // A poster names its source only when that is not Plex, which is
-                // what a card with no mark on it means.
-                let origin = crate::source::origin_of(item);
-                if origin.is_jellyfin() {
-                    let chip = Rect::from_min_size(rect.min + vec2(8.0, 8.0), vec2(22.0, 22.0));
-                    ui.painter().rect_filled(chip, CornerRadius::same(6), CHIP);
-                    marks::paint_source(
-                        ui.painter(),
-                        &origin,
-                        chip.min.x + 4.0,
-                        chip.center().y,
-                        MARK,
-                    );
-                }
-                if fresh {
-                    let center = pos2(rect.max.x - DOT[1], rect.min.y + DOT[1]);
-                    ui.painter().circle_filled(
-                        center,
-                        DOT[0] + 3.0,
-                        theme::ACCENT.gamma_multiply(0.25),
-                    );
-                    ui.painter().circle_filled(center, DOT[0], theme::ACCENT);
-                }
+                badges(ui, item, rect, flags.fresh);
             }
-            caption_lines(ui, &heading, &caption, width);
+            opened = caption_lines(ui, id, &heading, &caption, width, &links);
         },
     );
-    let sense = if playable {
+    let sense = if flags.playable {
         Sense::click()
     } else {
         Sense::hover()
     };
-    let response = ui.interact(inner.response.rect, id, sense);
-    // The ring is the art's, not the caption's: text a ring touches is worse
-    // than no ring.
-    cards::ring(ui, art, &response, cards::CARD_RADIUS);
     let tip = match shape {
         RowShape::Wide => format!("{heading}\n{}", episode_caption(item)),
         RowShape::Poster => format!("{heading}\n{caption}"),
     };
-    let response = cards::pointer(response).on_hover_text(tip);
-    let play = response.clicked().then(|| Resume {
-        rating_key: item.rating_key.clone().unwrap_or_default(),
-        title: play_title(item),
-        start: resume_start(item),
-        overview: false,
-    });
-    (play, response)
+    let response = cards::pointer(ui.interact(art, id, sense)).on_hover_text(tip);
+    let play = (flags.playable && ui.rect_contains_pointer(art)) || response.has_focus();
+    let play_button = play.then(|| play_button(ui, art, id, item));
+    // The ring is the art's, not the caption's: text a ring touches is worse
+    // than no ring. It stays while the pointer is on the play button too.
+    let ringed = match &play_button {
+        Some(button) => response.union(button.clone()),
+        None => response.clone(),
+    };
+    cards::ring(ui, art, &ringed, cards::CARD_RADIUS);
+    let pick = if play_button.is_some_and(|b| b.clicked()) {
+        Some(Pick::play(item))
+    } else if let Some(page) = opened {
+        Some(Pick::Open(page))
+    } else if response.clicked() {
+        if flags.direct {
+            Some(Pick::play(item))
+        } else {
+            item_page(item).map(Pick::Open)
+        }
+    } else {
+        None
+    };
+    (pick, response)
+}
+
+/// The pages a card's two caption lines open, where they open one.
+struct Links {
+    title: Option<Page>,
+    episode: Option<Page>,
+}
+
+/// The source chip on a poster that is not from Plex, and the "new" dot.
+fn badges(ui: &egui::Ui, item: &Item, rect: Rect, fresh: bool) {
+    // A poster names its source only when that is not Plex, which is what a
+    // card with no mark on it means.
+    let origin = crate::source::origin_of(item);
+    if origin.is_jellyfin() {
+        let chip = Rect::from_min_size(rect.min + vec2(8.0, 8.0), vec2(22.0, 22.0));
+        ui.painter().rect_filled(chip, CornerRadius::same(6), CHIP);
+        marks::paint_source(
+            ui.painter(),
+            &origin,
+            chip.min.x + 4.0,
+            chip.center().y,
+            MARK,
+        );
+    }
+    if fresh {
+        let center = pos2(rect.max.x - DOT[1], rect.min.y + DOT[1]);
+        ui.painter()
+            .circle_filled(center, DOT[0] + 3.0, theme::ACCENT.gamma_multiply(0.25));
+        ui.painter().circle_filled(center, DOT[0], theme::ACCENT);
+    }
+}
+
+/// The round play button in the middle of the art, drawn while the card is
+/// pointed at or focused.
+fn play_button(ui: &mut egui::Ui, art: Rect, id: egui::Id, item: &Item) -> egui::Response {
+    let rect = Rect::from_center_size(art.center(), vec2(PLAY, PLAY));
+    let hint = format!("{} {}", resume_label(resume_start(item)), play_title(item));
+    let response =
+        cards::pointer(ui.interact(rect, id.with("play"), Sense::click())).on_hover_text(hint);
+    let fill = if response.hovered() {
+        theme::PRIMARY_BG
+    } else {
+        Color32::from_black_alpha(160)
+    };
+    let ink = if response.hovered() {
+        theme::PRIMARY_TEXT
+    } else {
+        Color32::WHITE
+    };
+    let painter = ui.painter();
+    painter.circle_filled(rect.center(), PLAY / 2.0, fill);
+    painter.circle_stroke(
+        rect.center(),
+        PLAY / 2.0,
+        egui::Stroke::new(1.0, Color32::from_white_alpha(70)),
+    );
+    let icon = PLAY * 0.42;
+    let glyph = marks::width_at(marks::icon::PLAY, icon);
+    // The triangle's weight sits left of its box, so it is nudged right.
+    let left = rect.center().x - glyph / 2.0 + 1.5;
+    marks::paint_tinted(painter, marks::icon::PLAY, left, rect.center().y, icon, ink);
+    response
 }
 
 /// The art with its shadow, and on a wide card its overlays.
@@ -197,38 +271,85 @@ fn wide_overlays(ui: &mut egui::Ui, artwork: &mut images::Artwork, item: &Item, 
     }
 }
 
-/// A card's two caption lines: title then subtitle, close together.
-fn caption_lines(ui: &mut egui::Ui, heading: &str, subtitle: &str, width: f32) {
+/// A card's two caption lines: title then subtitle, close together. Each is a
+/// link where [`Links`] names its page; answers the page clicked.
+fn caption_lines(
+    ui: &mut egui::Ui,
+    id: egui::Id,
+    heading: &str,
+    subtitle: &str,
+    width: f32,
+    links: &Links,
+) -> Option<Page> {
     ui.with_layout(egui::Layout::top_down(egui::Align::Min), |ui| {
         ui.spacing_mut().item_spacing.y = 3.0;
-        caption(ui, heading, theme::semibold(14.0), theme::TEXT, 1, width);
-        caption(
-            ui,
-            subtitle,
-            theme::medium(12.5),
-            theme::SECONDARY,
-            2,
+        let title = Line {
+            text: heading,
+            font: theme::semibold(14.0),
+            color: theme::TEXT,
+            rows: 1,
             width,
-        );
-    });
+        };
+        let sub = Line {
+            text: subtitle,
+            font: theme::medium(12.5),
+            color: theme::SECONDARY,
+            rows: 2,
+            width,
+        };
+        let a = caption(ui, id.with("title"), title, links.title.as_ref());
+        let b = caption(ui, id.with("episode"), sub, links.episode.as_ref());
+        a.or(b)
+    })
+    .inner
 }
 
-/// One wrapped caption line inside a card's own width.
-fn caption(
-    ui: &mut egui::Ui,
-    text: &str,
+/// One caption line's text and how it is set.
+struct Line<'a> {
+    text: &'a str,
     font: egui::FontId,
     color: Color32,
-    max_rows: usize,
+    rows: usize,
     width: f32,
-) {
-    if text.is_empty() {
-        return;
+}
+
+/// One wrapped caption line inside a card's own width; with a `page`, it is
+/// a link to it, underlined while pointed at. Answers the page when clicked.
+fn caption(ui: &mut egui::Ui, id: egui::Id, line: Line<'_>, page: Option<&Page>) -> Option<Page> {
+    if line.text.is_empty() {
+        return None;
     }
-    let mut job = LayoutJob::simple(text.to_owned(), font, color, width);
-    job.wrap.max_rows = max_rows;
-    // Only a one-row label may cut mid-word (it ends in an ellipsis); wrapped
-    // text breaks between words.
-    job.wrap.break_anywhere = max_rows == 1;
-    ui.label(job);
+    let job = |underline: bool| {
+        let mut job = LayoutJob::simple(
+            line.text.to_owned(),
+            line.font.clone(),
+            line.color,
+            line.width,
+        );
+        job.wrap.max_rows = line.rows;
+        // Only a one-row label may cut mid-word (it ends in an ellipsis);
+        // wrapped text breaks between words.
+        job.wrap.break_anywhere = line.rows == 1;
+        if underline {
+            for section in &mut job.sections {
+                section.format.underline = egui::Stroke::new(1.0, line.color);
+            }
+        }
+        job
+    };
+    let galley = ui.painter().layout_job(job(false));
+    let Some(page) = page else {
+        ui.label(galley);
+        return None;
+    };
+    let (rect, _) = ui.allocate_exact_size(galley.size(), Sense::hover());
+    let response = cards::pointer(ui.interact(rect, id, Sense::click()))
+        .on_hover_text(format!("Go to {}", page.title));
+    let galley = if response.hovered() {
+        ui.painter().layout_job(job(true))
+    } else {
+        galley
+    };
+    ui.painter().galley(rect.min, galley, line.color);
+    response.clicked().then(|| page.clone())
 }

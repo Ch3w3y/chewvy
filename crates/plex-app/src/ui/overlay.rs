@@ -52,11 +52,11 @@ pub enum Heading {
 }
 
 impl Heading {
-    /// The title art at `logo` fitted in `logo_box`, or `item`'s title wrapped
-    /// in `width` while there is none.
+    /// The title art at `logo` fitted in `logo_box`, or `title` wrapped in
+    /// `width` while there is none.
     pub fn new(
         painter: &Painter,
-        item: &Item,
+        title: &str,
         logo: Option<&str>,
         artwork: &mut images::Artwork,
         logo_box: [f32; 2],
@@ -75,8 +75,8 @@ impl Heading {
         match fitted {
             Some((texture, size)) => Heading::Logo(texture, size),
             None => {
-                let title = item.title.as_deref().unwrap_or("(untitled)").to_owned();
-                let mut job = LayoutJob::simple(title, theme::extrabold(44.0), theme::TEXT, width);
+                let mut job =
+                    LayoutJob::simple(title.to_owned(), theme::extrabold(44.0), theme::TEXT, width);
                 job.wrap.max_rows = 2;
                 Heading::Title(painter.layout_job(job))
             }
@@ -84,9 +84,13 @@ impl Heading {
     }
 
     pub fn height(&self) -> f32 {
+        self.size().y
+    }
+
+    pub fn size(&self) -> egui::Vec2 {
         match self {
-            Heading::Logo(_, size) => size.y,
-            Heading::Title(galley) => galley.rect.height(),
+            Heading::Logo(_, size) => *size,
+            Heading::Title(galley) => galley.rect.size(),
         }
     }
 

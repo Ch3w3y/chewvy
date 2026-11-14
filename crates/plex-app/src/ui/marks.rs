@@ -141,6 +141,8 @@ pub mod icon {
     pub const BACK: Logo = icon!("back");
     /// The chosen row.
     pub const CHECK: Logo = icon!("check");
+    /// Download an update.
+    pub const DOWNLOAD: Logo = icon!("download");
 }
 
 /// One mark in a row.

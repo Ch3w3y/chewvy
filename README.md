@@ -159,7 +159,7 @@ list of things nobody has tried yet.
 | Left / Right, J / L | Seek 10 seconds |
 | Up / Down | Volume |
 | M | Mute |
-| F | Full screen |
+| F (player), F11 (anywhere) | Full screen |
 | C / A | Next subtitle / audio track |
 | [ / ] | Slower / faster |
 | S | Skip intro or credits |

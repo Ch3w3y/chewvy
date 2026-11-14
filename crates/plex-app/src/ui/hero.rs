@@ -115,8 +115,8 @@ struct Carousel {
     elapsed: f32,
 }
 
-/// Draw the hero over `pool` (its first [`SLOTS`] openable items). Returns the
-/// item a button asked to open, or `None` while nothing was clicked.
+/// Draw the hero over `pool` (its first [`SLOTS`] openable items). Returns
+/// what a button or link asked for, or `None` while nothing was clicked.
 ///
 /// `playable` is whether nothing else is playing: while an item plays, the
 /// buttons are hover-only, as the shelf cards are. `server` names where the
@@ -127,7 +127,7 @@ pub fn show(
     artwork: &mut images::Artwork,
     playable: bool,
     servers: crate::source::Servers<'_>,
-) -> Option<home::Resume> {
+) -> Option<home::Pick> {
     let items: Vec<&Item> = pool
         .iter()
         .copied()
@@ -153,16 +153,11 @@ pub fn show(
         art_rect.height() as u32,
     );
     bleed::paint(ui.ctx(), art_rect, texture, bleed::Mask::Hero);
-    let pressed = block::show(ui, hero, id, item, artwork, playable, servers.of(item));
+    let pick = block::show(ui, hero, id, item, artwork, playable, servers.of(item));
     if count > 1 {
         paint_dots(ui, hero, count, index);
     }
-    (pressed.play || pressed.details).then(|| home::Resume {
-        rating_key: item.rating_key.clone().unwrap_or_default(),
-        title: home::play_title(item),
-        start: home::resume_start(item),
-        overview: pressed.details,
-    })
+    pick
 }
 
 /// Step the carousel for this frame (auto-advance, dot clicks) and answer the
