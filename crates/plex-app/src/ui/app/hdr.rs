@@ -6,9 +6,10 @@
 //! the same way. Coming back plays the item here, tone-mapped, which is the
 //! only form this window's surface can show.
 
-use egui::{vec2, Id, RichText};
+use egui::{Id, RichText};
 
 use crate::player::{self, hdr::Output};
+use crate::ui::controls::{self, Kind};
 use crate::ui::player::hdr::offered;
 use crate::ui::theme;
 use crate::watch::Cmd;
@@ -66,38 +67,22 @@ impl Ui {
         let Some(at) = self.hdr.prompt else {
             return;
         };
-        let mut choice = None;
-        egui::Modal::new(Id::new("hdr-window-explainer")).show(ctx, |ui| {
-            ui.set_max_width(460.0);
+        let (choice, _) = controls::dialog(ctx, Id::new("hdr-window-explainer"), 440.0, |ui| {
             ui.label(RichText::new("Open the HDR window?").font(theme::h2()));
-            ui.add_space(8.0);
             ui.label(
-                "This video is HDR. Chewvy's own window can only show it tone-mapped, \
-                 so HDR and Dolby Vision play in a separate window that sends real HDR \
-                 to your display and applies Dolby Vision's colour processing itself.",
+                "This video is HDR. Chewvy's own window can only show it tone-mapped; \
+                 the HDR window sends real HDR to your display.",
             );
-            ui.add_space(6.0);
             ui.label(theme::secondary(
-                "Your TV shows HDR, not its own Dolby Vision mode. Turn HDR on for the \
-                 display in your system settings. In that window: Space pauses, F toggles \
-                 full screen, N plays the next episode, Q closes it. Chewvy shows a card with a button to close it \
-                 and keep playing here.",
+                "Turn HDR on for the display in your system settings first. In that window \
+                 Space pauses, F toggles full screen, N plays the next episode and Q \
+                 closes it.",
             ));
-            ui.add_space(12.0);
-            ui.horizontal(|ui| {
-                if ui
-                    .add(egui::Button::new("Open HDR window").min_size(vec2(160.0, 34.0)))
-                    .clicked()
-                {
-                    choice = Some(true);
-                }
-                if ui
-                    .add(egui::Button::new("Keep playing here").min_size(vec2(160.0, 34.0)))
-                    .clicked()
-                {
-                    choice = Some(false);
-                }
-            });
+            controls::actions(ui, |ui| {
+                let open = controls::button(ui, Kind::Primary, "Open HDR window").clicked();
+                let keep = controls::button(ui, Kind::Secondary, "Keep playing here").clicked();
+                open.then_some(true).or(keep.then_some(false))
+            })
         });
         match choice {
             Some(true) => {

@@ -5,6 +5,9 @@
 //! cannot hand the app a usable context leaves the user with no window at all
 //! and nothing else to read. That is why the version gate, the message text and
 //! the way it is raised live together here instead of at each failure site.
+//!
+//! The app's other call into Windows itself, for the time zone, sits beside
+//! that dialog so the crate's Windows FFI stays in this one allowed module.
 
 /// The desktop GL version Chewvy asks the window system for:
 /// `glutin::context::Version` in the window host's context attributes, and the
@@ -134,11 +137,63 @@ fn message_box(title: &str, text: &str) {
     };
 }
 
+/// The Windows time zone in force now.
+#[cfg(target_os = "windows")]
+pub struct WindowsZone {
+    /// The UTC offset in force, in seconds east.
+    pub offset_secs: i32,
+    /// The zone's registry key name (`AUS Eastern Standard Time`), which is the
+    /// same whatever the display language; `None` when Windows names none.
+    pub key_name: Option<String>,
+}
+
+/// The time zone `GetDynamicTimeZoneInformation` reports, with its
+/// daylight-saving state applied to the offset.
+#[cfg(target_os = "windows")]
+#[must_use]
+pub fn windows_zone() -> WindowsZone {
+    use windows_sys::Win32::System::Time::{
+        GetDynamicTimeZoneInformation, DYNAMIC_TIME_ZONE_INFORMATION,
+    };
+    const STANDARD: u32 = 1;
+    const DAYLIGHT: u32 = 2;
+    let mut zone = DYNAMIC_TIME_ZONE_INFORMATION::default();
+    // SAFETY: the call writes one DYNAMIC_TIME_ZONE_INFORMATION into the struct
+    // it is handed, which lives on this frame for the whole call.
+    let state = unsafe { GetDynamicTimeZoneInformation(&mut zone) };
+    let extra = match state {
+        STANDARD => zone.StandardBias,
+        DAYLIGHT => zone.DaylightBias,
+        _ => 0,
+    };
+    let name = &zone.TimeZoneKeyName;
+    let len = name
+        .iter()
+        .position(|unit| *unit == 0)
+        .unwrap_or(name.len());
+    let key_name = name
+        .get(..len)
+        .map(String::from_utf16_lossy)
+        .filter(|name| !name.is_empty());
+    WindowsZone {
+        // A bias is minutes to add to local time to reach UTC.
+        offset_secs: zone.Bias.saturating_add(extra).saturating_mul(-60),
+        key_name,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
         graphics_failure_text, version_supported, version_text, GL_FLOOR_ERROR, GL_REQUEST,
     };
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn windows_names_its_time_zone_by_its_registry_key() {
+        let zone = super::windows_zone();
+        assert!(zone.key_name.is_some());
+    }
 
     #[test]
     fn a_windows_builtin_gl_1_1_context_is_refused() {

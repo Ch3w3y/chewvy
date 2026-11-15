@@ -3,19 +3,6 @@ use egui::pos2 as p;
 use super::*;
 
 #[test]
-fn an_unflipped_arrow_points_right_and_a_flipped_one_left() {
-    let center = p(100.0, 50.0);
-    let [top, tip, bottom] = arrow_points(center, false);
-    assert!(tip.x > center.x, "tip right of centre");
-    assert!(top.x < tip.x && bottom.x < tip.x, "arms trail to the left");
-    assert_eq!(top.y - center.y, -ARROW[1]);
-    assert_eq!(bottom.y - center.y, ARROW[1]);
-    let [top, tip, bottom] = arrow_points(center, true);
-    assert!(tip.x < center.x, "tip left of centre");
-    assert!(top.x > tip.x && bottom.x > tip.x, "arms trail to the right");
-}
-
-#[test]
 fn an_arrows_clickable_box_is_two_radii_wide() {
     let rect = arrow_rect(p(40.0, 40.0));
     assert_eq!(rect.width(), 2.0 * ARROW_RADIUS);

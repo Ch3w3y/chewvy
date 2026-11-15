@@ -197,6 +197,39 @@ published 0.2.0, downloaded, verified and installed it while running, and
 "Restart now" started the published 0.2.0 `chewvy.exe` (same SHA-256). The
 macOS path has not been run.
 
+## Look and backgrounds
+
+The interface draws from one token set, `ui/theme/tokens.rs`. It is neutral
+grey and black smoked glass: a lint forbids colour literals elsewhere under
+`ui/`, and a test forbids any hue except the danger red. Controls come from
+`ui/controls.rs` rather than stock egui widgets, and a lint enforces that too.
+Icons are one SVG set (`assets/icons/`), rendered by `ui/marks/icon.rs` at the
+size they are drawn.
+
+A theme changes only the photograph behind the glass. The pieces:
+
+- **`theme_art`**: pure, with no I/O. It holds:
+  - the theme vocabulary;
+  - the calendar Automatic follows (season by hemisphere, Halloween from 15
+    October, Christmas from 1 December);
+  - a canon of films known for their cinematography;
+  - the title and image scoring that ranks a library's backdrops for each theme.
+- **`theme_library`**: on a background thread, it reads each connected
+  server's films and series. It measures the backdrops that could be picked
+  from 320-pixel thumbnails, ranks them, and caches the catalog and
+  measurements per server under the cache directory (`theme-art/`). A catalog
+  is read again at most once a day, or when the server's title count changes.
+  Every request is a read, and tokens travel in headers as for any other read.
+  "Use as background" saves its pin in `background.json` in the config
+  directory, and the pin overrides every theme until it is removed.
+- **`ui/backdrop`**: the 25 bundled photographs. `assets/backdrop/grade.py`
+  crops, darkens and compresses them, and writes `SOURCES.md` and `photos.rs`.
+  The module also chooses what shows: a pin first, then library art if "Use
+  art from my libraries" is on, then the theme's photographs, which take turns
+  every 30 minutes. Each picture is dimmed only as far as 7:1 contrast for
+  primary text over its brightest part needs. A new picture cross-fades in
+  once it has loaded.
+
 ## What the app never does
 
 - It never changes library metadata, deletes media or alters server settings.

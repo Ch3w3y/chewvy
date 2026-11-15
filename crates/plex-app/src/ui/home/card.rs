@@ -17,18 +17,18 @@ use super::{
 use crate::ui::{cards, images, marks, theme};
 
 /// The shadow every card's art casts on the page.
-const SHADOW: Shadow = Shadow {
-    offset: [0, 10],
-    blur: 24,
-    spread: 0,
-    color: Color32::from_rgba_premultiplied(0, 0, 0, 110),
-};
-/// The darkening under a wide card's title art.
-const SHADE: Color32 = Color32::from_rgba_premultiplied(0, 0, 0, 178);
-/// The resume track's unfilled part.
-const TRACK: Color32 = Color32::from_rgba_premultiplied(51, 51, 51, 51);
-/// The service chip's fill.
-const CHIP: Color32 = Color32::from_rgba_premultiplied(5, 7, 19, 140);
+fn shadow() -> Shadow {
+    Shadow {
+        offset: [0, 10],
+        blur: 24,
+        spread: 0,
+        color: theme::palette().scrim(110),
+    }
+}
+/// The strength of the darkening under a wide card's title art.
+const SHADE: u8 = 178;
+/// The strength of the wash that is the resume track's unfilled part.
+const TRACK: u8 = 51;
 /// The Plex wordmark's height on a card's service chip.
 const MARK: f32 = 9.0;
 /// The title art's box on a wide card: a share of its width, and a height.
@@ -145,7 +145,8 @@ fn badges(ui: &egui::Ui, item: &Item, rect: Rect, fresh: bool) {
     let origin = crate::source::origin_of(item);
     if origin.is_jellyfin() {
         let chip = Rect::from_min_size(rect.min + vec2(8.0, 8.0), vec2(22.0, 22.0));
-        ui.painter().rect_filled(chip, CornerRadius::same(6), CHIP);
+        ui.painter()
+            .rect_filled(chip, CornerRadius::same(6), theme::palette().plate);
         marks::paint_source(
             ui.painter(),
             &origin,
@@ -156,9 +157,13 @@ fn badges(ui: &egui::Ui, item: &Item, rect: Rect, fresh: bool) {
     }
     if fresh {
         let center = pos2(rect.max.x - DOT[1], rect.min.y + DOT[1]);
+        ui.painter().circle_filled(
+            center,
+            DOT[0] + 3.0,
+            theme::palette().accent.gamma_multiply(0.25),
+        );
         ui.painter()
-            .circle_filled(center, DOT[0] + 3.0, theme::ACCENT.gamma_multiply(0.25));
-        ui.painter().circle_filled(center, DOT[0], theme::ACCENT);
+            .circle_filled(center, DOT[0], theme::palette().accent);
     }
 }
 
@@ -170,27 +175,29 @@ fn play_button(ui: &mut egui::Ui, art: Rect, id: egui::Id, item: &Item) -> egui:
     let response =
         cards::pointer(ui.interact(rect, id.with("play"), Sense::click())).on_hover_text(hint);
     let fill = if response.hovered() {
-        theme::PRIMARY_BG
+        theme::palette().primary_bg
     } else {
-        Color32::from_black_alpha(160)
+        theme::palette().scrim(160)
     };
     let ink = if response.hovered() {
-        theme::PRIMARY_TEXT
+        theme::palette().primary_text
     } else {
-        Color32::WHITE
+        theme::palette().highlight
     };
     let painter = ui.painter();
     painter.circle_filled(rect.center(), PLAY / 2.0, fill);
     painter.circle_stroke(
         rect.center(),
         PLAY / 2.0,
-        egui::Stroke::new(1.0, Color32::from_white_alpha(70)),
+        egui::Stroke::new(1.0, theme::palette().wash(70)),
     );
-    let icon = PLAY * 0.42;
-    let glyph = marks::width_at(marks::icon::PLAY, icon);
-    // The triangle's weight sits left of its box, so it is nudged right.
-    let left = rect.center().x - glyph / 2.0 + 1.5;
-    marks::paint_tinted(painter, marks::icon::PLAY, left, rect.center().y, icon, ink);
+    marks::icon::paint(
+        painter,
+        marks::icon::Icon::Play,
+        marks::icon::Size::Primary,
+        rect.center(),
+        ink,
+    );
     response
 }
 
@@ -203,7 +210,8 @@ fn artwork_box(
     rect: Rect,
     (art_w, art_h): (u32, u32),
 ) {
-    ui.painter().add(SHADOW.as_shape(rect, cards::CARD_RADIUS));
+    ui.painter()
+        .add(shadow().as_shape(rect, cards::CARD_RADIUS));
     match artwork.texture(card_art(item, shape), art_w, art_h) {
         Some((texture, tex)) => cards::rounded_art(
             ui,
@@ -211,11 +219,11 @@ fn artwork_box(
             rect,
             cards::cover_uv(tex, rect.size()),
             cards::CARD_RADIUS,
-            Color32::WHITE,
+            theme::UNTINTED,
         ),
         None => {
             ui.painter()
-                .rect_filled(rect, cards::CARD_RADIUS, theme::CARD);
+                .rect_filled(rect, cards::CARD_RADIUS, theme::palette().card);
         }
     }
     if shape == RowShape::Wide {
@@ -224,7 +232,7 @@ fn artwork_box(
     ui.painter().rect_stroke(
         rect,
         cards::CARD_RADIUS,
-        (1.0, Color32::from_white_alpha(20)),
+        (1.0, theme::palette().wash(20)),
         egui::StrokeKind::Inside,
     );
 }
@@ -236,7 +244,7 @@ fn wide_overlays(ui: &mut egui::Ui, artwork: &mut images::Artwork, item: &Item, 
     painter.add(Shape::gradient_rect(
         shade,
         Direction::BottomUp,
-        [SHADE, Color32::TRANSPARENT],
+        [theme::palette().scrim(SHADE), Color32::TRANSPARENT],
     ));
     if let Some((texture, tex)) =
         hero_logo(item).and_then(|logo| artwork.texture(Some(logo), LOGO_ART[0], LOGO_ART[1]))
@@ -244,7 +252,7 @@ fn wide_overlays(ui: &mut egui::Ui, artwork: &mut images::Artwork, item: &Item, 
         let size = cards::fit_size(tex, vec2(rect.width() * LOGO_BOX[0], LOGO_BOX[1]));
         let logo = Rect::from_min_size(pos2(rect.min.x + 12.0, rect.max.y - 14.0 - size.y), size);
         ui.painter()
-            .image(texture, logo, cards::FULL_UV, Color32::WHITE);
+            .image(texture, logo, cards::FULL_UV, theme::UNTINTED);
     }
     let painter = ui.painter();
     let origin = crate::source::origin_of(item);
@@ -254,7 +262,7 @@ fn wide_overlays(ui: &mut egui::Ui, artwork: &mut images::Artwork, item: &Item, 
         rect.min + vec2(8.0, 8.0),
         vec2(marks::source_width(&origin, MARK) + 2.0 * pad, 22.0),
     );
-    painter.rect_filled(chip, CornerRadius::same(6), CHIP);
+    painter.rect_filled(chip, CornerRadius::same(6), theme::palette().plate);
     marks::paint_source(painter, &origin, chip.min.x + pad, chip.center().y, MARK);
     if let Some(fraction) = progress_fraction(item.view_offset, item.duration) {
         let track = Rect::from_min_max(pos2(rect.min.x, rect.max.y - PROGRESS_HEIGHT), rect.max);
@@ -264,10 +272,14 @@ fn wide_overlays(ui: &mut egui::Ui, artwork: &mut images::Artwork, item: &Item, 
             sw: cards::CARD_RADIUS.sw,
             se: cards::CARD_RADIUS.se,
         };
-        painter.rect_filled(track, bottom, TRACK);
+        painter.rect_filled(track, bottom, theme::palette().wash(TRACK));
         let filled =
             Rect::from_min_size(track.min, vec2(track.width() * fraction, PROGRESS_HEIGHT));
-        painter.rect_filled(filled, CornerRadius { se: 0, ..bottom }, theme::ACCENT);
+        painter.rect_filled(
+            filled,
+            CornerRadius { se: 0, ..bottom },
+            theme::palette().accent,
+        );
     }
 }
 
@@ -286,14 +298,14 @@ fn caption_lines(
         let title = Line {
             text: heading,
             font: theme::semibold(14.0),
-            color: theme::TEXT,
+            color: theme::palette().text,
             rows: 1,
             width,
         };
         let sub = Line {
             text: subtitle,
             font: theme::medium(12.5),
-            color: theme::SECONDARY,
+            color: theme::palette().secondary,
             rows: 2,
             width,
         };
@@ -339,7 +351,7 @@ fn caption(ui: &mut egui::Ui, id: egui::Id, line: Line<'_>, page: Option<&Page>)
     };
     let galley = ui.painter().layout_job(job(false));
     let Some(page) = page else {
-        ui.label(galley);
+        crate::ui::legible::label(ui, galley);
         return None;
     };
     let (rect, _) = ui.allocate_exact_size(galley.size(), Sense::hover());
@@ -350,6 +362,6 @@ fn caption(ui: &mut egui::Ui, id: egui::Id, line: Line<'_>, page: Option<&Page>)
     } else {
         galley
     };
-    ui.painter().galley(rect.min, galley, line.color);
+    crate::ui::legible::on_backdrop(ui.painter(), rect.min, galley, line.color);
     response.clicked().then(|| page.clone())
 }

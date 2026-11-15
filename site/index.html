@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en" data-release="pending">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chewvy: a native desktop client for Plex and Jellyfin</title>
+<meta name="description" content="Chewvy is a free desktop client for the Plex and Jellyfin servers you already run. It is written in Rust, plays through mpv with hardware decoding, and draws its interface as smoked glass over a photograph.">
+<meta name="theme-color" content="#0b0b0d">
+<meta name="color-scheme" content="dark">
+<meta property="og:title" content="Chewvy">
+<meta property="og:description" content="A native desktop client for Plex and Jellyfin, written in Rust.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/shots/home-1600.jpg">
+<link rel="icon" href="assets/brand/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/brand/icon-180.png">
+<link rel="preload" href="assets/fonts/PlusJakartaSans-ExtraBold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/PlusJakartaSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/themes/aurora.webp" as="image" type="image/webp">
+<link rel="stylesheet" href="styles.css">
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="backdrop" aria-hidden="true">
+  <div class="backdrop-layer is-on" style="background-image:url('assets/themes/aurora.webp')"></div>
+  <div class="backdrop-layer"></div>
+</div>
+
+<header class="top">
+  <a class="brand" href="#top" aria-label="Chewvy, back to top">
+    <img src="assets/brand/lockup.svg" width="137" height="32" alt="Chewvy">
+  </a>
+  <nav class="top-nav" aria-label="Sections">
+    <a href="#features">Features</a>
+    <a href="#backdrops">Backdrops</a>
+    <a href="#formats">Formats</a>
+    <a href="#screens">Screens</a>
+    <a href="#download">Download</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+  <a class="btn btn-ghost top-gh" href="https://github.com/Ch3w3y/chewvy">GitHub</a>
+</header>
+
+<main id="main">
+
+<section class="hero" id="top">
+  <div class="hero-copy">
+    <h1>One desktop app <span class="dim">for Plex and&nbsp;Jellyfin</span></h1>
+    <p class="lede">Chewvy signs in to the media servers you already run, shows their libraries side by side, and plays through mpv with hardware decoding. It is written in Rust and it is free software.</p>
+    <div class="cta">
+      <a class="btn btn-primary" id="dl-primary" href="https://github.com/Ch3w3y/chewvy/releases/latest">
+        <svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10M5.5 8.5 10 13l4.5-4.5M4 17h12"/></svg>
+        <span id="dl-primary-label">Download Chewvy</span>
+      </a>
+      <a class="btn btn-quiet" href="#download">All platforms</a>
+      <a class="btn btn-quiet" href="https://github.com/Ch3w3y/chewvy">Source on GitHub</a>
+    </div>
+    <p class="fine" id="dl-note">Linux AppImage, Windows installer and zip, and an experimental macOS disk image. <a href="#download">What works where</a>.</p>
+  </div>
+  <div class="hero-stage" aria-hidden="false">
+    <figure class="frame frame-back" data-parallax="0.06">
+      <img src="assets/shots/library-960.webp" srcset="assets/shots/library-960.webp 960w, assets/shots/library-1600.webp 1600w" sizes="(min-width: 1000px) 46vw, 92vw" width="1600" height="1000" alt="The library grid: posters of freely licensed films on smoked glass" loading="eager" decoding="async">
+    </figure>
+    <figure class="frame frame-front" data-parallax="-0.05">
+      <img src="assets/shots/home-960.webp" srcset="assets/shots/home-960.webp 960w, assets/shots/home-1600.webp 1600w" sizes="(min-width: 1000px) 52vw, 92vw" width="1600" height="1000" alt="Chewvy's home screen: a film's artwork fills the window, with Continue Watching below" fetchpriority="high" decoding="async">
+    </figure>
+  </div>
+</section>
+
+<section class="section" id="features">
+  <header class="section-head" data-reveal>
+    <p class="eyebrow">Features</p>
+    <h2>What Chewvy does</h2>
+    <p class="sub">Each claim on this page comes from the project's own measurements. Where something has not been tested, the page says so.</p>
+  </header>
+
+  <div class="bento" data-reveal>
+    <article class="card card-wide">
+      <h3>Two kinds of server, one library</h3>
+      <p>A Plex account and any number of Jellyfin servers appear together: one home screen, one sidebar, one search. Either kind is enough by itself. The first start asks which you have, and the switcher at the top of the sidebar adds more.</p>
+      <ul class="pills" aria-label="Ways to sign in">
+        <li>Plex: a code at plex.tv/link</li>
+        <li>Jellyfin: Quick Connect</li>
+        <li>Jellyfin: username and password</li>
+      </ul>
+      <p class="fine">Chewvy never stores a password. One Plex account at a time.</p>
+    </article>
+
+    <article class="card">
+      <p class="kicker">Player</p>
+      <h3>mpv inside the window</h3>
+      <p>Video is drawn by mpv onto the same OpenGL surface as the interface. There is no web view and no Electron. Audio and subtitle tracks, speed, intro and credits skip, next episode.</p>
+    </article>
+
+    <article class="card card-tall">
+      <p class="kicker">Watch together</p>
+      <h3>Play, pause and seek move everyone</h3>
+      <div class="sync" aria-hidden="true">
+        <div class="sync-row"><span class="who">A</span><span class="bar"><i></i></span></div>
+        <div class="sync-row"><span class="who">B</span><span class="bar"><i></i></span></div>
+        <div class="sync-row"><span class="who">C</span><span class="bar"><i></i></span></div>
+      </div>
+      <p>Start or join a SyncPlay group on Jellyfin, or a Watch Together room for a Plex film or episode. Plex's web app can join the same room.</p>
+      <p class="fine">Measured: within 0.05&nbsp;s of a scripted second member on a Jellyfin test server. Through Plex's service a change reaches the other side 0.1 to 1&nbsp;s later.</p>
+    </article>
+
+    <article class="card">
+      <p class="kicker">Display</p>
+      <h3 class="big">HDR window</h3>
+      <p>HDR10, HLG, HDR10+ and Dolby Vision profiles 5 and 8 can play in a separate mpv <code>gpu-next</code> window that sends HDR to the display. The main window tone-maps to SDR.</p>
+      <p class="fine">Needs a colour-managed Wayland compositor such as KDE Plasma 6.4 or newer. Light output has not been measured, and HDR output is untested on Windows and macOS.</p>
+    </article>
+
+    <article class="card">
+      <p class="kicker">When a file will not play</p>
+      <h3>Falls back to the server</h3>
+      <ol class="ladder">
+        <li><b>Direct play</b><span>the original file</span></li>
+        <li><b>Server remux</b><span>same position</span></li>
+        <li><b>1080p transcode</b><span>20 Mbps</span></li>
+      </ol>
+      <p class="fine">The quality menu offers the same steps by hand, down to 240p. On Plex the automatic fallback has run against a mock server only.</p>
+    </article>
+
+    <article class="card card-wide card-keys">
+      <div>
+        <p class="kicker">Keyboard and full screen</p>
+        <h3>Hands on the keys</h3>
+        <p>F11 is full screen on every screen, and it stays on through the next episode, a quality change or a move to the HDR window.</p>
+      </div>
+      <dl class="keys">
+        <div><dt><kbd>Space</kbd></dt><dd>Play or pause</dd></div>
+        <div><dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Seek 10 seconds</dd></div>
+        <div><dt><kbd>C</kbd> <kbd>A</kbd></dt><dd>Next subtitle or audio track</dd></div>
+        <div><dt><kbd>S</kbd></dt><dd>Skip intro or credits</dd></div>
+        <div><dt><kbd>N</kbd></dt><dd>Next episode</dd></div>
+        <div><dt><kbd>/</kbd></dt><dd>Search</dd></div>
+      </dl>
+    </article>
+
+    <article class="card">
+      <p class="kicker">Updates</p>
+      <h3>Updates from inside the app</h3>
+      <p>Chewvy checks GitHub for a newer release when it starts. "Update now" downloads the package you installed, refuses it unless it matches the release's <code>SHA256SUMS</code>, installs it and restarts.</p>
+      <p class="fine">Run on the AppImage and on Windows. The macOS path has not been tried. The check can be switched off.</p>
+    </article>
+
+    <article class="card card-wide">
+      <p class="kicker">Your library</p>
+      <h3>Read-only towards your servers</h3>
+      <p>Chewvy never changes library metadata, deletes media or alters server settings. Its only writes are playback progress and played state, and only once you turn on Progress sync in Settings.</p>
+    </article>
+  </div>
+</section>
+
+<section class="section" id="backdrops">
+  <header class="section-head" data-reveal>
+    <p class="eyebrow">Backdrops <span class="next-release">In the next release</span></p>
+    <h2>Smoked glass over a photograph</h2>
+    <p class="sub">The interface is neutral grey and black glass. The colour comes from the photograph behind it. Pick one and this page changes the way the app does.</p>
+  </header>
+
+  <div class="themes glass" data-reveal>
+    <div class="theme-groups" id="theme-groups">
+      <noscript><p class="fine">The backdrop switcher needs JavaScript. The photographs are listed in the <a href="credits.html">credits</a>.</p></noscript>
+    </div>
+    <p class="theme-credit" id="theme-credit" aria-live="polite"></p>
+  </div>
+
+  <div class="strip" data-reveal>
+    <figure class="frame"><img src="assets/shots/theme-fantasy-960.webp" width="960" height="600" loading="lazy" decoding="async" alt="The Films grid in the app over the Fantasy photograph"><figcaption>Fantasy</figcaption></figure>
+    <figure class="frame"><img src="assets/shots/theme-scifi-960.webp" width="960" height="600" loading="lazy" decoding="async" alt="The Films grid in the app over the Science fiction photograph"><figcaption>Science fiction</figcaption></figure>
+    <figure class="frame"><img src="assets/shots/theme-western-960.webp" width="960" height="600" loading="lazy" decoding="async" alt="The Films grid in the app over the Western photograph"><figcaption>Western</figcaption></figure>
+    <figure class="frame"><img src="assets/shots/theme-spring-960.webp" width="960" height="600" loading="lazy" decoding="async" alt="The Films grid in the app over the Spring photograph"><figcaption>Spring</figcaption></figure>
+  </div>
+
+  <div class="duo" data-reveal>
+    <div class="note glass">
+      <h3>Thirteen themes, 25 bundled photographs</h3>
+      <p>Aurora, six genres, two festivals and four seasons. Every bundled photograph is public domain or Creative Commons, and the app credits each one under Settings.</p>
+    </div>
+    <div class="note glass">
+      <h3>Follows the calendar</h3>
+      <p>Left on Automatic, the backdrop follows the season where you are, with Halloween from 15 October and Christmas from 1 December.</p>
+    </div>
+    <div class="note glass">
+      <h3>Art from your own library</h3>
+      <p>With "Use art from my libraries" on, a theme shows backdrops of films and shows from your servers. Chewvy bundles and hosts no film stills.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="formats">
+  <header class="section-head" data-reveal>
+    <p class="eyebrow">Formats</p>
+    <h2>What it plays</h2>
+    <p class="sub">Decoding is done by mpv and FFmpeg. Chewvy does not claim to play everything. A format is marked measured only when it was seen playing on the Linux development machine: AMD Radeon RX 9070 XT, Mesa VA-API, mpv 0.41, FFmpeg 9.0.</p>
+  </header>
+
+  <ul class="legend" data-reveal aria-label="Key">
+    <li><span class="st st-yes" aria-hidden="true"></span>Measured</li>
+    <li><span class="st st-maybe" aria-hidden="true"></span>Expected, not measured</li>
+    <li><span class="st st-no" aria-hidden="true"></span>Not supported</li>
+  </ul>
+
+  <div class="bento formats" data-reveal>
+    <article class="card card-wide card-tall">
+      <h3>Video codecs</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Video codecs">
+      <table>
+        <thead><tr><th scope="col">Codec</th><th scope="col">Measured up to</th><th scope="col">Decoded in</th><th scope="col">Status</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">H.264, 8-bit</th><td>3840x2160</td><td>Hardware (VA-API)</td><td><span class="st st-yes" aria-hidden="true"></span>Measured</td></tr>
+          <tr><th scope="row">HEVC Main and Main10</th><td>3840x2160</td><td>Hardware (VA-API)</td><td><span class="st st-yes" aria-hidden="true"></span>Measured</td></tr>
+          <tr><th scope="row">AV1, 8 and 10-bit</th><td>3840x2160</td><td>Hardware (VA-API)</td><td><span class="st st-yes" aria-hidden="true"></span>Measured</td></tr>
+          <tr><th scope="row">VP9, 8 and 10-bit</th><td>3840x2160</td><td>Hardware (VA-API)</td><td><span class="st st-yes" aria-hidden="true"></span>Measured</td></tr>
+          <tr><th scope="row">MPEG-2, progressive</th><td>1920x1080</td><td>Software</td><td><span class="st st-yes" aria-hidden="true"></span>Measured</td></tr>
+          <tr><th scope="row">MPEG-4 part 2</th><td>1280x720</td><td>Software</td><td><span class="st st-yes" aria-hidden="true"></span>Measured</td></tr>
+          <tr><th scope="row">VP8</th><td>1280x720</td><td>Software</td><td><span class="st st-yes" aria-hidden="true"></span>Measured</td></tr>
+          <tr><th scope="row">WMV8</th><td>1280x720</td><td>Software</td><td><span class="st st-yes" aria-hidden="true"></span>Measured in mpv alone</td></tr>
+          <tr><th scope="row">10-bit H.264, interlaced MPEG-2, VC-1, MJPEG, VVC, ProRes</th><td>None</td><td>Software, by FFmpeg</td><td><span class="st st-maybe" aria-hidden="true"></span>Expected, not measured</td></tr>
+          <tr><th scope="row">Frames larger than 4096x2160</th><td>None</td><td>Unknown</td><td><span class="st st-maybe" aria-hidden="true"></span>Not measured</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="fine">The 3840x2160 rows are decode rates from mpv with no display. H.264 and HEVC Main10 at 1080p were measured through the app's own render path.</p>
+    </article>
+
+    <article class="card">
+      <h3>Containers</h3>
+      <ul class="chips" aria-label="Containers measured">
+        <li>MKV</li><li>MP4</li><li>MOV</li><li>WebM</li><li>MPEG-TS</li><li>MPEG-PS</li><li>AVI</li>
+        <li class="chip-maybe" title="Played in mpv alone">WMV / ASF</li>
+      </ul>
+      <p class="fine">WMV and ASF were played in mpv alone. Disc structures are not supported: DVD <code>VIDEO_TS</code>, Blu-ray <code>BDMV</code> and ISO images.</p>
+    </article>
+
+    <article class="card">
+      <h3>Audio</h3>
+      <ul class="chips" aria-label="Audio codecs measured">
+        <li>AAC</li><li>MP3</li><li>MP2</li><li>FLAC</li><li>ALAC</li><li>AC-3</li><li>E-AC-3</li><li>DTS core</li><li>TrueHD</li><li>24-bit PCM</li><li>Opus</li><li>Vorbis</li>
+      </ul>
+      <ul class="chips" aria-label="Audio codecs not measured">
+        <li class="chip-maybe">DTS-HD MA</li><li class="chip-maybe">DTS:X</li><li class="chip-maybe">TrueHD with Atmos</li><li class="chip-maybe">WMA</li>
+      </ul>
+      <p class="fine"><span class="st st-no" aria-hidden="true"></span>No bitstream passthrough to a receiver. Audio is always decoded to PCM, in software.</p>
+    </article>
+
+    <article class="card card-wide">
+      <h3>HDR and Dolby Vision</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="HDR and Dolby Vision">
+      <table>
+        <thead><tr><th scope="col">Format</th><th scope="col">Main window</th><th scope="col">HDR window</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">HDR10, HLG</th><td>Tone-mapped to SDR</td><td><span class="st st-yes" aria-hidden="true"></span>HDR output</td></tr>
+          <tr><th scope="row">HDR10+</th><td>Tone-mapped to SDR</td><td><span class="st st-yes" aria-hidden="true"></span>HDR output with its dynamic metadata</td></tr>
+          <tr><th scope="row">Dolby Vision profile 8</th><td>Plays its HDR10 base layer, tone-mapped</td><td><span class="st st-yes" aria-hidden="true"></span>Dolby Vision reshaping</td></tr>
+          <tr><th scope="row">Dolby Vision profile 5</th><td>Plays with wrong colours, so the player offers the HDR window</td><td><span class="st st-yes" aria-hidden="true"></span>Dolby Vision reshaping</td></tr>
+          <tr><th scope="row">Dolby Vision profile 7 enhancement layer</th><td>Not measured</td><td><span class="st st-maybe" aria-hidden="true"></span>Needs mpv 0.42 or newer, not measured</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="fine">Detection of each format was verified with generated clips. Light output at the display has not been measured. HDR output needs a colour-managed Wayland compositor and is not measured on Windows or macOS. A television's own Dolby Vision mode is not reachable from a desktop window: the picture is processed here and sent as HDR10.</p>
+    </article>
+
+    <article class="card">
+      <h3>Subtitles</h3>
+      <ul class="rows">
+        <li><span class="st st-yes" aria-hidden="true"></span><span>Embedded text tracks, SRT and styled ASS, drawn by mpv</span></li>
+        <li><span class="st st-yes" aria-hidden="true"></span><span>External files listed by a Plex server</span></li>
+        <li><span class="st st-maybe" aria-hidden="true"></span><span>Image tracks, PGS and VobSub: not measured</span></li>
+        <li><span class="st st-no" aria-hidden="true"></span><span>External files on a Jellyfin server are not fetched</span></li>
+        <li><span class="st st-no" aria-hidden="true"></span><span>Server-side burn-in is not requested</span></li>
+      </ul>
+    </article>
+
+    <article class="card card-full">
+      <h3>Hardware decoding by platform</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Hardware decoding by platform">
+      <table>
+        <thead><tr><th scope="col">Platform</th><th scope="col">Path</th><th scope="col">Status</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Linux, AMD, Wayland</th><td>VA-API, frames reach the window without a copy</td><td><span class="st st-yes" aria-hidden="true"></span>Measured</td></tr>
+          <tr><th scope="row">Linux, X11 through Xwayland</th><td>Plays. With a GLX context decoding used a copy path</td><td><span class="st st-yes" aria-hidden="true"></span>Measured</td></tr>
+          <tr><th scope="row">Linux, NVIDIA, headless session</th><td>NVDEC: H.264 and VP9 at 3840x2160, 10-bit HDR VP9 at 2960x2160, AV1 at 1440x1080</td><td><span class="st st-yes" aria-hidden="true"></span>Measured, not in a desktop session</td></tr>
+          <tr><th scope="row">Linux, Intel</th><td>VA-API, by mpv's own selection</td><td><span class="st st-maybe" aria-hidden="true"></span>Not tried</td></tr>
+          <tr><th scope="row">Windows</th><td>A copy path or software is expected under the app's OpenGL context</td><td><span class="st st-maybe" aria-hidden="true"></span>Not tried on a real GPU</td></tr>
+          <tr><th scope="row">macOS, Apple Silicon</th><td>VideoToolbox, if it starts under mpv's render API</td><td><span class="st st-maybe" aria-hidden="true"></span>Not tried on a Mac</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="fine">Where hardware decoding is not available, mpv decodes in software. The switch is under Settings. <a href="https://github.com/Ch3w3y/chewvy/blob/main/docs/CAPABILITIES.md">The full capability matrix</a> says how each row was measured.</p>
+    </article>
+  </div>
+</section>
+
+<section class="section" id="screens">
+  <header class="section-head" data-reveal>
+    <p class="eyebrow">Screens</p>
+    <h2>The app, as it runs</h2>
+    <p class="sub">Captures of the running app at 2560x1600. The library in them holds real films that are public domain or Creative Commons, listed in the <a href="credits.html">credits</a>.</p>
+  </header>
+
+  <div class="gallery" data-reveal>
+    <div class="gallery-bar">
+      <div class="tabs" role="tablist" aria-label="Screens">
+        <button role="tab" id="tab-home" aria-selected="true" aria-controls="shot-panel" data-shot="home" data-alt="Home: a film's artwork fills the window, with a Resume button and the Continue Watching row" data-caption="Home. The hero shows what you were watching, over its own artwork.">Home</button>
+        <button role="tab" id="tab-library" aria-selected="false" aria-controls="shot-panel" tabindex="-1" data-shot="library" data-alt="Library: a grid of film posters with sort and filter controls" data-caption="Library. Posters on glass, with sort and an unwatched filter.">Library</button>
+        <button role="tab" id="tab-detail" aria-selected="false" aria-controls="shot-panel" tabindex="-1" data-shot="detail" data-alt="A film's page: backdrop, poster, format badges, Play and Watch together buttons, and cast" data-caption="A film's page. Format badges, cast, Play and Watch together.">Film</button>
+        <button role="tab" id="tab-show" aria-selected="false" aria-controls="shot-panel" tabindex="-1" data-shot="show" data-alt="A show's page: seasons and a list of episodes with thumbnails" data-caption="A show's page. Seasons and episodes.">Show</button>
+        <button role="tab" id="tab-player" aria-selected="false" aria-controls="shot-panel" tabindex="-1" data-shot="player" data-alt="The player: a frame of Big Buck Bunny with the control bar along the bottom" data-caption="The player. mpv draws the film and the controls sit over it.">Player</button>
+        <button role="tab" id="tab-info" aria-selected="false" aria-controls="shot-panel" tabindex="-1" data-shot="player-info" data-alt="The player with its information panel: direct play of H.264 at 3840 by 2160 and 60 frames a second, decoded in hardware" data-caption="Playback information. Press I to see what is playing and how it is decoded.">Playback info</button>
+        <button role="tab" id="tab-search" aria-selected="false" aria-controls="shot-panel" tabindex="-1" data-shot="search" data-alt="Search results grouped by server" data-caption="Search. One query across every server.">Search</button>
+        <button role="tab" id="tab-settings" aria-selected="false" aria-controls="shot-panel" tabindex="-1" data-shot="settings" data-alt="Settings: sources, playback, background and updates on glass panels" data-caption="Settings. Sources, playback, background and updates.">Settings</button>
+        <button role="tab" id="tab-backgrounds" aria-selected="false" aria-controls="shot-panel" tabindex="-1" data-shot="settings-background" data-alt="Settings, Background: a grid of fourteen photographs to choose from, with a credit line and the switch for art from your own libraries" data-caption="Settings, Background. Pick the photograph behind the glass, or leave it on Automatic.">Backgrounds</button>
+        <button role="tab" id="tab-first-run" aria-selected="false" aria-controls="shot-panel" tabindex="-1" data-shot="first-run" data-alt="First start: a glass card asks whether to add a Plex account or a Jellyfin server" data-caption="First start. Add a Plex account or a Jellyfin server.">First start</button>
+      </div>
+      <div class="arrows">
+        <button class="arrow" id="shot-prev" aria-label="Previous screen"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="m12.5 4.5-5.5 5.5 5.5 5.5"/></svg></button>
+        <button class="arrow" id="shot-next" aria-label="Next screen"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="m7.5 4.5 5.5 5.5-5.5 5.5"/></svg></button>
+      </div>
+    </div>
+    <div id="shot-panel" role="tabpanel" aria-labelledby="tab-home">
+    <figure class="frame frame-big">
+      <a id="shot-link" href="assets/shots/home.webp" aria-label="Open this capture at full size">
+        <img id="shot-img" src="assets/shots/home-1600.webp" srcset="assets/shots/home-960.webp 960w, assets/shots/home-1600.webp 1600w" sizes="(min-width: 1200px) 1112px, 94vw" width="1600" height="1000" alt="Home: a film's artwork fills the window, with a Resume button and the Continue Watching row" loading="lazy" decoding="async">
+      </a>
+      <figcaption id="shot-caption">Home. The hero shows what you were watching, over its own artwork.</figcaption>
+    </figure>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="download">
+  <header class="section-head" data-reveal>
+    <p class="eyebrow">Download</p>
+    <h2>Get Chewvy</h2>
+    <p class="sub">Packages are on the <a href="https://github.com/Ch3w3y/chewvy/releases/latest">GitHub release page</a><span id="dl-version"></span>, each with a SHA-256 in <code>SHA256SUMS</code>. None of them is code-signed.</p>
+  </header>
+
+  <div class="bento platforms" data-reveal>
+    <article class="card" data-os="linux">
+      <p class="kicker">Linux x86_64</p>
+      <h3>AppImage</h3>
+      <p class="status"><span class="st st-yes" aria-hidden="true"></span>Developed and used here: KDE Plasma on Wayland, AMD graphics, Mesa.</p>
+      <div class="code"><pre tabindex="0"><code id="cmd-linux">curl -fsSL https://raw.githubusercontent.com/Ch3w3y/chewvy/main/install.sh | sh</code></pre><button class="copy" data-copy="cmd-linux">Copy</button></div>
+      <p class="fine">The script installs for your user only, never asks for root, and checks the download against <code>SHA256SUMS</code>. <a href="https://github.com/Ch3w3y/chewvy/blob/main/install.sh">Read it first</a>. Needs glibc 2.39 or newer: Ubuntu 24.04, Debian 13, Fedora 40 and current rolling distributions.</p>
+      <p class="fine">Other desktops, X11 sessions and Intel graphics are expected to work and have not been measured. NVIDIA graphics have been measured in a headless session only.</p>
+      <a class="btn btn-quiet" data-asset="x86_64.AppImage" href="https://github.com/Ch3w3y/chewvy/releases/latest">Download the AppImage</a>
+    </article>
+
+    <article class="card" data-os="windows">
+      <p class="kicker">Windows 10 and 11, x86_64</p>
+      <h3>Installer or zip</h3>
+      <p class="status"><span class="st st-maybe" aria-hidden="true"></span>Installed, started and updated in a Windows 11 virtual machine that draws with software OpenGL. Not run on a real GPU, so hardware decoding and HDR are untested.</p>
+      <p class="fine">The installer is not code-signed, so SmartScreen warns about an unrecognised app: choose More info, then Run anyway. A Vulkan-capable graphics driver must be installed.</p>
+      <div class="btn-row">
+        <a class="btn btn-quiet" data-asset="windows-x86_64-setup.exe" href="https://github.com/Ch3w3y/chewvy/releases/latest">Download the installer</a>
+        <a class="btn btn-quiet" data-asset="windows-x86_64.zip" href="https://github.com/Ch3w3y/chewvy/releases/latest">Portable zip</a>
+      </div>
+    </article>
+
+    <article class="card" data-os="macos">
+      <p class="kicker">macOS 15 or newer, Apple Silicon</p>
+      <h3>Disk image</h3>
+      <p class="status"><span class="st st-maybe" aria-hidden="true"></span>Experimental. Built on a GitHub runner, where it started and drew its window. Nobody has run it on a physical Mac: sign-in, playback and hardware decoding are untested.</p>
+      <p class="fine">The app is not notarised, so macOS refuses the first launch. Allow it under System Settings, Privacy &amp; Security, Open Anyway, or clear the download flag:</p>
+      <div class="code"><pre tabindex="0"><code id="cmd-macos">xattr -dr com.apple.quarantine /Applications/Chewvy.app</code></pre><button class="copy" data-copy="cmd-macos">Copy</button></div>
+      <a class="btn btn-quiet" data-asset="macos-arm64.dmg" href="https://github.com/Ch3w3y/chewvy/releases/latest">Download the disk image</a>
+    </article>
+
+    <article class="card card-foot">
+      <h3>Build it yourself</h3>
+      <p>Rust 1.99.1, a C toolchain, <code>pkg-config</code> and libmpv from mpv 0.40 or newer. <a href="https://github.com/Ch3w3y/chewvy/blob/main/docs/BUILD.md">The build guide</a> has the packages for Debian, Arch, macOS and Windows.</p>
+      <p class="fine">There is no Android or iOS app, only <a href="https://github.com/Ch3w3y/chewvy/blob/main/docs/MOBILE_PORT.md">a porting plan</a>.</p>
+    </article>
+  </div>
+</section>
+
+<section class="section" id="privacy">
+  <header class="section-head" data-reveal>
+    <p class="eyebrow">Privacy</p>
+    <h2>It talks to your servers and to GitHub</h2>
+  </header>
+  <div class="duo" data-reveal>
+    <div class="note glass">
+      <h3>Three kinds of host</h3>
+      <p>Your own Plex and Jellyfin servers, Plex's account service when you link a Plex account, and GitHub for the update check and download. Nothing else.</p>
+    </div>
+    <div class="note glass">
+      <h3>Tokens stay out of sight</h3>
+      <p>Sign-in tokens are sent as request headers only. They never appear in a URL, a log line or a process argument, and tests fail the build if one does. On Linux they live in the system keyring.</p>
+    </div>
+    <div class="note glass">
+      <h3>The update check says little</h3>
+      <p>It is one request to GitHub's release API carrying the app's name and version. Settings turns it off. This website sets no cookies and loads nothing from a third party, apart from asking GitHub which release is newest.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="faq">
+  <header class="section-head" data-reveal>
+    <p class="eyebrow">FAQ</p>
+    <h2>Questions</h2>
+  </header>
+  <div class="faq" data-reveal>
+    <details>
+      <summary>Is Chewvy free?</summary>
+      <div class="answer"><p>Yes. It is free software under the GNU General Public License, version 3 or later. There is no paid tier and no account with the project.</p></div>
+    </details>
+    <details>
+      <summary>Do I need both Plex and Jellyfin?</summary>
+      <div class="answer"><p>No. Either is enough. The first start asks which you have, and you can add the other later from the switcher at the top of the sidebar.</p></div>
+    </details>
+    <details>
+      <summary>Will it play every file I have?</summary>
+      <div class="answer"><p>Chewvy does not claim that. The <a href="#formats">formats section</a> lists what has been measured. When mpv cannot play the original, the item reopens at the same position as a server remux, then as a 1080p transcode.</p></div>
+    </details>
+    <details>
+      <summary>Does HDR work?</summary>
+      <div class="answer"><p>In the main window HDR is tone-mapped to SDR. The separate HDR window sends HDR to the display on a colour-managed Wayland compositor, KDE Plasma 6.4 or newer. Light output has not been checked with measuring equipment, and HDR output on Windows and macOS is untested.</p></div>
+    </details>
+    <details>
+      <summary>Can it pass Dolby Atmos or DTS:X to my receiver?</summary>
+      <div class="answer"><p>No. Audio is always decoded to PCM. Bitstream passthrough is not supported.</p></div>
+    </details>
+    <details>
+      <summary>Why do Windows and macOS warn me about it?</summary>
+      <div class="answer"><p>The packages are not code-signed and the macOS app is not notarised. The <a href="#download">download section</a> says how to open each one. Every package has a SHA-256 in the release's <code>SHA256SUMS</code>.</p></div>
+    </details>
+    <details>
+      <summary>Where are my sign-in tokens kept?</summary>
+      <div class="answer"><p>On Linux, in the system keyring through the Secret Service: KDE Wallet or GNOME Keyring. If no secret service is running, Chewvy explains that the alternative is a file readable only by you and uses it only after you agree. On Windows and macOS the token file lives in your application-data folder. The platform keychains are not used yet.</p></div>
+    </details>
+    <details>
+      <summary>Does it change anything on my server?</summary>
+      <div class="answer"><p>Only if you ask it to: with Progress sync turned on in Settings, it reports playback progress and played state. It never edits metadata, deletes media or changes server settings.</p></div>
+    </details>
+    <details>
+      <summary>What about music, photos and live TV?</summary>
+      <div class="answer"><p>Not implemented. Chewvy plays films and television.</p></div>
+    </details>
+    <details>
+      <summary>Is there a phone or TV app?</summary>
+      <div class="answer"><p>No. Chewvy is a desktop app for Linux, Windows and macOS. A plan for an Android and iOS port exists, and no work on it has started.</p></div>
+    </details>
+  </div>
+</section>
+
+</main>
+
+<div class="foot-band">
+<footer class="foot">
+  <div class="foot-row">
+    <a class="brand" href="#top" aria-label="Chewvy, back to top"><img src="assets/brand/lockup.svg" width="103" height="24" alt="Chewvy"></a>
+    <nav aria-label="Project links">
+      <a href="https://github.com/Ch3w3y/chewvy">GitHub</a>
+      <a href="https://github.com/Ch3w3y/chewvy/tree/main/docs#readme">Documentation</a>
+      <a href="https://github.com/Ch3w3y/chewvy/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="credits.html">Credits</a>
+      <a href="#top">Back to top</a>
+    </nav>
+  </div>
+  <p class="fine">Chewvy is free software under the <a href="https://github.com/Ch3w3y/chewvy/blob/main/LICENSE">GNU General Public License, version 3 or later</a>. The packages bundle mpv, FFmpeg and other libraries under their own licences, listed in the <a href="https://github.com/Ch3w3y/chewvy/blob/main/THIRD-PARTY-NOTICES.md">third-party notices</a>. The typeface is Plus Jakarta Sans, under the <a href="assets/fonts/OFL.txt">SIL Open Font License</a>.</p>
+  <p class="fine">The background photographs and the films in the screenshots are public domain or Creative Commons works. Their authors and licences are in the <a href="credits.html">credits</a>.</p>
+  <p class="fine">Chewvy is an independent project, not affiliated with Plex, Inc. or the Jellyfin project. "Plex" and "Jellyfin" name the services it connects to. Plex is a trademark of Plex, Inc. Jellyfin is a trademark of the Jellyfin project. Dolby, DTS and the other format marks belong to their owners.</p>
+</footer>
+</div>
+
+<script src="main.js" defer></script>
+</body>
+</html>

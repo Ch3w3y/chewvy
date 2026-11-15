@@ -79,6 +79,8 @@ impl User {
 #[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct Person {
+    /// The person's own item id, which their picture is addressed by.
+    pub id: Option<String>,
     /// Person name.
     pub name: Option<String>,
     /// Character or crew role (`Theo O'Dell`, `Director`, …).
@@ -120,6 +122,20 @@ impl UserData {
         self.playback_position_ticks
             .and_then(ticks::ticks_to_duration)
     }
+}
+
+/// `ProviderIds` with the empty and `null` values dropped: the server's type is
+/// a string map whose values are not promised to be present.
+fn provider_ids<'de, D>(deserializer: D) -> Result<BTreeMap<String, String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let ids = Option::<BTreeMap<String, Option<String>>>::deserialize(deserializer)?;
+    Ok(ids
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|(provider, id)| Some((provider, id.filter(|id| !id.is_empty())?)))
+        .collect())
 }
 
 /// One `MediaSourceInfo` of `MediaSources[]` — a version that can be played.
@@ -246,6 +262,22 @@ pub struct Item {
     pub collection_type: Option<String>,
     /// Year for a movie.
     pub production_year: Option<i64>,
+    /// The title in its original language (`OriginalTitle`). Only answered
+    /// when the request's `fields` names it, as [`crate::browse::CATALOG_FIELDS`]
+    /// does.
+    pub original_title: Option<String>,
+    /// The community score, **out of 10** (`CommunityRating`; TMDb's vote
+    /// average for the built-in metadata, `8.042` for a 2001 row of the
+    /// catalog capture). Answered without being asked for.
+    pub community_rating: Option<f64>,
+    /// The critics' score, **out of 100** (`CriticRating`; a Tomatometer
+    /// percentage, `91` on the same row). Answered without being asked for.
+    pub critic_rating: Option<f64>,
+    /// External ids by provider, in the server's spelling (`Imdb`, `Tmdb`,
+    /// `TmdbCollection`, …). Only answered when `fields` names `ProviderIds`;
+    /// a provider the server answers `null` or `""` for is left out.
+    #[serde(default, deserialize_with = "provider_ids")]
+    pub provider_ids: BTreeMap<String, String>,
     /// Length in ticks; absent on every folder row the capture contains.
     pub run_time_ticks: Option<i64>,
     /// Number of this row inside its parent: the episode number of an episode,
@@ -261,6 +293,24 @@ pub struct Item {
     pub season_name: Option<String>,
     /// Season id of an episode (Plex's `parentRatingKey`).
     pub season_id: Option<String>,
+    /// The `Primary` tag of an episode's or season's series, addressed by
+    /// [`Item::series_id`]: the poster Plex calls `grandparentThumb`.
+    pub series_primary_image_tag: Option<String>,
+    /// The nearest ancestor with a `Primary` image (an episode's season, else
+    /// its series) and that image's tag.
+    pub parent_primary_image_item_id: Option<String>,
+    /// See [`Item::parent_primary_image_item_id`].
+    pub parent_primary_image_tag: Option<String>,
+    /// The nearest ancestor with a backdrop, for a season or an episode that
+    /// has none of its own, and that ancestor's backdrop tags.
+    pub parent_backdrop_item_id: Option<String>,
+    /// See [`Item::parent_backdrop_item_id`].
+    #[serde(default)]
+    pub parent_backdrop_image_tags: Vec<String>,
+    /// The nearest ancestor with a clear logo, and that logo's tag.
+    pub parent_logo_item_id: Option<String>,
+    /// See [`Item::parent_logo_item_id`].
+    pub parent_logo_image_tag: Option<String>,
     /// Blurb (Plex's `summary`). Named by the captured `Fields` list, never by
     /// a fixture row, because the fixture media have no overview.
     pub overview: Option<String>,
@@ -270,6 +320,11 @@ pub struct Item {
     /// Genres, for the detail meta line.
     #[serde(default)]
     pub genres: Vec<String>,
+    /// Subject keywords (`Tags`): the built-in TMDb metadata fills them with
+    /// TMDb's keywords (`christmas`, `snow`). Only answered when `fields`
+    /// names them, as [`crate::browse::CATALOG_FIELDS`] does.
+    #[serde(default)]
+    pub tags: Vec<String>,
     /// Cast and crew, for the detail credits row.
     #[serde(default)]
     pub people: Vec<Person>,
@@ -426,6 +481,10 @@ pub struct ImageInfo {
     pub image_type: Option<String>,
     /// The tag its artwork URL needs.
     pub image_tag: Option<String>,
+    /// Which image of its type this is: a backdrop's position in
+    /// `BackdropImageTags`, which its route is addressed by. Absent on the
+    /// single-image types of the older capture.
+    pub image_index: Option<u64>,
     /// Width and height the server probed.
     pub width: Option<u64>,
     /// Height the server probed.

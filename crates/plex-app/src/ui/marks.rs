@@ -6,7 +6,8 @@
 //! not served. Each is rasterised by `resvg` at the exact pixel height it is
 //! drawn at, so it stays sharp at any display scale, and cached per height.
 //! Format logos are drawn bare in white over the page; tags share their height
-//! so a row reads as one set of marks.
+//! so a row reads as one set of marks. The interface icons ([`icon`]) and the
+//! app's own mark ([`BRAND`]) are drawn through the same pipeline.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -102,7 +103,14 @@ pub fn paint_source(
     height: f32,
 ) -> f32 {
     let (logo, height) = source(origin, height);
-    paint_tinted(painter, logo, left, center_y, height, Color32::WHITE)
+    paint_tinted(
+        painter,
+        logo,
+        left,
+        center_y,
+        height,
+        crate::ui::theme::UNTINTED,
+    )
 }
 
 /// The width [`paint_source`] takes.
@@ -112,38 +120,16 @@ pub fn source_width(origin: &crate::source::Origin, height: f32) -> f32 {
     width_at(logo, height)
 }
 
-macro_rules! icon {
-    ($name:literal) => {
-        Logo {
-            name: concat!("icon-", $name),
-            svg: include_bytes!(concat!("../../assets/icons/", $name, ".svg")),
-            ink: Ink::Silhouette,
-            height: 14.0,
-        }
-    };
-}
+/// The app's own mark, the reel whose fifth hole opens into a c: a silhouette
+/// tinted where it is drawn, its holes left clear so the glass shows through.
+pub const BRAND: Logo = Logo {
+    name: "brand-reel",
+    svg: include_bytes!("../../assets/brand/reel.svg"),
+    ink: Ink::Silhouette,
+    height: 20.0,
+};
 
-/// Interface icons: single-colour line drawings, tinted where they are drawn.
-pub mod icon {
-    use super::{Ink, Logo};
-
-    /// Home.
-    pub const HOME: Logo = icon!("home");
-    /// Search.
-    pub const SEARCH: Logo = icon!("search");
-    /// Settings.
-    pub const GEAR: Logo = icon!("gear");
-    /// Play / resume.
-    pub const PLAY: Logo = icon!("play");
-    /// Details.
-    pub const INFO: Logo = icon!("info");
-    /// Back.
-    pub const BACK: Logo = icon!("back");
-    /// The chosen row.
-    pub const CHECK: Logo = icon!("check");
-    /// Download an update.
-    pub const DOWNLOAD: Logo = icon!("download");
-}
+pub mod icon;
 
 /// One mark in a row.
 #[derive(Clone, Debug, PartialEq)]
@@ -288,9 +274,10 @@ fn render(
     Some(out)
 }
 
-/// The texture for `logo` at `height_px` device pixels, rasterised the first
-/// time a window asks for that size.
-fn texture(ctx: &egui::Context, logo: Logo, height_px: u32) -> Option<TextureHandle> {
+/// The texture for the `crop` of `logo` at `height_px` device pixels,
+/// rasterised the first time a window asks for that size. A logo is always
+/// asked for with one crop, so its name and height key the cache.
+fn texture(ctx: &egui::Context, logo: Logo, crop: Crop, height_px: u32) -> Option<TextureHandle> {
     type Cache = HashMap<(&'static str, u32), TextureHandle>;
     static CACHE: OnceLock<Mutex<Cache>> = OnceLock::new();
     let key = (logo.name, height_px.max(1));
@@ -303,7 +290,7 @@ fn texture(ctx: &egui::Context, logo: Logo, height_px: u32) -> Option<TextureHan
         return Some(handle.clone());
     }
     let entry = tree(logo)?;
-    let (tree, [x0, y0, x1, y1]) = (&entry.0, entry.1);
+    let (tree, [x0, y0, x1, y1]) = (&entry.0, crop);
     let size = tree.size();
     let (ink_w, ink_h) = ((x1 - x0) * size.width(), (y1 - y0) * size.height());
     let scale = key.1 as f32 / ink_h.max(1e-3);
@@ -343,14 +330,19 @@ pub fn paint_tinted(
     tint: Color32,
 ) -> f32 {
     let ctx = painter.ctx();
-    let Some(size) = logo_size(logo, height) else {
+    let (Some(size), Some(entry)) = (logo_size(logo, height), tree(logo)) else {
         return 0.0;
     };
-    let px = (height * ctx.pixels_per_point()).round() as u32;
-    let Some(handle) = texture(ctx, logo, px) else {
+    let ppp = ctx.pixels_per_point();
+    let px = (height * ppp).round() as u32;
+    let Some(handle) = texture(ctx, logo, entry.1, px) else {
         return 0.0;
     };
-    let rect = Rect::from_min_size(pos2(left, center_y - size.y / 2.0), size);
+    // One texel to one device pixel, the corner on a whole pixel: the texture
+    // is sampled linearly, so anything else softens every edge.
+    let drawn = vec2(handle.size()[0] as f32, handle.size()[1] as f32) / ppp;
+    let snap = |v: f32| (v * ppp).round() / ppp;
+    let rect = Rect::from_min_size(pos2(snap(left), snap(center_y - drawn.y / 2.0)), drawn);
     painter.image(
         handle.id(),
         rect,
@@ -368,7 +360,7 @@ pub fn width_at(logo: Logo, height: f32) -> f32 {
 
 #[cfg(test)]
 mod tests {
-    use super::{logo, marks, rating, rating_text, tree, Mark, BBFC};
+    use super::{logo, marks, rating, rating_text, tree, Mark, BBFC, BRAND};
 
     #[test]
     fn audio_badges_split_into_logos_and_text() {
@@ -429,5 +421,6 @@ mod tests {
         for (key, logo) in BBFC {
             assert!(tree(logo).is_some(), "{key} renders with ink");
         }
+        assert!(tree(BRAND).is_some(), "the app's mark renders with ink");
     }
 }

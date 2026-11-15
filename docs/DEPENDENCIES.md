@@ -171,8 +171,8 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | is_terminal_polyfill | 1.70.2 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | itertools | 0.15.0 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | itoa | 1.0.18 | license: MIT OR Apache-2.0 | transitive | crates.io |
-| jellyfin-core | 0.3.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
-| jiff | 0.2.31 | license: Unlicense OR MIT | transitive | crates.io |
+| jellyfin-core | 0.4.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
+| jiff | 0.2.31 | license: Unlicense OR MIT | plex-app (target.'cfg(not(windows))'.dependencies) | crates.io |
 | khronos_api | 3.1.0 | license: Apache-2.0 | transitive | crates.io |
 | kurbo | 0.13.1 | license: Apache-2.0 OR MIT | transitive | crates.io |
 | libc | 0.2.189 | license: MIT OR Apache-2.0 | transitive | crates.io |
@@ -204,10 +204,10 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | pin-project-lite | 0.2.17 | license: Apache-2.0 OR MIT | transitive | crates.io |
 | piper | 0.2.5 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | pkg-config | 0.3.34 | license: MIT OR Apache-2.0 | plex-cli (build-dependencies), plex-player (build-dependencies) | crates.io |
-| plex-app | 0.3.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
-| plex-cli | 0.3.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
-| plex-core | 0.3.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
-| plex-player | 0.3.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
+| plex-app | 0.4.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
+| plex-cli | 0.4.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
+| plex-core | 0.4.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
+| plex-player | 0.4.0 | GPL-3.0-or-later | workspace member target | workspace member (path) |
 | png | 0.18.1 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | polling | 3.11.0 | license: Apache-2.0 OR MIT | transitive | crates.io |
 | polycool | 0.4.0 | license: MIT OR Apache-2.0 | transitive | crates.io |
@@ -282,7 +282,7 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | tracing-attributes | 0.1.31 | license: MIT | transitive | crates.io |
 | tracing-core | 0.1.36 | license: MIT | transitive | crates.io |
 | ttf-parser | 0.25.1 | license: MIT OR Apache-2.0 | transitive | crates.io |
-| tungstenite | 0.30.0 | license: MIT OR Apache-2.0 | jellyfin-core (dependencies) | crates.io |
+| tungstenite | 0.30.0 | license: MIT OR Apache-2.0 | jellyfin-core (dependencies), plex-core (dependencies) | crates.io |
 | typenum | 1.20.1 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | unicode-general-category | 1.1.0 | license: Apache-2.0 | transitive | crates.io |
 | unicode-ident | 1.0.24 | license: (MIT OR Apache-2.0) AND Unicode-3.0 | transitive | crates.io |
@@ -312,7 +312,7 @@ display or FFI crate (enforced by `crates/plex-core/tests/workspace_contract.rs`
 | wayland-sys | 0.31.11 | license: MIT | transitive | crates.io |
 | web-time | 1.1.0 | license: MIT OR Apache-2.0 | transitive | crates.io |
 | webbrowser | 1.2.4 | license: MIT OR Apache-2.0 | transitive | crates.io |
-| webpki-roots | 1.0.8 | license: CDLA-Permissive-2.0 | jellyfin-core (dependencies) | crates.io |
+| webpki-roots | 1.0.8 | license: CDLA-Permissive-2.0 | jellyfin-core (dependencies), plex-core (dependencies) | crates.io |
 | winit | 0.30.13 | license: Apache-2.0 | plex-app (dependencies) | crates.io |
 | winnow | 1.0.4 | license: MIT | transitive | crates.io |
 | writeable | 0.6.4 | license: Unicode-3.0 | transitive | crates.io |

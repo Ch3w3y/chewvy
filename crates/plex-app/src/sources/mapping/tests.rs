@@ -281,3 +281,102 @@ fn a_type_the_browse_model_has_no_kind_for_keeps_its_own_name() {
     assert_eq!(item.leaf_count, None);
     assert_eq!(item.viewed_leaf_count, None);
 }
+
+#[test]
+fn a_movie_with_a_landscape_thumb_still_shows_its_poster_on_poster_cards() {
+    // TMDb fills both: `Primary` is the 2:3 poster, `Thumb` a 16:9 title card.
+    let movie: JfItem = match serde_json::from_value(json!({
+        "Id": MOVIE, "Type": "Movie", "Name": "Arrival",
+        "ImageTags": {"Primary": "poster", "Thumb": "landscape"},
+    })) {
+        Ok(row) => row,
+        Err(why) => panic!("a movie row: {why}"),
+    };
+    let item = item(SERVER, &movie);
+    let poster = source::artwork_address(SERVER, &addressed(MOVIE, ImageKind::Primary, "poster"));
+    assert_eq!(item.thumb.as_deref(), Some(poster.as_str()));
+    assert_eq!(crate::ui::home::poster_thumb(&item), Some(poster.as_str()));
+}
+
+#[test]
+fn a_row_with_only_a_landscape_thumb_still_has_artwork() {
+    let movie: JfItem = match serde_json::from_value(json!({
+        "Id": MOVIE, "Type": "Movie", "Name": "Arrival",
+        "ImageTags": {"Thumb": "landscape"},
+    })) {
+        Ok(row) => row,
+        Err(why) => panic!("a movie row: {why}"),
+    };
+    let landscape =
+        source::artwork_address(SERVER, &addressed(MOVIE, ImageKind::Thumb, "landscape"));
+    assert_eq!(
+        item(SERVER, &movie).thumb.as_deref(),
+        Some(landscape.as_str())
+    );
+}
+
+fn parsed(value: Value) -> JfItem {
+    match serde_json::from_value(value) {
+        Ok(row) => row,
+        Err(why) => panic!("a row: {why}"),
+    }
+}
+
+#[test]
+fn an_episode_on_a_poster_shelf_draws_its_show_s_poster_not_its_still() {
+    let episode = parsed(json!({
+        "Id": EPISODE, "Type": "Episode", "Name": "The Kingsroad",
+        "SeriesId": SERIES, "SeasonId": SEASON,
+        "SeriesPrimaryImageTag": "show",
+        "ParentPrimaryImageItemId": SEASON, "ParentPrimaryImageTag": "season",
+        "ParentBackdropItemId": SERIES, "ParentBackdropImageTags": ["wide"],
+        "ParentLogoItemId": SERIES, "ParentLogoImageTag": "logo",
+        "ImageTags": {"Primary": "still"},
+    }));
+    let item = item(SERVER, &episode);
+    let at = |id, kind, tag| source::artwork_address(SERVER, &addressed(id, kind, tag));
+    let show = at(SERIES, ImageKind::Primary, "show");
+    assert_eq!(crate::ui::home::poster_thumb(&item), Some(show.as_str()));
+    assert_eq!(
+        item.parent_thumb,
+        Some(at(SEASON, ImageKind::Primary, "season"))
+    );
+    // The still stays the episode's own artwork, for its 16:9 cards.
+    assert_eq!(item.thumb, Some(at(EPISODE, ImageKind::Primary, "still")));
+    let wide = at(SERIES, ImageKind::Backdrop, "wide");
+    assert_eq!(item.grandparent_art.as_deref(), Some(wide.as_str()));
+    assert_eq!(item.art.as_deref(), Some(wide.as_str()));
+    let logo = at(SERIES, ImageKind::Logo, "logo");
+    assert_eq!(item.image_url("clearLogo"), Some(logo.as_str()));
+}
+
+#[test]
+fn a_season_card_draws_its_show_s_poster() {
+    let season = parsed(json!({
+        "Id": SEASON, "Type": "Season", "Name": "Season 1",
+        "SeriesId": SERIES, "SeriesPrimaryImageTag": "show",
+        "ImageTags": {"Primary": "season"},
+    }));
+    let item = item(SERVER, &season);
+    let show = source::artwork_address(SERVER, &addressed(SERIES, ImageKind::Primary, "show"));
+    assert_eq!(crate::ui::home::poster_thumb(&item), Some(show.as_str()));
+}
+
+#[test]
+fn a_credited_actor_with_a_picture_has_a_photo_address() {
+    let movie = parsed(json!({
+        "Id": MOVIE, "Type": "Movie", "Name": "Arrival",
+        "People": [
+            {"Id": "4f1c", "Name": "Amy Adams", "Role": "Louise Banks", "Type": "Actor",
+             "PrimaryImageTag": "face"},
+            {"Id": "77aa", "Name": "No Picture", "Type": "Actor"},
+        ],
+    }));
+    let roles = item(SERVER, &movie).roles;
+    let face = source::artwork_address(SERVER, &addressed("4f1c", ImageKind::Primary, "face"));
+    assert_eq!(
+        roles.first().and_then(|r| r.thumb.as_deref()),
+        Some(face.as_str())
+    );
+    assert_eq!(roles.get(1).and_then(|r| r.thumb.as_deref()), None);
+}

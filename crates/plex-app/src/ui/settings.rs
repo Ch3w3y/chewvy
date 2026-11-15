@@ -12,6 +12,8 @@ use serde::{Deserialize, Serialize};
 
 use plex_core::tokens::StorePaths;
 
+use crate::theme_art::ThemeId;
+
 /// The settings file's name under the app config dir.
 pub const FILE: &str = "settings.json";
 
@@ -40,6 +42,36 @@ impl PosterSize {
     pub const ALL: [Self; 3] = [Self::Small, Self::Medium, Self::Large];
 }
 
+/// Which photograph sits behind the glass. A pinned title is not a choice
+/// here: the pin lives beside the theme library ([`crate::theme_library`])
+/// and overrides this until it is taken off, which then returns to this.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Background {
+    /// The season or festival of the local date and hemisphere.
+    #[default]
+    Automatic,
+    /// One theme, whatever the date.
+    Theme(ThemeId),
+}
+
+impl Background {
+    /// The value the settings file keeps: `automatic` or the theme's key.
+    #[must_use]
+    pub fn key(self) -> &'static str {
+        match self {
+            Self::Automatic => "automatic",
+            Self::Theme(theme) => theme.key(),
+        }
+    }
+
+    /// The choice a settings file names; Automatic for anything else, so a
+    /// theme a later version drops falls back to the calendar.
+    #[must_use]
+    pub fn from_key(key: &str) -> Self {
+        ThemeId::from_key(key).map_or(Self::Automatic, Self::Theme)
+    }
+}
+
 /// What the Settings screen edits, with the values the app starts on.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Settings {
@@ -59,6 +91,10 @@ pub struct Settings {
     pub hdr_explained: bool,
     /// Ask GitHub for a newer release when the app starts.
     pub check_updates: bool,
+    /// The photograph behind the glass.
+    pub background: Background,
+    /// Themes may show backdrops from the user's own servers.
+    pub library_art: bool,
 }
 
 impl Default for Settings {
@@ -71,13 +107,15 @@ impl Default for Settings {
             hdr_fullscreen: true,
             hdr_explained: false,
             check_updates: true,
+            background: Background::Automatic,
+            library_art: true,
         }
     }
 }
 
 /// A stored [`Settings`]: a field an older or partial file does not name keeps
 /// its default.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(default)]
 struct Stored {
     progress_sync: bool,
@@ -87,6 +125,8 @@ struct Stored {
     hdr_fullscreen: bool,
     hdr_explained: bool,
     check_updates: bool,
+    background: String,
+    library_art: bool,
 }
 
 // A field the file leaves out takes the app's default (hardware decoding on),
@@ -107,6 +147,8 @@ impl From<Settings> for Stored {
             hdr_fullscreen: value.hdr_fullscreen,
             hdr_explained: value.hdr_explained,
             check_updates: value.check_updates,
+            background: value.background.key().to_owned(),
+            library_art: value.library_art,
         }
     }
 }
@@ -121,6 +163,8 @@ impl From<Stored> for Settings {
             hdr_fullscreen: value.hdr_fullscreen,
             hdr_explained: value.hdr_explained,
             check_updates: value.check_updates,
+            background: Background::from_key(&value.background),
+            library_art: value.library_art,
         }
     }
 }

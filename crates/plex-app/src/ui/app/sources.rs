@@ -8,34 +8,36 @@
 //! token is not a request, which is why a server that is asleep is still
 //! removable.
 
-use egui::{
-    Color32, CornerRadius, Frame, Margin, RichText, Sense, Stroke, StrokeKind, TextEdit, Vec2,
-};
+use egui::{CornerRadius, Frame, Margin, RichText, Sense, Stroke, StrokeKind, Vec2};
 
 use crate::add_source::{AddFlow, FlowInput, Stage};
 use crate::source::Origin;
 use crate::sources::JellyfinServer;
+use crate::ui::controls::{self, Button, Field, Kind};
 use crate::ui::rail::Entry;
-use crate::ui::{marks, splash, theme};
+use crate::ui::{glass, marks, splash, theme};
 use crate::watch::{Cmd, JfCmd, JfEv};
 
-use super::app_settings::{chip, section_panel};
+use super::app_settings::{note_panel, section_panel};
 use super::{Screen, Ui};
 
-/// The Plex badge's amber.
-const PLEX_HUE: Color32 = Color32::from_rgb(0xE3, 0xB6, 0x5A);
-/// The Jellyfin badge's violet.
-const JELLYFIN_HUE: Color32 = Color32::from_rgb(0xA9, 0x8B, 0xFF);
-/// A badge's box: wide enough for the Plex wordmark.
-const BADGE: Vec2 = Vec2::new(46.0, 28.0);
+/// A badge's box: wide enough for the Plex wordmark to read at 1x.
+const BADGE: Vec2 = Vec2::new(56.0, 36.0);
 /// The Plex wordmark's height inside a badge.
-const BADGE_MARK: f32 = 11.0;
-/// Where the add panel's text fields stop.
-const FIELD: [f32; 2] = [280.0, 24.0];
-/// What the footer says about where the secrets live, and what Remove costs.
-const TOKEN_NOTE: &str = "Tokens live in the system keychain — Secret Service, Credential \
-Manager, or Keychain. Removing a source deletes its token from this device only, so a server \
-that is asleep or off-network can still be forgotten.";
+const BADGE_MARK: f32 = 15.0;
+/// The strengths of the wash a badge is filled and edged in, and of the
+/// fill of an option row at rest and pointed at.
+const BADGE_FILL: u8 = 18;
+const BADGE_EDGE: u8 = 60;
+const OPTION_FILL: [u8; 2] = [12, 40];
+/// The keychain this build keeps tokens in, by the name its platform uses.
+const KEYCHAIN: &str = if cfg!(target_os = "windows") {
+    "Windows Credential Manager"
+} else if cfg!(target_os = "macos") {
+    "macOS Keychain"
+} else {
+    "system keyring (Secret Service)"
+};
 
 impl Ui {
     /// With no Plex account linked, the shell opens on the Jellyfin servers on
@@ -93,15 +95,19 @@ impl Ui {
 
     /// Draw the Sources entry.
     pub(super) fn draw_sources(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Sources");
-        ui.label(theme::secondary(
-            "Accounts and servers this app can play from",
-        ));
-        // The cards and an open add panel are taller than a default window.
-        ui.spacing_mut().scroll = egui::style::ScrollStyle::solid();
+        // The title scrolls with the cards, so nothing is cut off under it.
         egui::ScrollArea::vertical()
+            .id_salt("sources-page")
             .auto_shrink([false, false])
-            .show(ui, |ui| self.sources_list(ui));
+            .show(ui, |ui| {
+                ui.set_max_width(super::app_settings::COLUMN);
+                crate::ui::legible::label(ui, RichText::new("Sources").heading());
+                crate::ui::legible::label(
+                    ui,
+                    theme::secondary("Accounts and servers this app can play from"),
+                );
+                self.sources_list(ui);
+            });
     }
 
     /// The Sources screen under its heading: one card per source, then the way
@@ -115,33 +121,33 @@ impl Ui {
             self.jellyfin_card(ui, server);
         }
         if self.add.is_none() && !self.choosing {
-            ui.add_space(theme::SPACING_BASE);
-            ui.horizontal_wrapped(|ui| {
-                let hover = if self.sources.plex.is_some() {
-                    "Add a Jellyfin server"
-                } else {
-                    "Add a Plex account or a Jellyfin server"
-                };
-                if chip(ui, "+ Add a source", hover) {
-                    self.add_source();
-                }
-            });
-            if self.sources.plex.is_some() {
-                ui.label(
-                    RichText::new("One Plex account at a time: sign out of it to link another.")
-                        .color(theme::MUTED)
-                        .size(theme::CAPTION_SIZE),
-                );
+            ui.add_space(theme::GAP);
+            let hover = if self.sources.plex.is_some() {
+                "Add a Jellyfin server"
+            } else {
+                "Add a Plex account or a Jellyfin server"
+            };
+            if Button::new(Kind::Secondary, "Add a source")
+                .hint(hover)
+                .show(ui)
+                .clicked()
+            {
+                self.add_source();
             }
         }
         self.kind_panel(ui);
-        self.add_panel(ui);
-        ui.add_space(theme::GAP);
-        ui.label(
-            RichText::new(TOKEN_NOTE)
-                .color(theme::MUTED)
-                .size(theme::CAPTION_SIZE),
+        self.add_panel(ui, true);
+        let mut note = format!(
+            "Tokens live in the {KEYCHAIN}. Removing a source deletes its token from this \
+             device only, so a server that is asleep or off-network can still be forgotten."
         );
+        if self.sources.plex.is_some() {
+            note.insert_str(
+                0,
+                "One Plex account at a time: sign out of it to link another. ",
+            );
+        }
+        note_panel(ui, &note);
         ui.add_space(theme::GAP);
     }
 
@@ -153,8 +159,12 @@ impl Ui {
         let mut closed = false;
         section_panel(ui, "Add a source", |ui| {
             self.kind_options(ui);
-            ui.add_space(theme::GAP);
-            if chip(ui, "Cancel", "Stop adding a source") {
+            ui.add_space(theme::SPACING_BASE);
+            if Button::new(Kind::Quiet, "Cancel")
+                .hint("Stop adding a source")
+                .show(ui)
+                .clicked()
+            {
                 closed = true;
             }
         });
@@ -189,18 +199,19 @@ impl Ui {
     pub(super) fn welcome(&mut self, ui: &mut egui::Ui, status: &str) {
         if self.add.is_some() {
             splash::heading(ui, "Add a Jellyfin server", "Find it, then sign in");
-            self.add_panel(ui);
+            self.add_panel(ui, false);
             return;
         }
+        splash::masthead(ui);
         splash::heading(
             ui,
-            "Where are your films and shows?",
+            "Where are your films?",
             "Add one now. You can add the other later.",
         );
         self.kind_options(ui);
         if !status.trim().is_empty() {
             ui.add_space(theme::GAP);
-            spinner(ui, status);
+            controls::working(ui, status);
         }
     }
 
@@ -210,16 +221,22 @@ impl Ui {
         let servers = self.server_choices.clone();
         let meta = plex_meta(&self.server, &servers);
         source_card(ui, &Origin::Plex, "Plex account", &meta, |ui| {
-            if chip(
-                ui,
-                "Refresh servers",
-                "Ask this account which servers it has",
-            ) {
-                self.send(Cmd::Servers);
-            }
-            if chip(ui, "Sign out", "Forget this Plex account on this device") {
-                self.send(Cmd::SignOut);
-            }
+            ui.horizontal_wrapped(|ui| {
+                if Button::new(Kind::Secondary, "Refresh servers")
+                    .hint("Ask this account which servers it has")
+                    .show(ui)
+                    .clicked()
+                {
+                    self.send(Cmd::Servers);
+                }
+                if Button::new(Kind::Secondary, "Sign out")
+                    .hint("Forget this Plex account on this device")
+                    .show(ui)
+                    .clicked()
+                {
+                    self.send(Cmd::SignOut);
+                }
+            });
             ui.add_space(theme::SPACING_BASE);
             if servers.is_empty() {
                 ui.label(theme::secondary(
@@ -227,14 +244,12 @@ impl Ui {
                 ));
             } else {
                 ui.label(theme::secondary("Or switch to another of its servers"));
-                ui.horizontal_wrapped(|ui| {
-                    for (index, name) in servers.iter().enumerate() {
-                        if chip(ui, name, "Connect to this server") {
-                            self.status = format!("Connecting to {name}…");
-                            self.send(Cmd::Connect(index));
-                        }
+                for (index, name) in servers.iter().enumerate() {
+                    if splash::server_row(ui, name) {
+                        self.status = format!("Connecting to {name}…");
+                        self.send(Cmd::Connect(index));
                     }
-                });
+                }
             }
         });
     }
@@ -251,68 +266,74 @@ impl Ui {
         );
         let origin = Origin::Jellyfin(server_id.clone());
         source_card(ui, &origin, &name, &meta, |ui| {
-            if chip(
-                ui,
-                "Remove",
-                "Forget this server on this device, its token included",
-            ) {
+            if Button::new(Kind::Secondary, "Remove")
+                .hint("Forget this server on this device, its token included")
+                .show(ui)
+                .clicked()
+            {
                 self.send(Cmd::Jf(JfCmd::Remove { server_id }));
             }
         });
     }
 
-    /// The panel that adds a Jellyfin server, at whichever step it reached.
+    /// The panel that adds a Jellyfin server, at whichever step it reached:
+    /// a glass section on the Sources screen (`framed`), or straight on the
+    /// first-run card, which already says what it is for.
     ///
     /// The flow is taken out of the screen for the length of the panel so a
     /// button in it can ask the worker for a step. Both Cancel and `Added` close
     /// it, and both tell the worker the server it was working on is done with:
     /// otherwise a wait nobody is watching would run on to its own timeout.
-    fn add_panel(&mut self, ui: &mut egui::Ui) {
+    fn add_panel(&mut self, ui: &mut egui::Ui, framed: bool) {
         let Some(mut flow) = self.add.take() else {
             return;
         };
         let stage = flow.stage;
-        let error = flow.error.clone();
         let mut closed = false;
-        section_panel(ui, "Add a Jellyfin source", |ui| {
-            match stage {
-                Stage::Address => self.address_step(&mut flow, ui),
-                Stage::Checking => self.checking_step(&mut flow, ui),
-                Stage::Ready => self.ready_step(&mut flow, ui),
-                Stage::Pairing => self.pairing_step(&mut flow, ui),
-                Stage::Password => self.password_step(&mut flow, ui),
-                Stage::SigningIn => {
-                    ui.label(theme::secondary("Signing in\u{2026}"));
-                    spinner(ui, "Exchanging the password for a token");
-                }
-                // The source is already in the list above; the panel is leaving.
-                Stage::Added => {}
+        let mut steps = |ui: &mut egui::Ui| {
+            self.add_steps(&mut flow, ui);
+            ui.add_space(theme::SPACING_BASE);
+            if Button::new(Kind::Quiet, "Cancel")
+                .hint("Stop adding a source and forget it")
+                .show(ui)
+                .clicked()
+            {
+                closed = true;
             }
-            if let Some(failure) = error {
-                ui.add_space(theme::SPACING_BASE);
-                ui.label(
-                    RichText::new(failure.message())
-                        .color(theme::DANGER)
-                        .size(theme::META_SIZE),
-                );
-            }
-            ui.add_space(theme::GAP);
-            ui.horizontal_wrapped(|ui| {
-                let busy = stage.is_busy();
-                let label = if busy { "Cancel anyway" } else { "Cancel" };
-                if chip(ui, label, "Stop adding a source and forget it") {
-                    closed = true;
-                }
-                if busy {
-                    ui.label(theme::secondary("One step at a time."));
-                }
-            });
-        });
+        };
+        if framed {
+            section_panel(ui, "Add a Jellyfin server", steps);
+        } else {
+            steps(ui);
+        }
         if closed || stage == Stage::Added {
             self.send(Cmd::Jf(JfCmd::Dismiss));
             self.add = None;
         } else {
             self.add = Some(flow);
+        }
+    }
+
+    /// The step the flow is at, then its error if the last step failed.
+    fn add_steps(&mut self, flow: &mut AddFlow, ui: &mut egui::Ui) {
+        let error = flow.error.clone();
+        match flow.stage {
+            Stage::Address => self.address_step(flow, ui),
+            Stage::Checking => self.checking_step(flow, ui),
+            Stage::Ready => self.ready_step(flow, ui),
+            Stage::Pairing => self.pairing_step(flow, ui),
+            Stage::Password => self.password_step(flow, ui),
+            Stage::SigningIn => controls::working(ui, "Signing in\u{2026}"),
+            // The source is already in the list above; the panel is leaving.
+            Stage::Added => {}
+        }
+        if let Some(failure) = error {
+            ui.add_space(theme::SPACING_BASE);
+            ui.label(
+                RichText::new(failure.message())
+                    .color(theme::palette().danger)
+                    .size(theme::META_SIZE),
+            );
         }
     }
 
@@ -323,30 +344,33 @@ impl Ui {
             "Pick a server found nearby, or type its address.",
         ));
         ui.add_space(theme::SPACING_BASE);
-        if flow.discovering {
-            spinner(ui, "Asking the network\u{2026}");
-        } else if chip(ui, "Look again", "Ask the network which servers answer") {
-            self.act(flow, FlowInput::Discover);
-        }
         let found = flow.discovered.clone();
         for found in &found {
             let address = found.address.clone();
-            if chip(ui, &found.name, "Use this server") {
+            if splash::server_row(ui, &found.name) {
                 self.act(flow, FlowInput::Address(address));
                 self.act(flow, FlowInput::SubmitAddress);
             }
         }
-        self.address_field(flow, ui);
+        if flow.discovering {
+            controls::working(ui, "Asking the network\u{2026}");
+        } else if Button::new(Kind::Quiet, "Look on the network again")
+            .hint("Ask the network which servers answer")
+            .show(ui)
+            .clicked()
+        {
+            self.act(flow, FlowInput::Discover);
+        }
+        self.address_field(flow, ui, true);
     }
 
     /// The step that waits for an address to say what it is, still showing the
     /// field: typing over it is how that wait is left behind.
     fn checking_step(&mut self, flow: &mut AddFlow, ui: &mut egui::Ui) {
         let address = flow.address.clone();
-        ui.label(theme::secondary(format!("Checking {address}\u{2026}")));
-        spinner(ui, "Getting in touch");
-        ui.label(theme::secondary("Typing another address above asks again."));
-        self.address_field(flow, ui);
+        controls::working(ui, &format!("Checking {address}\u{2026}"));
+        ui.label(theme::secondary("Typing another address asks again."));
+        self.address_field(flow, ui, false);
     }
 
     /// The step a known server waits on: how the user wants to sign in to it.
@@ -358,20 +382,23 @@ impl Ui {
         if let Some(known) = known {
             ui.label(theme::secondary(known));
         }
-        ui.add_space(theme::SPACING_BASE);
         ui.label(theme::secondary("How do you want to sign in?"));
         ui.add_space(theme::SPACING_BASE);
-        ui.horizontal_wrapped(|ui| {
-            if ui
-                .add(theme::primary(RichText::new("Sign in with a code")))
-                .clicked()
-            {
-                self.act(flow, FlowInput::ChooseQuickConnect);
-            }
-            if ui.button("Username and password").clicked() {
-                self.act(flow, FlowInput::ChoosePassword);
-            }
-        });
+        ui.spacing_mut().item_spacing.y = theme::SPACING_BASE * 3.0;
+        if Button::new(Kind::Primary, "Sign in with a code")
+            .wide()
+            .show(ui)
+            .clicked()
+        {
+            self.act(flow, FlowInput::ChooseQuickConnect);
+        }
+        if Button::new(Kind::Secondary, "Username and password")
+            .wide()
+            .show(ui)
+            .clicked()
+        {
+            self.act(flow, FlowInput::ChoosePassword);
+        }
     }
 
     /// The step that shows the six digits and waits for another device to accept
@@ -383,7 +410,7 @@ impl Ui {
                 "Asking that server for a code of its own.",
             ));
             ui.add_space(theme::SPACING_BASE);
-            spinner(ui, "Getting the code");
+            controls::working(ui, "Getting the code");
         } else {
             let host = flow
                 .server
@@ -396,10 +423,13 @@ impl Ui {
             ui.add_space(theme::SPACING_BASE);
             splash::code_tiles(ui, &code);
             ui.add_space(theme::GAP);
-            spinner(ui, "Waiting for it to be approved");
+            controls::working(ui, "Waiting for it to be approved");
         }
         ui.add_space(theme::SPACING_BASE);
-        if ui.button("Use a username instead").clicked() {
+        if Button::new(Kind::Quiet, "Use a username instead")
+            .show(ui)
+            .clicked()
+        {
             self.act(flow, FlowInput::ChoosePassword);
         }
     }
@@ -411,27 +441,26 @@ impl Ui {
             "An account on that server, sent over the connection just made.",
         ));
         ui.add_space(theme::SPACING_BASE);
-        ui.horizontal(|ui| {
-            ui.label(theme::secondary("Username"));
-            ui.add_sized(
-                FIELD,
-                TextEdit::singleline(&mut flow.username).hint_text("someone"),
-            );
-        });
-        let mut entered = false;
-        ui.horizontal(|ui| {
-            ui.label(theme::secondary("Password"));
-            let response = ui.add_sized(
-                FIELD,
-                TextEdit::singleline(&mut flow.password)
-                    .password(!flow.show_password)
-                    .hint_text("their password"),
-            );
-            entered = response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
-            ui.toggle_value(&mut flow.show_password, "show");
-        });
-        ui.add_space(theme::SPACING_BASE);
-        let asked = ui.add(theme::primary(RichText::new("Sign in"))).clicked();
+        // Each label sits over its field, both on the card's left edge, so
+        // the two fields line up and no row is wider than the card.
+        let entered = ui
+            .with_layout(egui::Layout::top_down(egui::Align::Min), |ui| {
+                ui.spacing_mut().item_spacing.y = theme::SPACING_BASE * 1.5;
+                ui.label(theme::secondary("Username"));
+                Field::new(&mut flow.username, "someone", "jf-username").show(ui);
+                ui.add_space(theme::SPACING_BASE);
+                ui.label(theme::secondary("Password"));
+                Field::new(&mut flow.password, "their password", "jf-password")
+                    .password(&mut flow.show_password)
+                    .show(ui)
+                    .submitted
+            })
+            .inner;
+        ui.add_space(theme::SPACING_BASE * 2.0);
+        let asked = Button::new(Kind::Primary, "Sign in")
+            .wide()
+            .show(ui)
+            .clicked();
         if asked || entered {
             self.act(flow, FlowInput::SubmitPassword);
         }
@@ -440,18 +469,20 @@ impl Ui {
     /// The add panel's address field. Typing records what it holds — which is
     /// also how a check still in flight gets left behind — and Enter or `Check`
     /// asks the worker what the address is.
-    fn address_field(&mut self, flow: &mut AddFlow, ui: &mut egui::Ui) {
+    fn address_field(&mut self, flow: &mut AddFlow, ui: &mut egui::Ui, check: bool) {
         let before = flow.address.clone();
-        let response = ui.add_sized(
-            FIELD,
-            TextEdit::singleline(&mut flow.address).hint_text("http://192.168.1.20:8096"),
-        );
+        let answer =
+            Field::new(&mut flow.address, "http://192.168.1.20:8096", "jf-address").show(ui);
         if flow.address != before {
             let text = flow.address.clone();
             self.act(flow, FlowInput::Address(text));
         }
-        let entered = response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
-        if entered || ui.button("Check").clicked() {
+        let asked = check
+            && Button::new(Kind::Primary, "Check")
+                .wide()
+                .show(ui)
+                .clicked();
+        if answer.submitted || asked {
             self.act(flow, FlowInput::SubmitAddress);
         }
     }
@@ -490,8 +521,8 @@ impl Ui {
     }
 }
 
-/// One source: its kind, its name, what makes it work, and what can be done with
-/// it from here.
+/// One source on a glass card: its kind, its name, what makes it work, and
+/// what can be done with it from here.
 fn source_card(
     ui: &mut egui::Ui,
     origin: &Origin,
@@ -499,82 +530,91 @@ fn source_card(
     meta: &str,
     actions: impl FnOnce(&mut egui::Ui),
 ) {
-    ui.add_space(theme::SPACING_BASE);
-    Frame::new()
-        .fill(theme::CARD)
-        .corner_radius(theme::CARD_RADIUS)
-        .inner_margin(Margin::symmetric(16, 12))
-        .stroke(Stroke::new(theme::HAIRLINE, theme::CARD_HOVER))
+    ui.add_space(theme::GAP);
+    let slot = glass::reserve(ui.painter());
+    let card = Frame::NONE
+        .inner_margin(Margin::symmetric(20, 16))
         .show(ui, |ui| {
             ui.set_width(ui.available_width());
-            ui.horizontal(|ui| {
+            ui.horizontal_top(|ui| {
                 badge(ui, origin);
                 ui.vertical(|ui| {
+                    ui.spacing_mut().item_spacing.y = theme::SPACING_BASE;
                     ui.label(theme::title(RichText::new(name).size(theme::H2_SIZE)));
-                    ui.add_space(theme::SPACING_BASE);
                     ui.label(theme::meta_text(meta));
                     ui.add_space(theme::SPACING_BASE * 2.0);
                     actions(ui);
                 });
             });
         });
+    glass::fill(
+        ui.painter(),
+        slot,
+        card.response.rect,
+        super::app_settings::SECTION_RADIUS,
+        theme::current().glass.section,
+    );
 }
 
 /// One kind of source as a row to click: its badge, its name, and one line on
 /// what adding it involves. Answers whether it was clicked.
 fn option_row(ui: &mut egui::Ui, origin: &Origin, title: &str, note: &str) -> bool {
-    let hue = hue_of(origin);
-    let inner = Frame::new()
-        .fill(theme::CARD)
-        .corner_radius(theme::CARD_RADIUS)
+    let fill = ui.painter().add(egui::Shape::Noop);
+    let inner = Frame::NONE
         .inner_margin(Margin::symmetric(14, 12))
-        .stroke(Stroke::new(theme::HAIRLINE, theme::CARD_HOVER))
         .show(ui, |ui| {
             ui.set_width(ui.available_width());
             ui.horizontal(|ui| {
                 badge(ui, origin);
                 ui.vertical(|ui| {
+                    ui.spacing_mut().item_spacing.y = 2.0;
                     ui.label(theme::title(RichText::new(title).size(theme::H2_SIZE)));
                     ui.label(theme::meta_text(note));
                 });
             });
         });
-    let response = inner
-        .response
-        .interact(Sense::click())
+    let response = ui
+        .interact(
+            inner.response.rect,
+            ui.id().with(("source-kind", title)),
+            Sense::click(),
+        )
         .on_hover_cursor(egui::CursorIcon::PointingHand);
-    if response.hovered() {
-        ui.painter().rect_stroke(
+    let [rest, hover] = OPTION_FILL;
+    let wash = if response.hovered() || response.has_focus() {
+        hover
+    } else {
+        rest
+    };
+    ui.painter().set(
+        fill,
+        egui::epaint::RectShape::filled(
             response.rect,
             theme::CARD_RADIUS,
-            Stroke::new(theme::HAIRLINE, hue.gamma_multiply(0.7)),
-            StrokeKind::Inside,
-        );
-    }
+            theme::palette().wash(wash),
+        ),
+    );
+    controls::ring_when_focused(
+        ui.painter(),
+        &response,
+        response.rect,
+        f32::from(theme::CARD_RADIUS_U8),
+    );
     response.clicked()
 }
 
-/// The hue a service's badge is edged in.
-fn hue_of(origin: &Origin) -> Color32 {
-    if origin.is_jellyfin() {
-        JELLYFIN_HUE
-    } else {
-        PLEX_HUE
-    }
-}
-
-/// A source's service as its own mark, centred in a box edged in its hue.
+/// A source's service as its own mark, centred in a quiet box: the mark is
+/// the only thing on the page that carries the service's colours.
 fn badge(ui: &mut egui::Ui, origin: &Origin) {
-    let hue = hue_of(origin);
     let (rect, _) = ui.allocate_at_least(BADGE, Sense::hover());
     let radius = CornerRadius::same(8);
     let painter = ui.painter();
-    painter.rect_filled(rect, radius, hue.gamma_multiply(0.14));
+    painter.rect_filled(rect, radius, theme::palette().wash(BADGE_FILL));
     painter.rect_stroke(
         rect,
         radius,
-        Stroke::new(theme::HAIRLINE, hue.gamma_multiply(0.55)),
-        StrokeKind::Middle,
+        Stroke::new(theme::HAIRLINE, theme::palette().wash(BADGE_EDGE)),
+        StrokeKind::Inside,
     );
     let width = marks::source_width(origin, BADGE_MARK);
     marks::paint_source(
@@ -584,16 +624,6 @@ fn badge(ui: &mut egui::Ui, origin: &Origin) {
         rect.center().y,
         BADGE_MARK,
     );
-}
-
-/// The working mark, with the repaint that keeps it turning and a wait honest.
-fn spinner(ui: &mut egui::Ui, what: &str) {
-    ui.horizontal(|ui| {
-        ui.add(egui::Spinner::new().size(16.0).color(theme::ACCENT));
-        ui.label(theme::meta_text(what));
-    });
-    ui.ctx()
-        .request_repaint_after(std::time::Duration::from_millis(200));
 }
 
 /// The Plex card's second line: what the token on file makes true right now.

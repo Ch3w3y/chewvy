@@ -4,7 +4,7 @@
 //! them in a narrow window).
 
 use egui::text::LayoutJob;
-use egui::{pos2, vec2, Color32, CornerRadius, Painter, Pos2, Rect, Sense};
+use egui::{pos2, vec2, CornerRadius, Painter, Pos2, Rect, Sense};
 use plex_core::library::{Item, Media};
 
 use super::{
@@ -12,8 +12,10 @@ use super::{
     Action, Ancestor, Page, Target,
 };
 use crate::source::Origin;
+use crate::ui::controls::{Button, Kind};
+use crate::ui::marks::icon::{self, Icon, Size};
 use crate::ui::overlay::{self, Heading, BUTTON};
-use crate::ui::{bleed, glass, glass_tints, images, marks, theme};
+use crate::ui::{bleed, glass, images, marks, theme};
 
 /// The art's height under the head.
 const ART_HEIGHT: f32 = 640.0;
@@ -28,21 +30,25 @@ const PANEL: [f32; 2] = [400.0, 900.0];
 const GAP: f32 = 40.0;
 /// The box a `clearLogo` is fitted into.
 const LOGO_BOX: [f32; 2] = [380.0, 140.0];
+/// The "Use as background" row under the buttons.
+const BACKGROUND_ROW: f32 = 32.0;
 /// Rows the summary may use.
 const SUMMARY_ROWS: usize = 5;
 /// A version row's height inside the panel.
 const VERSION_ROW: f32 = 60.0;
 /// The panel's inner padding.
 const PAD: f32 = 18.0;
-/// The selected version's row fill.
-const ROW_FILL: Color32 = Color32::from_rgba_premultiplied(20, 20, 20, 20);
+/// The strength of the wash under the selected version's row.
+const ROW_FILL: u8 = 20;
 
-/// Draw the head from the cursor and answer with a play button's click.
+/// Draw the head from the cursor and answer with a button's click.
+/// `[playing, pinned]`: an item is in the player, and the background is this
+/// title's backdrop.
 pub fn show(
     ui: &mut egui::Ui,
     page: &Page,
     artwork: &mut images::Artwork,
-    playing: bool,
+    state: [bool; 2],
     servers: crate::source::Servers<'_>,
 ) -> Option<Action> {
     let item = &page.item;
@@ -69,7 +75,7 @@ pub fn show(
     };
     let top = origin.y + TOP;
     let (column_height, action) =
-        column_block(ui, pos2(origin.x, top), column, page, artwork, playing);
+        column_block(ui, pos2(origin.x, top), column, page, artwork, state);
     let mut height = TOP + column_height;
     if !item.media.is_empty() {
         let panel_origin = if beside {
@@ -98,7 +104,7 @@ fn column_block(
     width: f32,
     page: &Page,
     artwork: &mut images::Artwork,
-    playing: bool,
+    [playing, pinned]: [bool; 2],
 ) -> (f32, Option<Action>) {
     let item = &page.item;
     let painter = ui.painter().clone();
@@ -122,12 +128,16 @@ fn column_block(
     heading.paint(&painter, pos2(origin.x, y));
     y += heading_height + 16.0;
     if let Some(line) = episode_heading(item) {
-        let galley = painter.layout(line, theme::semibold(16.0), theme::ACCENT, width);
+        let galley = painter.layout(line, theme::semibold(16.0), theme::palette().accent, width);
         let height = galley.rect.height();
-        overlay::shadowed(&painter, pos2(origin.x, y), galley);
+        crate::ui::legible::on_art(&painter, pos2(origin.x, y), galley);
         y += height + 12.0;
     }
-    let meta = painter.layout_no_wrap(meta_text(item), theme::medium(14.0), overlay::META_TEXT);
+    let meta = painter.layout_no_wrap(
+        meta_text(item),
+        theme::medium(14.0),
+        theme::palette().art_meta,
+    );
     y += overlay::meta_row(&painter, pos2(origin.x, y), width, meta, item) + 16.0;
     if let Some(summary) = item
         .summary
@@ -138,13 +148,13 @@ fn column_block(
         let mut job = LayoutJob::simple(
             summary.to_owned(),
             theme::medium(15.0),
-            overlay::BODY_TEXT,
+            theme::palette().art_body,
             width,
         );
         job.wrap.max_rows = SUMMARY_ROWS;
         let galley = painter.layout_job(job);
         let height = galley.rect.height();
-        overlay::shadowed(&painter, pos2(origin.x, y), galley);
+        crate::ui::legible::on_art(&painter, pos2(origin.x, y), galley);
         y += height + 20.0;
     }
     if let Some(target) = play_target(page) {
@@ -152,6 +162,32 @@ fn column_block(
     }
     if play_target(page).is_some() {
         y += BUTTON[0];
+    }
+    if pinnable(item) {
+        y += 8.0;
+        let rect = Rect::from_min_size(pos2(origin.x, y), vec2(width, BACKGROUND_ROW));
+        let label = if pinned {
+            "Stop using as background"
+        } else {
+            "Use as background"
+        };
+        let hint = if pinned {
+            "Go back to the background theme chosen in Settings"
+        } else {
+            "Show this title's backdrop behind the app until you unpin it"
+        };
+        let clicked = ui
+            .scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
+                Button::new(Kind::Quiet, label)
+                    .hint(hint)
+                    .show(ui)
+                    .clicked()
+            })
+            .inner;
+        if clicked {
+            action = action.or(Some(Action::Background));
+        }
+        y += BACKGROUND_ROW;
     }
     (y - origin.y, action)
 }
@@ -165,15 +201,20 @@ fn ancestor_links(ui: &mut egui::Ui, origin: Pos2, above: &[Ancestor]) -> (f32, 
     let mut height: f32 = 0.0;
     let mut clicked = None;
     for (index, ancestor) in above.iter().enumerate() {
+        let galley = painter.layout_no_wrap(
+            ancestor.title.clone(),
+            theme::semibold(15.0),
+            theme::palette().text,
+        );
         if index > 0 {
-            let mark =
-                painter.layout_no_wrap("›".to_owned(), theme::medium(15.0), overlay::META_TEXT);
-            let width = mark.rect.width();
-            overlay::shadowed(&painter, pos2(x + 8.0, origin.y), mark);
-            x += width + 16.0;
+            let center = pos2(
+                x + 2.0 + icon::SIZE / 2.0,
+                origin.y + galley.rect.height() / 2.0,
+            );
+            let ink = theme::palette().art_meta;
+            crate::ui::legible::icon_on_art(&painter, Icon::ChevronRight, center, ink);
+            x += icon::SIZE + 4.0;
         }
-        let galley =
-            painter.layout_no_wrap(ancestor.title.clone(), theme::semibold(15.0), theme::TEXT);
         let rect = Rect::from_min_size(pos2(x, origin.y), galley.rect.size());
         let link = ui
             .interact(
@@ -183,11 +224,11 @@ fn ancestor_links(ui: &mut egui::Ui, origin: Pos2, above: &[Ancestor]) -> (f32, 
             )
             .on_hover_cursor(egui::CursorIcon::PointingHand)
             .on_hover_text(format!("Go to {}", ancestor.title));
-        overlay::shadowed(&painter, rect.min, galley);
+        crate::ui::legible::on_art(&painter, rect.min, galley);
         if link.hovered() {
             painter.line_segment(
                 [rect.left_bottom(), rect.right_bottom()],
-                egui::Stroke::new(1.0, theme::TEXT),
+                egui::Stroke::new(1.0, theme::palette().text),
             );
         }
         if link.clicked() {
@@ -279,6 +320,12 @@ fn buttons(
     None
 }
 
+/// A film or a show with a backdrop can be the background; an episode's or a
+/// season's art is its show's, which the show's own page pins.
+fn pinnable(item: &Item) -> bool {
+    matches!(item.kind.as_deref(), Some("movie" | "show")) && item.art.is_some()
+}
+
 /// `1:37:12`, or `37:12` under an hour.
 #[must_use]
 pub fn clock(seconds: f64) -> String {
@@ -309,12 +356,12 @@ fn versions(
     let note = painter.layout(
         note.to_owned(),
         theme::medium(12.5),
-        theme::SECONDARY,
+        theme::palette().secondary,
         width - 2.0 * PAD - 8.0,
     );
     let height = PAD + 30.0 + count as f32 * (VERSION_ROW + 6.0) + 8.0 + note.rect.height() + PAD;
     let rect = Rect::from_min_size(origin, vec2(width, height));
-    glass::panel(painter, rect, 12.0, glass_tints::PANEL);
+    glass::panel(painter, rect, 12.0, theme::current().glass.panel);
 
     let inner = rect.shrink(PAD);
     painter.text(
@@ -322,7 +369,7 @@ fn versions(
         egui::Align2::LEFT_CENTER,
         "Play from",
         theme::bold(15.0),
-        theme::TEXT,
+        theme::palette().text,
     );
     let found = if count == 1 {
         "1 version".to_owned()
@@ -334,7 +381,7 @@ fn versions(
         egui::Align2::RIGHT_CENTER,
         found,
         theme::medium(12.5),
-        theme::SECONDARY,
+        theme::palette().secondary,
     );
     let mut y = inner.min.y + 30.0;
     for (index, media) in item.media.iter().enumerate() {
@@ -342,7 +389,11 @@ fn versions(
         version_row(painter, row, media, index == 0, &source.0, source.1);
         y += VERSION_ROW + 6.0;
     }
-    painter.galley(pos2(inner.min.x + 4.0, y + 8.0), note, theme::SECONDARY);
+    painter.galley(
+        pos2(inner.min.x + 4.0, y + 8.0),
+        note,
+        theme::palette().secondary,
+    );
     height
 }
 
@@ -357,14 +408,13 @@ fn version_row(
     server: &str,
 ) {
     if chosen {
-        painter.rect_filled(row, CornerRadius::same(8), ROW_FILL);
-        marks::paint_tinted(
+        painter.rect_filled(row, CornerRadius::same(8), theme::palette().wash(ROW_FILL));
+        icon::paint(
             painter,
-            marks::icon::CHECK,
-            row.min.x + 14.0,
-            row.center().y,
-            18.0,
-            theme::ACCENT,
+            Icon::Check,
+            Size::Regular,
+            pos2(row.min.x + 23.0, row.center().y),
+            theme::palette().accent,
         );
     }
     let x = row.min.x + 46.0;
@@ -378,16 +428,17 @@ fn version_row(
         egui::Align2::LEFT_CENTER,
         server,
         theme::bold(14.0),
-        theme::TEXT,
+        theme::palette().text,
     );
     let spec = version_badges(media).join("  ·  ");
-    let mut job = LayoutJob::simple_singleline(spec, theme::medium(12.5), theme::SECONDARY);
+    let mut job =
+        LayoutJob::simple_singleline(spec, theme::medium(12.5), theme::palette().secondary);
     job.wrap.max_width = row.max.x - 12.0 - x;
     job.wrap.max_rows = 1;
     let spec = painter.layout_job(job);
     painter.galley(
         pos2(x, row.min.y + 42.0 - spec.rect.height() / 2.0),
         spec,
-        theme::SECONDARY,
+        theme::palette().secondary,
     );
 }

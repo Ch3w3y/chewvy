@@ -20,7 +20,7 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-use egui::{ColorImage, Context, Response, Sense, TextureHandle, TextureOptions, Ui, Vec2};
+use egui::{ColorImage, Context, Response, Sense, TextureOptions, Ui, Vec2};
 
 use plex_core::library::photo_transcode_path;
 
@@ -29,6 +29,10 @@ use crate::sources::browse;
 use crate::shell::live::LiveClient;
 use crate::ui::art_cache::{env_dir, DiskCache};
 use crate::ui::theme;
+
+#[cfg(test)]
+use lru::texture_bytes;
+use lru::Lru;
 
 /// Poster size requested from `/photo/:/transcode` and drawn left of a row.
 pub const POSTER: [u16; 2] = [60, 90];
@@ -52,6 +56,10 @@ const ART_TEXTURE: TextureOptions = TextureOptions {
     mipmap_mode: Some(egui::TextureFilter::Linear),
     ..TextureOptions::LINEAR
 };
+/// The size a server backdrop is fetched at to be a background: its browsing
+/// copy is blurred down to [`crate::ui::backdrop::decode::SOFT_WIDTH`], so a
+/// larger answer would only cost bytes.
+const BACKGROUND_FETCH: [u32; 2] = [1920, 1080];
 /// Fetch/decode threads.
 pub const WORKERS: usize = 4;
 /// Requests queued ahead of the workers; the oldest is dropped when full.
@@ -134,6 +142,9 @@ struct Job {
     /// The pixel size asked for: the answer is resampled to cover this
     /// before upload, up or down.
     size: [u32; 2],
+    /// A background: uploaded as its blurred browsing copy, with the dims
+    /// its pixels ask for ([`crate::ui::backdrop::decode::derive`]).
+    background: bool,
 }
 
 struct Frame {
@@ -143,6 +154,8 @@ struct Frame {
     /// The size the answer decoded at, before any resampling: the source's
     /// true size when the request refused a server-side upscale.
     answer: [u32; 2],
+    /// A background's dims.
+    backdrop: Option<theme::Backdrop>,
 }
 
 /// One finished worker attempt: `frame` on success, `error` when it failed.
@@ -207,104 +220,6 @@ fn push(shared: &Shared, inflight: &mut HashSet<String>, job: Job) {
     shared.queued.notify_one();
 }
 
-/// Key-ordered texture set: the least-recently-used entry is freed first.
-struct Lru {
-    cap: usize,
-    budget: usize,
-    bytes: usize,
-    clock: u64,
-    entries: HashMap<String, Entry>,
-}
-
-struct Entry {
-    handle: TextureHandle,
-    used: u64,
-    bytes: usize,
-}
-
-/// The GPU bytes one RGBA texture takes with its mip chain (~4/3 of the base).
-fn texture_bytes(handle: &TextureHandle) -> usize {
-    let [w, h] = handle.size();
-    w * h * 4 * 4 / 3
-}
-
-impl Lru {
-    fn new(cap: usize) -> Self {
-        Self::with_budget(cap, TEXTURE_BUDGET)
-    }
-
-    fn with_budget(cap: usize, budget: usize) -> Self {
-        Self {
-            cap: cap.max(1),
-            budget,
-            bytes: 0,
-            clock: 0,
-            entries: HashMap::new(),
-        }
-    }
-
-    fn contains(&self, key: &str) -> bool {
-        self.entries.contains_key(key)
-    }
-
-    /// Free every texture: dropping a [`TextureHandle`] is what releases it.
-    fn clear(&mut self) {
-        self.entries.clear();
-        self.bytes = 0;
-    }
-
-    /// Marks `key` most-recently-used and returns its texture.
-    fn get(&mut self, key: &str) -> Option<&TextureHandle> {
-        let used = self.tick();
-        self.entries.get_mut(key).map(|entry| {
-            entry.used = used;
-            &entry.handle
-        })
-    }
-
-    /// Inserts `handle`, freeing the least-recently-used textures until both
-    /// the count cap and the byte budget hold; returns how many were freed.
-    fn insert(&mut self, key: String, handle: TextureHandle) -> usize {
-        let used = self.tick();
-        let bytes = texture_bytes(&handle);
-        if let Some(old) = self.entries.remove(&key) {
-            self.bytes -= old.bytes;
-        }
-        let mut freed = 0;
-        while !self.entries.is_empty()
-            && (self.entries.len() >= self.cap || self.bytes + bytes > self.budget)
-        {
-            let Some(victim) = self
-                .entries
-                .iter()
-                .min_by_key(|(_, entry)| entry.used)
-                .map(|(key, _)| key.clone())
-            else {
-                break;
-            };
-            if let Some(entry) = self.entries.remove(&victim) {
-                self.bytes -= entry.bytes;
-                freed += 1;
-            }
-        }
-        self.bytes += bytes;
-        self.entries.insert(
-            key,
-            Entry {
-                handle,
-                used,
-                bytes,
-            },
-        );
-        freed
-    }
-
-    fn tick(&mut self) -> u64 {
-        self.clock += 1;
-        self.clock
-    }
-}
-
 /// The fetch queue, decoder and texture cache behind one browse screen.
 pub struct Artwork {
     shared: Arc<Shared>,
@@ -323,6 +238,8 @@ pub struct Artwork {
     workers: Vec<JoinHandle<()>>,
     /// Physical pixels per point, read each frame in [`Artwork::drain`].
     scale: f32,
+    /// The dims of each background texture, by its key.
+    backdrops: HashMap<String, theme::Backdrop>,
 }
 
 /// One key's failure history: attempts so far and the next allowed queue time.
@@ -357,6 +274,7 @@ impl Artwork {
             scale: 1.0,
             retry_base: RETRY_BASE,
             workers,
+            backdrops: HashMap::new(),
         }
     }
 
@@ -389,6 +307,7 @@ impl Artwork {
         self.textures.clear();
         self.inflight.clear();
         self.failed.clear();
+        self.backdrops.clear();
         lock(&self.shared.queue).clear();
     }
 
@@ -412,7 +331,13 @@ impl Artwork {
                     );
                     let handle = ctx.load_texture(outcome.key.clone(), image, ART_TEXTURE);
                     self.failed.remove(&outcome.key);
+                    if let Some(backdrop) = frame.backdrop {
+                        self.backdrops.insert(outcome.key.clone(), backdrop);
+                    }
                     self.textures.insert(outcome.key, handle);
+                    // A texture the cache freed takes its dims with it.
+                    let textures = &self.textures;
+                    self.backdrops.retain(|key, _| textures.contains(key));
                 }
                 None => {
                     if let Some(error) = outcome.error {
@@ -493,6 +418,10 @@ impl Artwork {
     }
 
     fn enqueue(&mut self, key: String, path: String, size: [u32; 2]) {
+        self.enqueue_job(key, path, size, false);
+    }
+
+    fn enqueue_job(&mut self, key: String, path: String, size: [u32; 2], background: bool) {
         if self.textures.contains(&key) {
             return;
         }
@@ -509,82 +438,25 @@ impl Artwork {
                 path,
                 gen: self.generation,
                 size,
+                background,
             },
         );
     }
 
-    /// True when `key` has a texture (test view).
-    #[cfg(test)]
-    fn has_texture(&self, key: &str) -> bool {
-        self.textures.contains(key)
-    }
-
-    #[cfg(test)]
-    fn texture_count(&self) -> usize {
-        self.textures.entries.len()
-    }
-
-    #[cfg(test)]
-    fn queued_len(&self) -> usize {
-        lock(&self.shared.queue).len()
-    }
-
-    #[cfg(test)]
-    fn has_inflight(&self, key: &str) -> bool {
-        self.inflight.contains(key)
-    }
-
-    /// Tests shorten the retry cooldown to exercise the backoff without waiting.
-    #[cfg(test)]
-    fn set_retry_base(&mut self, base: Duration) {
-        self.retry_base = base;
-    }
-
-    /// Attempts recorded for `key` (test view).
-    #[cfg(test)]
-    fn failure_attempts(&self, key: &str) -> u32 {
-        self.failed.get(key).map_or(0, |failure| failure.attempts)
-    }
-
-    /// Keys with a recorded failure (test view).
-    #[cfg(test)]
-    fn failure_count(&self) -> usize {
-        self.failed.len()
-    }
-
-    /// Tests wait for a worker's failed attempt (no client attached) to reach
-    /// [`Artwork::drain`]: the helper waits until `at_least` attempts are
-    /// recorded, so an attempt already counted is not mistaken for the new one.
-    #[cfg(test)]
-    fn wait_for_failure(&mut self, key: &str, at_least: u32) -> bool {
-        let ctx = Context::default();
-        for _ in 0..100 {
-            self.drain(&ctx);
-            if self.failure_attempts(key) >= at_least {
-                return true;
-            }
-            std::thread::sleep(Duration::from_millis(25));
-        }
-        false
-    }
-
-    #[cfg(test)]
-    fn inflight_count(&self) -> usize {
-        self.inflight.len()
-    }
-
-    /// Tests wait for a worker to deliver without a server by pre-filling the
-    /// disk cache.
-    #[cfg(test)]
-    fn wait_for_texture(&mut self, ctx: &Context, key: &str) -> bool {
-        for _ in 0..100 {
-            self.drain(ctx);
-            if self.has_texture(key) {
-                return true;
-            }
-            std::thread::sleep(Duration::from_millis(25));
-        }
-        false
+    /// Request the server backdrop at `address` as the background and answer
+    /// its blurred copy, its size and the dims it asks for once the loader
+    /// has it.
+    pub fn background(
+        &mut self,
+        address: &str,
+    ) -> Option<(egui::TextureId, Vec2, theme::Backdrop)> {
+        let [width, height] = BACKGROUND_FETCH;
+        let (key, path) = request_for(address, width, height)?;
+        let key = format!("{key}-background");
+        self.enqueue_job(key.clone(), path, [width, height], true);
+        let backdrop = *self.backdrops.get(&key)?;
+        let handle = self.textures.get(&key)?;
+        Some((handle.id(), handle.size_vec2(), backdrop))
     }
 }
 
@@ -647,7 +519,11 @@ fn next_job(shared: &Shared) -> Option<Job> {
 
 /// Decode an answer for `job` and log once per key what size it came in at.
 fn decode_logged(shared: &Shared, job: &Job, bytes: &[u8]) -> Option<Frame> {
-    let frame = decode(bytes, job.size)?;
+    let frame = if job.background {
+        decode_background(bytes)?
+    } else {
+        decode(bytes, job.size)?
+    };
     note_answer(shared, &job.key, job.size, frame.answer);
     Some(frame)
 }
@@ -745,6 +621,26 @@ fn fetch(shared: &Shared, client: Option<&Arc<LiveClient>>, job: &Job) -> Outcom
 /// so server-supplied bytes decide neither how much is read nor how large the
 /// `width * height * 4` pixel buffer may get.
 fn decode(bytes: &[u8], target: [u32; 2]) -> Option<Frame> {
+    let image = read_limited(bytes)?;
+    let mut rgba = image.to_rgba8();
+    let (answer_w, answer_h) = rgba.dimensions();
+    premultiply(&mut rgba);
+    let rgba = resample(rgba, target);
+    let frame = Frame {
+        width: usize::try_from(rgba.width()).unwrap_or(0),
+        height: usize::try_from(rgba.height()).unwrap_or(0),
+        rgba: rgba.into_raw(),
+        answer: [answer_w, answer_h],
+        backdrop: None,
+    };
+    if frame.width == 0 || frame.height == 0 {
+        return None;
+    }
+    Some(frame)
+}
+
+/// An answer's encoded bytes decoded within the size and allocation limits.
+fn read_limited(bytes: &[u8]) -> Option<image::DynamicImage> {
     if bytes.len() > MAX_ENCODED_BYTES {
         log::debug!(
             "artwork answer of {} bytes is over the decode limit",
@@ -760,21 +656,23 @@ fn decode(bytes: &[u8], target: [u32; 2]) -> Option<Frame> {
     limits.max_image_height = Some(MAX_DECODE_DIM);
     limits.max_alloc = Some(MAX_DECODE_ALLOC);
     reader.limits(limits);
-    let image = reader.decode().ok()?;
-    let mut rgba = image.to_rgba8();
-    let (answer_w, answer_h) = rgba.dimensions();
-    premultiply(&mut rgba);
-    let rgba = resample(rgba, target);
-    let frame = Frame {
-        width: usize::try_from(rgba.width()).unwrap_or(0),
-        height: usize::try_from(rgba.height()).unwrap_or(0),
-        rgba: rgba.into_raw(),
-        answer: [answer_w, answer_h],
-    };
-    if frame.width == 0 || frame.height == 0 {
-        return None;
-    }
-    Some(frame)
+    reader.decode().ok()
+}
+
+/// A server backdrop as a background: its blurred browsing copy, opaque, and
+/// the dims its pixels ask for.
+fn decode_background(bytes: &[u8]) -> Option<Frame> {
+    let image = read_limited(bytes)?.to_rgb8();
+    let answer = [image.width(), image.height()];
+    let derived = crate::ui::backdrop::decode::derive(&image);
+    let soft = image::DynamicImage::ImageRgb8(derived.soft).to_rgba8();
+    Some(Frame {
+        width: usize::try_from(soft.width()).ok()?,
+        height: usize::try_from(soft.height()).ok()?,
+        rgba: soft.into_raw(),
+        answer,
+        backdrop: Some(derived.backdrop),
+    })
 }
 
 /// Multiply each pixel's colour by its alpha, as egui's textures expect. Done
@@ -819,9 +717,11 @@ fn resample(image: image::RgbaImage, target: [u32; 2]) -> image::RgbaImage {
 fn placeholder(ui: &mut Ui, size: Vec2) -> Response {
     let (rect, response) = ui.allocate_exact_size(size, Sense::hover());
     ui.painter()
-        .rect_filled(rect, theme::CARD_RADIUS, theme::CARD);
+        .rect_filled(rect, theme::CARD_RADIUS, theme::palette().card);
     response
 }
+
+mod lru;
 
 #[cfg(test)]
 mod tests;

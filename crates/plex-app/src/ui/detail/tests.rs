@@ -481,7 +481,7 @@ fn painted_rects(out: &egui::FullOutput, fill: egui::Color32) -> Vec<egui::Rect>
 
 /// The row's [`EPISODE_THUMB`] plate, which the resume bar and the tick sit on.
 fn thumb_plate(out: &egui::FullOutput) -> egui::Rect {
-    painted_rects(out, theme::CARD)
+    painted_rects(out, theme::palette().card)
         .into_iter()
         .find(|rect| rect.width() == EPISODE_THUMB[0] && rect.height() == EPISODE_THUMB[1])
         .unwrap_or_else(|| {
@@ -507,7 +507,7 @@ fn a_half_watched_episode_row_paints_the_resume_bar_on_its_thumb_edge() {
     let started = wire_episode(1, "Pilot", Some(1_238_240), None);
     let frame = painted_row(&started);
     let plate = thumb_plate(&frame);
-    let bars = painted_rects(&frame, theme::ACCENT);
+    let bars = painted_rects(&frame, theme::palette().accent);
     let Some(bar) = bars.first() else {
         panic!("a row whose offset the server named painted no resume bar");
     };
@@ -537,7 +537,7 @@ fn a_watched_episode_row_paints_the_tick_over_its_thumb_corner() {
     let frame = painted_row(&seen);
     let plate = thumb_plate(&frame);
     assert!(
-        painted_rects(&frame, theme::ACCENT).is_empty(),
+        painted_rects(&frame, theme::palette().accent).is_empty(),
         "a row with no `viewOffset` paints no bar"
     );
     let Some((center, radius)) = tick_plate(&frame) else {
@@ -557,7 +557,7 @@ fn an_untouched_episode_row_paints_neither_bar_nor_tick() {
     let frame = painted_row(&fresh);
     let _ = thumb_plate(&frame);
     assert!(
-        painted_rects(&frame, theme::ACCENT).is_empty(),
+        painted_rects(&frame, theme::palette().accent).is_empty(),
         "no offset, no bar"
     );
     assert!(tick_plate(&frame).is_none(), "no view count, no tick plate");

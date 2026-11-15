@@ -12,7 +12,7 @@
 //! nothing else would, and a frame's `predicted_dt` is what the timer is
 //! measured in, so the countdown only counts frames that were actually drawn.
 
-use egui::{Color32, Id, Sense};
+use egui::{Id, Sense};
 use plex_core::library::Item;
 
 use crate::ui::{bleed, cards, home, images, theme};
@@ -29,11 +29,11 @@ const ART_OVERHANG: f32 = 120.0;
 /// A pager dot's painted radius.
 const DOT_RADIUS: f32 = 3.5;
 /// A pager dot's clickable box: wider than [`DOT_RADIUS`] so a dot is easy to hit.
-const DOT_BOX: f32 = 18.0;
+const DOT_BOX: f32 = 24.0;
 /// The dot row's inset from the hero's bottom and right edges.
 const DOT_INSET: f32 = 12.0;
-/// A dot the carousel is not on.
-const DOT_DIM: Color32 = Color32::from_rgba_premultiplied(110, 110, 110, 110);
+/// The strength of the wash a dot the carousel is not on is drawn in.
+const DOT_DIM: u8 = 110;
 
 /// How many hero items the carousel rotates through.
 pub const SLOTS: usize = 5;
@@ -209,7 +209,14 @@ fn dot_clicks(ui: &mut egui::Ui, hero: egui::Rect, id: Id, count: usize) -> Opti
     let mut clicked = None;
     for (ordinal, rect) in dot_rects(hero, count).into_iter().enumerate() {
         let box_id = id.with(("hero-dot", ordinal));
-        let response = cards::pointer(ui.interact(rect, box_id, Sense::click()));
+        let response = cards::pointer(ui.interact(rect, box_id, Sense::click()))
+            .on_hover_text(format!("Item {} of {count}", ordinal + 1));
+        crate::ui::controls::round_ring_when_focused(
+            ui.painter(),
+            &response,
+            rect.center(),
+            DOT_RADIUS + 3.0,
+        );
         if response.clicked() {
             clicked = Some(ordinal);
         }
@@ -221,9 +228,9 @@ fn dot_clicks(ui: &mut egui::Ui, hero: egui::Rect, id: Id, count: usize) -> Opti
 fn paint_dots(ui: &mut egui::Ui, hero: egui::Rect, count: usize, index: usize) {
     for (ordinal, rect) in dot_rects(hero, count).into_iter().enumerate() {
         let color = if ordinal == index {
-            theme::ACCENT
+            theme::palette().accent
         } else {
-            DOT_DIM
+            theme::palette().wash(DOT_DIM)
         };
         ui.painter().circle_filled(rect.center(), DOT_RADIUS, color);
     }

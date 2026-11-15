@@ -336,6 +336,11 @@ pub(crate) enum Ev {
         query: String,
         hubs: Vec<Hub>,
     },
+    /// The search for `query` could not be answered, and why.
+    SearchFailed {
+        query: String,
+        error: String,
+    },
     /// An item resolved and ready: the window starts it in its own player.
     PlayReady(Box<PlayRequest>),
     /// Every source this install can play from, as its file keeps them.
@@ -683,7 +688,10 @@ fn worker(cmds: &Receiver<Cmd>, ev: &Sender<Ev>, out: &Sender<Cmd>) {
                     match client.search_hubs(&q, SEARCH_ROWS) {
                         Ok(found) => hubs = found,
                         Err(e) => {
-                            send(Ev::Error(format!("search failed: {e}")));
+                            send(Ev::SearchFailed {
+                                query: q,
+                                error: format!("The server did not answer: {e}"),
+                            });
                             continue;
                         }
                     }

@@ -14,7 +14,7 @@ use crate::player::{self, PlayRequest};
 use crate::source::{Library, Origin};
 use crate::ui::player::Overlay;
 use crate::ui::rail::{self, Entry};
-use crate::ui::{grid, home, images, search, settings, theme};
+use crate::ui::{grid, home, images, settings, theme};
 use crate::watch::{Ask, Cmd, Ev};
 
 /// The screens before a connected server, then the connected shell itself.
@@ -95,17 +95,8 @@ pub struct Ui {
     asked: Option<Ask>,
     /// A section whose first page waits on that section's own `/sorts` answer.
     awaiting_sorts: Option<String>,
-    /// The search query the last ask was made for, kept so an answer for a
-    /// query the field no longer holds fills nothing.
-    search_asked: Option<String>,
-    /// The trimmed query the search field holds that has not been asked for.
-    search_pending: Option<String>,
-    /// When [`Ui::search_pending`] last changed, the start of its debounce.
-    search_at: Option<Instant>,
-    /// The search answer, kept as the server grouped it.
-    search_groups: Vec<search::Group>,
-    /// The search card the arrow keys have selected.
-    search_focus: Option<search::Selection>,
+    /// The Search screen: its asks, its debounce and its answer.
+    search: app_search::SearchState,
     /// The grid card the arrow keys have selected.
     card_focus: Option<usize>,
     /// Ask the rail's search field for the keyboard focus on its next draw.
@@ -128,8 +119,9 @@ pub struct Ui {
     chips: grid::Chips,
     /// The sorts the section in view offered.
     sorts: Vec<SortOption>,
-    /// The connected server's `/hubs` shelves, as last read for the Home entry.
-    hubs: Vec<Hub>,
+    /// The connected server's `/hubs` shelves, as last read for the Home entry;
+    /// `None` until the server first answers.
+    hubs: Option<Vec<Hub>>,
     /// The detail page in view: the item a card opened, as the worker read it.
     detail: Option<crate::ui::detail::Page>,
     query: String,
@@ -162,6 +154,8 @@ pub struct Ui {
     update_dismissed: bool,
     /// The update prompt is open.
     update_prompt: bool,
+    /// The photograph behind the glass and the library art it may show.
+    backgrounds: background::Backgrounds,
 }
 
 impl Ui {
@@ -184,11 +178,7 @@ impl Ui {
             card_start: 0,
             asked: None,
             awaiting_sorts: None,
-            search_asked: None,
-            search_pending: None,
-            search_at: None,
-            search_groups: Vec::new(),
-            search_focus: None,
+            search: app_search::SearchState::default(),
             card_focus: None,
             focus_search: false,
             rail_query: String::new(),
@@ -198,7 +188,7 @@ impl Ui {
             settings: settings::load(),
             chips: grid::Chips::default(),
             sorts: Vec::new(),
-            hubs: Vec::new(),
+            hubs: None,
             detail: None,
             query: String::new(),
             overlay: None,
@@ -214,6 +204,7 @@ impl Ui {
             updater: crate::update::Updater::default(),
             update_dismissed: false,
             update_prompt: false,
+            backgrounds: background::Backgrounds::new(),
         }
     }
 
@@ -255,6 +246,7 @@ impl Ui {
             Ev::Sections { server, sections } => {
                 self.error = None;
                 self.server = server;
+                self.backgrounds.servers_changed();
                 self.sections = sections;
                 self.history = History::default();
                 self.current = None;
@@ -266,7 +258,11 @@ impl Ui {
                 // library stays the user's click, as it was before the rail.
                 self.go(Entry::Home);
             }
-            Ev::Artwork(client) => self.artwork.attach(client),
+            Ev::Artwork(client) => {
+                self.backgrounds
+                    .set_plex(Some(std::sync::Arc::clone(&client)));
+                self.artwork.attach(client);
+            }
             Ev::Jellyfin {
                 pool,
                 libraries,
@@ -274,6 +270,7 @@ impl Ui {
             } => {
                 // The loader reads artwork from these servers too, so it holds the
                 // same cheap handle the screens browse with.
+                self.backgrounds.set_jellyfin(pool.clone());
                 self.artwork.attach_jellyfin(pool);
                 self.jellyfin = libraries;
                 self.jellyfin_notes = notes;
@@ -281,9 +278,10 @@ impl Ui {
             Ev::Hubs(hubs) => {
                 self.error = None;
                 self.status = String::new();
-                self.hubs = hubs;
+                self.hubs = Some(hubs);
             }
             Ev::SearchHubs { query, hubs } => self.apply_search(&query, hubs),
+            Ev::SearchFailed { query, error } => self.search_failed(&query, error),
             Ev::Cards {
                 cards,
                 append,
@@ -312,111 +310,11 @@ impl Ui {
             }
             Ev::Jf(answer) => self.apply_jellyfin(answer),
             Ev::Together(news) => self.apply_together(news),
-            Ev::SignedOut | Ev::NoPlex => self.open_without_plex(),
-        }
-    }
-
-    /// One poster page, filed under the browsing that asked for it: a section
-    /// page fills [`Ui::cards`]. An answer whose [`Ask`] is not the last one
-    /// this screen sent is stale, so a slow page cannot land in the list of a
-    /// screen that never asked for it.
-    fn apply_cards(
-        &mut self,
-        cards: Vec<grid::Card>,
-        append: bool,
-        more: bool,
-        total: Option<u64>,
-        asked: Ask,
-    ) {
-        if self.asked.as_ref() != Some(&asked) {
-            return;
-        }
-        self.error = None;
-        self.status = String::new();
-        self.card_paging = false;
-        self.card_more = more;
-        self.card_total = total;
-        match asked {
-            Ask::Section { start, .. } => {
-                // The next page continues after the rows this answer filled,
-                // which is not `cards.len()` when the server served a shorter
-                // window than [`grid::PAGE`].
-                self.card_start = start + cards.len();
-                if append {
-                    self.cards.extend(cards);
-                } else {
-                    self.cards = cards;
-                }
+            Ev::SignedOut | Ev::NoPlex => {
+                self.backgrounds.set_plex(None);
+                self.open_without_plex();
             }
         }
-    }
-
-    /// A section's own sorts: the sort in effect becomes the default this
-    /// section names, then its first page is asked for once, in that order. An
-    /// answer for a section the user has left fills nothing, and a section never
-    /// sees another library's sort keys.
-    fn apply_sorts(&mut self, section: &str, options: Vec<SortOption>) {
-        if self.awaiting_sorts.as_deref() != Some(section) {
-            return;
-        }
-        self.awaiting_sorts = None;
-        self.sorts = options;
-        self.chips.sort = grid::default_sort(&self.sorts);
-        let sort = self.chips.sort.clone();
-        self.browse(section, 0, sort);
-    }
-
-    /// Ask the worker for one page of a section's posters and remember exactly
-    /// that ask, so only its answer fills the grid.
-    fn browse(&mut self, section: &str, start: usize, sort: Option<String>) {
-        let unwatched = self.chips.unwatched;
-        self.asked = Some(Ask::Section {
-            section: section.to_owned(),
-            start,
-            sort: sort.clone(),
-            unwatched,
-        });
-        self.send(Cmd::Browse {
-            section: section.to_owned(),
-            start,
-            sort,
-            unwatched,
-        });
-    }
-
-    /// What the grid answered with: which page to re-ask, or which card to open.
-    fn apply_grid(&mut self, action: grid::Action, section: String) {
-        match action {
-            grid::Action::Open(index) => {
-                let card = self.cards.get(index);
-                self.open_card(card.cloned());
-            }
-            grid::Action::Sort(value) => {
-                self.chips.sort = value;
-                self.reload(&section);
-            }
-            grid::Action::Unwatched(on) => {
-                self.chips.unwatched = on;
-                self.reload(&section);
-            }
-            grid::Action::Next => {
-                self.card_paging = true;
-                let start = self.card_start;
-                let sort = self.chips.sort.clone();
-                self.browse(&section, start, sort);
-            }
-            grid::Action::Select(selected) => self.card_focus = selected,
-        }
-    }
-
-    /// Ask for the same browsing again from the first poster.
-    fn reload(&mut self, section: &str) {
-        self.card_paging = true;
-        self.cards.clear();
-        self.card_more = false;
-        self.card_start = 0;
-        let sort = self.chips.sort.clone();
-        self.browse(section, 0, sort);
     }
 
     /// Open one poster: its detail page, which is where Play / Resume starts
@@ -430,7 +328,6 @@ impl Ui {
         self.go(Entry::Detail { id, title });
     }
 
-    /// Move to a rail entry, remembering where the user was.
     /// The rail's libraries: the connected Plex server's sections first, then
     /// every Jellyfin library, each carrying the source and server it belongs to.
     #[must_use]
@@ -449,13 +346,15 @@ impl Ui {
         rows
     }
 
+    /// Move to a rail entry, remembering where the user was.
     fn go(&mut self, to: Entry) {
+        self.leave_search(&to);
         if let Some(from) = self.current.clone() {
             self.history.leave(&from);
         }
         self.current = Some(to.clone());
         self.card_focus = None;
-        self.search_focus = None;
+        self.search.focus = None;
         self.status = String::new();
         self.card_paging = false;
         self.card_more = false;
@@ -492,10 +391,7 @@ impl Ui {
                 // answer filed for a screen the user left. The rail's field is
                 // the only way here, so it keeps the keyboard focus it already
                 // has rather than being asked for it again.
-                self.search_asked = None;
-                self.search_pending = None;
-                self.search_at = None;
-                self.search_groups.clear();
+                self.search.restart();
             }
             Entry::Settings => {}
             // The registry is already the worker's, read before this screen was
@@ -553,7 +449,7 @@ impl Ui {
         // art and every page run full-bleed under the window buttons.
         if matches!(self.screen, Screen::Connected) {
             let screen = root.ctx().content_rect();
-            crate::ui::backdrop::paint(root.ctx(), screen, crate::ui::backdrop::Kind::Soft, 0.25);
+            self.paint_background(root.ctx(), screen, crate::ui::backdrop::Kind::Soft);
         }
 
         // The browsing keyboard is read before its screens draw, so Back and
@@ -563,22 +459,8 @@ impl Ui {
             self.browse_keys(root.ctx(), typed_before);
         }
 
-        // The strip is a message, not chrome: with nothing to say it is left off
-        // entirely so the screen gets the height back.
-        let message = self
-            .error
-            .as_ref()
-            .map(|error| (true, error.clone()))
-            .or_else(|| (!self.status.trim().is_empty()).then(|| (false, self.status.clone())));
-        if let Some((failed, text)) = message.filter(|_| matches!(self.screen, Screen::Connected)) {
-            let color = if failed {
-                theme::DANGER
-            } else {
-                theme::SECONDARY
-            };
-            egui::Panel::bottom("status").show(root, |ui| {
-                ui.colored_label(color, text);
-            });
+        if matches!(self.screen, Screen::Connected) {
+            self.status_toast(root.ctx());
         }
 
         match &self.screen {
@@ -588,7 +470,6 @@ impl Ui {
                     .show(root, |ui| self.sign_in(ui));
             }
             Screen::Connected => {
-                crate::ui::backdrop::release_sharp();
                 let libraries = self.libraries();
                 let entries = rail::entries(&libraries);
                 let rooms = self.room_count();
@@ -656,11 +537,7 @@ impl Ui {
                     }
                     Some(rail::Choice::AddSource) => self.add_source(),
                     Some(rail::Choice::Search { query, submitted }) => {
-                        if submitted {
-                            self.ask_search(&query);
-                        } else if !matches!(self.current, Some(Entry::Search)) {
-                            self.go(Entry::Search);
-                        }
+                        self.rail_search(&query, submitted);
                     }
                     None => {}
                 }
@@ -689,6 +566,7 @@ impl Ui {
         }
         // Every screen but the player can offer an update, sign-in included.
         self.update_overlays(root.ctx());
+        crate::ui::controls::ring_the_rest(root.ctx());
     }
 
     /// The central panel for the selected rail entry.
@@ -703,14 +581,20 @@ impl Ui {
                 // A card opens an item only while nothing else is playing, the
                 // same gate the item list's ▶ Play button uses.
                 let idle = !player::is_active();
+                // Until the server first answers, the status strip says Home
+                // is loading, and an empty state would only flash.
+                if self.hubs.is_none() && self.error.is_none() {
+                    return;
+                }
                 // The shelves are taken out so a card can ask the artwork
                 // loader while the drawing loop still borrows them.
-                let hubs = std::mem::take(&mut self.hubs);
+                let hubs = self.hubs.take();
                 let servers = crate::source::Servers {
                     plex: &self.server,
                     jellyfin: &self.sources.jellyfin,
                 };
-                let pick = home::show(ui, &hubs, &mut self.artwork, idle, servers);
+                let shown = hubs.as_deref().unwrap_or_default();
+                let pick = home::show(ui, shown, &mut self.artwork, idle, servers);
                 self.hubs = hubs;
                 match pick {
                     Some(home::Pick::Open(page)) => self.go(Entry::Detail {
@@ -720,6 +604,7 @@ impl Ui {
                     Some(home::Pick::Play(resume)) => {
                         self.start_title(resume.rating_key, resume.title, resume.start, ui.ctx());
                     }
+                    Some(home::Pick::Sources) => self.go(Entry::Sources),
                     None => {}
                 }
             }
@@ -729,8 +614,10 @@ impl Ui {
             Some(Entry::Detail { .. }) => self.draw_detail(ui),
             Some(Entry::Search) => self.draw_search(ui),
             None => {
-                ui.heading("Chewvy");
-                ui.label(&self.status);
+                ui.vertical_centered(|ui| {
+                    ui.add_space(theme::PAGE_TOP);
+                    crate::ui::controls::working(ui, &self.status);
+                });
             }
         }
     }
@@ -783,7 +670,7 @@ impl Ui {
             ui,
             origin,
             ui.id().with("back"),
-            Some(crate::ui::marks::icon::BACK),
+            Some(crate::ui::marks::icon::Icon::Back),
             "Back",
             true,
         )
@@ -794,139 +681,18 @@ impl Ui {
             }
         }
     }
-
-    /// The library browsing screen: the server's own posters in the responsive
-    /// grid, under its title and `totalSize`, with a next page and its chips
-    /// belonging to `section`.
-    fn grid_center(&mut self, ui: &mut egui::Ui, title: String, section: String) {
-        // The cards are taken out so a poster can ask the artwork loader while
-        // the grid still borrows them.
-        let cards = std::mem::take(&mut self.cards);
-        let view = grid::View {
-            cards: &cards,
-            title,
-            total: self.card_total,
-            more: self.card_more,
-            chips: self.chips.clone(),
-            sorts: &self.sorts,
-            paging: self.card_paging,
-            size: self.settings.poster_size,
-            focus: self.card_focus,
-            navigate: true,
-            typing: self.typing,
-        };
-        let action = grid::show(ui, view, &mut self.artwork, player::is_active());
-        self.cards = cards;
-        if let Some(action) = action {
-            self.apply_grid(action, section);
-        }
-    }
-
-    /// The sign-in screens: the space backdrop, and a glass card that says
-    /// what the app is doing (an orbit while it works), shows the pairing code,
-    /// or lists the account's servers.
-    fn sign_in(&mut self, ui: &mut egui::Ui) {
-        use crate::ui::splash;
-        let area = ui.max_rect();
-        crate::ui::backdrop::paint(
-            ui.ctx(),
-            ui.ctx().content_rect(),
-            crate::ui::backdrop::Kind::Sharp,
-            0.0,
-        );
-        let screen = match &self.screen {
-            Screen::Pairing { code, url } => Screen::Pairing {
-                code: code.clone(),
-                url: url.clone(),
-            },
-            Screen::Servers(names) => Screen::Servers(names.clone()),
-            Screen::Welcome => Screen::Welcome,
-            _ => Screen::Starting,
-        };
-        let error = self.error.clone();
-        let status = self.status.clone();
-        splash::card(ui, area, |ui| match &screen {
-            Screen::Pairing { code, url } => {
-                splash::heading(ui, "Link this device", "Sign in with your Plex account");
-                ui.label(
-                    theme::secondary("Go to plex.tv/link and enter this code").font(theme::body()),
-                );
-                ui.add_space(16.0);
-                splash::code_tiles(ui, code);
-                ui.add_space(24.0);
-                if splash::primary(ui, "Open plex.tv/link") {
-                    ui.ctx().open_url(egui::OpenUrl::new_tab(url));
-                }
-                ui.add_space(8.0);
-                if splash::secondary(ui, "Get a new code") {
-                    self.send(Cmd::Pair);
-                }
-                ui.add_space(8.0);
-                if splash::secondary(ui, "Back") {
-                    self.send(Cmd::CancelPair);
-                    self.open_without_plex();
-                }
-                ui.add_space(16.0);
-                ui.horizontal(|ui| {
-                    ui.spinner();
-                    ui.label(
-                        theme::secondary("Waiting for the code to be entered").font(theme::meta()),
-                    );
-                });
-            }
-            Screen::Welcome => self.welcome(ui, &status),
-            Screen::Servers(names) => {
-                let subtitle = if names.is_empty() {
-                    "No servers found on this account"
-                } else {
-                    "Choose a server to browse"
-                };
-                splash::heading(ui, "Your servers", subtitle);
-                for (index, name) in names.iter().enumerate() {
-                    if splash::server_row(ui, name) {
-                        self.send(Cmd::Connect(index));
-                    }
-                }
-            }
-            _ => {
-                splash::heading(ui, "Chewvy", "Your libraries, beautifully");
-                splash::orbit(ui);
-                ui.add_space(16.0);
-                let line = if status.trim().is_empty() {
-                    "Starting…".to_owned()
-                } else {
-                    status.clone()
-                };
-                ui.label(theme::secondary(line).font(theme::body()));
-            }
-        });
-        splash::not_affiliated(ui, area);
-        if let Some(error) = error {
-            let strip = egui::Rect::from_center_size(
-                egui::pos2(area.center().x, area.max.y - 48.0),
-                egui::vec2(area.width().min(640.0), 40.0),
-            );
-            crate::ui::glass::panel(
-                ui.painter(),
-                strip,
-                20.0,
-                crate::ui::glass_tints::STATUS_STRIP,
-            );
-            ui.painter().text(
-                strip.center(),
-                egui::Align2::CENTER_CENTER,
-                error,
-                theme::body(),
-                theme::TEXT,
-            );
-        }
-    }
 }
 
+#[path = "app/background.rs"]
+mod background;
+#[path = "app/browse.rs"]
+mod browse;
 #[path = "app/hdr.rs"]
 mod hdr;
 #[path = "app/playback.rs"]
 mod playback;
+#[path = "app/sign_in.rs"]
+mod sign_in;
 
 #[path = "app/detail.rs"]
 mod detail;

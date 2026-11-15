@@ -49,6 +49,9 @@ pub enum Action {
     /// Open the watch-together panel for this title, under the button at
     /// `anchor`: its Jellyfin server's groups, or its Plex rooms.
     Together { target: Target, anchor: egui::Rect },
+    /// Pin this film's or show's backdrop as the background, or take the
+    /// pin off when it is this title's already.
+    Background,
 }
 
 /// One thing the page can put in the player.

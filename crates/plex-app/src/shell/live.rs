@@ -353,6 +353,23 @@ impl LiveClient {
         library::browse_items(server, section_key, page, options).map_err(|e| e.to_string())
     }
 
+    /// One page of one section with each row's external ids, for the theme art
+    /// library ([`library::catalog_page`]).
+    ///
+    /// # Errors
+    ///
+    /// A bounded description when no server is connected or the call fails.
+    pub fn catalog(
+        &self,
+        section_key: &str,
+        start: usize,
+        size: usize,
+    ) -> Result<ItemPage, String> {
+        let server = self.server.as_ref().ok_or("no server connected")?;
+        let page = Page::new(start, size).map_err(|e| e.to_string())?;
+        library::catalog_page(server, section_key, page).map_err(|e| e.to_string())
+    }
+
     /// `GET /library/sections/{id}/sorts` — the sorts one section offers, in the
     /// order it named them.
     ///

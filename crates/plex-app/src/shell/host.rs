@@ -101,6 +101,12 @@ pub const HOST_WINDOW_TITLE: &str = "Chewvy";
 /// compositor can show the app's icon and group its windows.
 #[cfg(target_os = "linux")]
 const APP_ID: &str = "io.github.ch3w3y.chewvy";
+/// The smallest the browsing window goes. Below this width the rail crowds
+/// the page; 560 tall still fits a 1366x768 screen at 125% under a panel.
+const MIN_WINDOW: winit::dpi::LogicalSize<f64> = winit::dpi::LogicalSize {
+    width: 960.0,
+    height: 560.0,
+};
 
 /// Bounded wait each pump frame gives the player for one rendered frame.
 ///
@@ -198,7 +204,8 @@ impl GlutinWindowContext {
                 .with_inner_size(winit::dpi::LogicalSize {
                     width: 1280.0,
                     height: 800.0,
-                }),
+                })
+                .with_min_inner_size(MIN_WINDOW),
         }
         .with_title(title)
         // Keep hidden until something has been painted (upstream note:

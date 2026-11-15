@@ -45,6 +45,8 @@ main() {
     target="$bin_dir/chewvy"
     desktop="$data_dir/applications/$app_id.desktop"
     icon="$data_dir/icons/hicolor/scalable/apps/$app_id.svg"
+    # Pixel-fitted renderings for panels and task bars, beside the scalable one.
+    small_icons="16x16 24x24 32x32"
 
     if [ "$uninstall" -eq 1 ]; then
         do_uninstall
@@ -130,6 +132,14 @@ main() {
     else
         say "note: could not read the icon from the AppImage; the menu entry will use a generic one"
     fi
+    for size in $small_icons; do
+        small="usr/share/icons/hicolor/$size/apps/$app_id.png"
+        if (cd "$work" && "./$asset" --appimage-extract "$small" >/dev/null 2>&1) &&
+            [ -f "$work/squashfs-root/$small" ]; then
+            mkdir -p "$data_dir/icons/hicolor/$size/apps"
+            cp "$work/squashfs-root/$small" "$data_dir/icons/hicolor/$size/apps/$app_id.png"
+        fi
+    done
     # Move into place last, in one step, so an interrupted run leaves no half-written program.
     mv "$work/$asset" "$bin_dir/.chewvy.new"
     mv "$bin_dir/.chewvy.new" "$target"
@@ -183,6 +193,9 @@ do_uninstall() {
             say "removed $path"
             removed=1
         fi
+    done
+    for size in $small_icons; do
+        rm -f "$data_dir/icons/hicolor/$size/apps/$app_id.png"
     done
     [ "$removed" -eq 1 ] || say "Chewvy is not installed for this user"
     if command -v update-desktop-database >/dev/null 2>&1; then

@@ -1,59 +1,77 @@
-//! The Chewvy mark (a peak with a star over it) and its wordmark, drawn as
-//! shapes so they stay sharp at any scale.
+//! The Chewvy mark (a film reel whose fifth hole opens into a lower-case c)
+//! and its lockup with the name. The mark is an SVG drawn through
+//! [`marks`], rasterised at the size it is drawn so it stays sharp at any
+//! scale, with its holes clear so the glass under it shows through.
 
-use egui::{pos2, Align2, Color32, Painter, Pos2, Shape, Stroke};
+use std::sync::Arc;
 
-use crate::ui::theme;
+use egui::{pos2, Galley, Painter};
+
+use crate::ui::{marks, theme};
 
 /// Shown on first run and in Settings: Plex and Jellyfin are other people's
 /// names, used here only to say which service a source belongs to.
 pub const NOT_AFFILIATED: &str =
     "Chewvy is an independent project, not affiliated with Plex, Inc. or the Jellyfin project.";
 
-/// Attribution the licences of the bundled artwork and font ask for.
-pub const CREDITS: [&str; 3] = [
-    "Backdrop: “Aurora” by Russo Francesco, CC BY 3.0, cropped, colour-graded and blurred.",
+/// Attribution the licences of the bundled font and icon ask for; the
+/// background photographs' credits come from their own table
+/// ([`crate::ui::backdrop::PHOTOS`]).
+pub const CREDITS: [&str; 2] = [
     "Typeface: Plus Jakarta Sans, SIL Open Font License 1.1.",
     "Jellyfin icon: the Jellyfin project, CC BY-SA 4.0.",
 ];
 
-/// The mark's design grid: every point below is on a 34-unit square.
-const GRID: f32 = 34.0;
-const RIDGE: [[f32; 2]; 5] = [
-    [2.5, 29.0],
-    [12.5, 12.5],
-    [18.0, 20.0],
-    [21.0, 16.0],
-    [31.5, 29.0],
-];
-const SNOW: [[f32; 2]; 3] = [[9.8, 17.0], [12.5, 12.5], [15.4, 16.4]];
-const STAR: [f32; 2] = [24.5, 7.5];
+/// The gap between the mark and the name, as a fraction of the mark's size.
+const GAP: f32 = 0.3;
+/// How far above the baseline the middle of the name's x-height sits, as a
+/// fraction of the type size (Plus Jakarta Sans Bold).
+const X_MIDDLE: f32 = 0.272;
 
-/// The mark `size` points square with its top-left at `origin`.
-pub fn mark(painter: &Painter, origin: Pos2, size: f32) {
-    let k = size / GRID;
-    let at = |[x, y]: [f32; 2]| pos2(origin.x + x * k, origin.y + y * k);
-    let width = (2.3 * k).max(1.2);
-    painter.add(Shape::closed_line(
-        RIDGE.iter().copied().map(at).collect(),
-        Stroke::new(width, Color32::from_rgb(0xf1, 0xf3, 0xff)),
-    ));
-    painter.add(Shape::line(
-        SNOW.iter().copied().map(at).collect(),
-        Stroke::new(width, theme::ACCENT),
-    ));
-    painter.circle_filled(at(STAR), 2.3 * k, theme::ACCENT);
+/// The mark `size` points tall from `left`, centred on `center_y`; answers
+/// its width.
+pub fn mark(painter: &Painter, left: f32, center_y: f32, size: f32) -> f32 {
+    marks::paint_tinted(
+        painter,
+        marks::BRAND,
+        left,
+        center_y,
+        size,
+        theme::palette().mark,
+    )
 }
 
-/// The mark followed by the lower-case name; answers the drawn width.
-pub fn wordmark(painter: &Painter, origin: Pos2, mark_size: f32, text_size: f32) -> f32 {
-    mark(painter, origin, mark_size);
-    let text = painter.text(
-        pos2(origin.x + mark_size + 10.0, origin.y + mark_size * 0.5),
-        Align2::LEFT_CENTER,
-        "chewvy",
-        theme::bold(text_size),
-        theme::TEXT,
+/// "chewvy" in bold `size` points, and how far down its galley the middle of
+/// its x-height is.
+fn name(painter: &Painter, size: f32) -> (Arc<Galley>, f32) {
+    let galley = painter.layout_no_wrap(
+        "chewvy".to_owned(),
+        theme::bold(size),
+        theme::palette().text,
     );
-    text.max.x - origin.x
+    let baseline = galley
+        .rows
+        .first()
+        .and_then(|row| Some(row.pos.y + row.glyphs.first()?.pos.y))
+        .unwrap_or(size);
+    (galley, baseline - X_MIDDLE * size)
+}
+
+/// The width [`wordmark`] takes at `size`.
+#[must_use]
+pub fn wordmark_width(painter: &Painter, size: f32) -> f32 {
+    let mark = marks::width_at(marks::BRAND, size);
+    mark + GAP * size + name(painter, size).0.rect.width()
+}
+
+/// The lockup from `left`: the mark as tall as the name's type is large, then
+/// "chewvy" in bold `size` points, both centred on the name's x-height, which
+/// sits on `center_y`. Answers the drawn width.
+pub fn wordmark(painter: &Painter, left: f32, center_y: f32, size: f32) -> f32 {
+    let mark = mark(painter, left, center_y, size);
+    let (galley, middle) = name(painter, size);
+    let width = galley.rect.width();
+    let x = left + mark + GAP * size;
+    painter.galley(pos2(x, center_y - middle), galley, theme::palette().text);
+    x + width - left
 }

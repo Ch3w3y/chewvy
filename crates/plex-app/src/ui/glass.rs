@@ -21,8 +21,10 @@
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Arc, Mutex};
 
-use egui::{pos2, Color32, CornerRadius, Rect, Stroke};
+use egui::{pos2, Color32, CornerRadius, Rect, Shape, Stroke};
 use glow::HasContext as _;
+
+use crate::ui::theme;
 
 /// How far the blurred copy is scaled down before blurring.
 const DOWNSCALE: i32 = 4;
@@ -31,12 +33,6 @@ const DOWNSCALE: i32 = 4;
 const MARGIN: i32 = 48;
 /// Separable blur passes (horizontal + vertical each).
 const PASSES: usize = 2;
-/// Colour saturation applied to the blurred backdrop (1 is unchanged).
-const SATURATION: f32 = 1.35;
-/// The rim drawn around every glass panel.
-const RIM: Color32 = Color32::from_rgba_premultiplied(30, 30, 30, 30);
-/// The brighter line along the top edge, where light catches the glass.
-const SHEEN: Color32 = Color32::from_rgba_premultiplied(46, 46, 46, 46);
 
 /// 0: not tried yet, 1: works, 2: shaders failed (plain fills from now on).
 static STATE: AtomicU8 = AtomicU8::new(0);
@@ -46,38 +42,145 @@ const FAILED: u8 = 2;
 /// The GL objects, made on first use on the context `egui_glow` paints with.
 static GL: Mutex<Option<Objects>> = Mutex::new(None);
 
+/// What one panel's blur is composited with, fixed when the panel is added.
+#[derive(Clone, Copy)]
+struct Composite {
+    /// Corner radius in points.
+    radius: f32,
+    /// The tint, premultiplied, as the shader takes it.
+    tint: [f32; 4],
+    /// The theme's saturation of the blurred backdrop.
+    saturation: f32,
+}
+
+/// Room in the paint order for one glass panel, kept before the panel's
+/// contents are laid out so the glass can be filled in under them once their
+/// size is known (a popover, a dialog, a card that grows with its rows).
+#[derive(Clone, Copy)]
+pub struct Slot([egui::layers::ShapeIdx; 3]);
+
+/// Keep a [`Slot`] at this point of `painter`'s paint order.
+#[must_use]
+pub fn reserve(painter: &egui::Painter) -> Slot {
+    Slot([
+        painter.add(Shape::Noop),
+        painter.add(Shape::Noop),
+        painter.add(Shape::Noop),
+    ])
+}
+
 /// A glass panel filling `rect` with corner `radius` (points), tinted by
 /// `tint` (premultiplied: its alpha is how much tint covers the blur).
 pub fn panel(painter: &egui::Painter, rect: Rect, radius: f32, tint: Color32) {
+    fill(painter, reserve(painter), rect, radius, tint);
+}
+
+/// [`panel`] drawn into `slot`, under whatever was painted after it was kept.
+pub fn fill(painter: &egui::Painter, slot: Slot, rect: Rect, radius: f32, tint: Color32) {
+    let material = theme::current().glass;
     let rounding = CornerRadius::same(radius.clamp(0.0, 255.0) as u8);
+    let [body, rim, sheen] = slot.0;
     if STATE.load(Ordering::Relaxed) == FAILED {
-        let [r, g, b, a] = tint.to_array();
-        let solid = Color32::from_rgba_premultiplied(r, g, b, a.saturating_add(70));
-        painter.rect_filled(rect, rounding, solid);
+        painter.set(
+            body,
+            egui::epaint::RectShape::filled(rect, rounding, material.solid(tint)),
+        );
     } else {
-        let tint = tint.to_normalized_gamma_f32();
+        let composite = Composite {
+            radius,
+            tint: tint.to_normalized_gamma_f32(),
+            saturation: material.saturation,
+        };
         let callback = egui_glow::CallbackFn::new(move |info, painter| {
-            draw(painter.gl(), &info, radius, tint);
+            draw(painter.gl(), &info, composite);
         });
-        painter.add(egui::PaintCallback {
-            rect,
-            callback: Arc::new(callback),
-        });
+        painter.set(
+            body,
+            egui::PaintCallback {
+                rect,
+                callback: Arc::new(callback),
+            },
+        );
     }
-    painter.rect_stroke(
-        rect,
-        rounding,
-        Stroke::new(1.0, RIM),
-        egui::StrokeKind::Inside,
+    painter.set(
+        rim,
+        egui::epaint::RectShape::stroke(
+            rect,
+            rounding,
+            Stroke::new(1.0, material.rim),
+            egui::StrokeKind::Inside,
+        ),
     );
-    let inset = radius.max(1.0);
-    painter.line_segment(
-        [
-            pos2(rect.left() + inset, rect.top() + 0.5),
-            pos2(rect.right() - inset, rect.top() + 0.5),
-        ],
-        Stroke::new(1.0, SHEEN),
+    painter.set(
+        sheen,
+        Shape::mesh(sheen_mesh(
+            rect,
+            f32::from(rounding.nw),
+            material.sheen,
+            painter.ctx().pixels_per_point(),
+        )),
     );
+}
+
+/// Steps along each quarter of a corner the sheen follows.
+const SHEEN_STEPS: usize = 12;
+
+/// The bright line along a panel's top edge as one anti-aliased strip. It
+/// runs on round both top corners, fading out as each corner turns down, so
+/// it never stops dead where the straight edge meets the curve.
+fn sheen_mesh(rect: Rect, radius: f32, ink: Color32, ppp: f32) -> egui::Mesh {
+    let half = 0.5;
+    let r = (radius - half).max(0.0);
+    let mut line: Vec<(egui::Pos2, f32)> = Vec::new();
+    let left = pos2(rect.left() + radius, rect.top() + radius);
+    let right = pos2(rect.right() - radius, rect.top() + radius);
+    for step in (0..=SHEEN_STEPS).rev() {
+        let t = step as f32 / SHEEN_STEPS as f32;
+        let a = std::f32::consts::FRAC_PI_2 * (1.0 + t);
+        line.push((left + r * egui::vec2(a.cos(), -a.sin()), 1.0 - t));
+    }
+    for step in 0..=SHEEN_STEPS {
+        let t = step as f32 / SHEEN_STEPS as f32;
+        let a = std::f32::consts::FRAC_PI_2 * (1.0 - t);
+        line.push((right + r * egui::vec2(a.cos(), -a.sin()), 1.0 - t));
+    }
+    // Four vertices across the line: transparent, ink, ink, transparent, so
+    // its edges fade over one device pixel instead of stepping.
+    let core = 0.25;
+    let feather = 1.0 / ppp.max(0.5);
+    let offsets = [
+        (-(core + feather), 0.0),
+        (-core, 1.0),
+        (core, 1.0),
+        (core + feather, 0.0),
+    ];
+    let mut mesh = egui::Mesh::default();
+    let mut previous: Option<u32> = None;
+    for (index, &(point, fade)) in line.iter().enumerate() {
+        let next = line.get(index + 1).map_or(point, |n| n.0);
+        let prev = index
+            .checked_sub(1)
+            .and_then(|i| line.get(i))
+            .map_or(point, |p| p.0);
+        let along = next - prev;
+        if along.length() < 1e-4 {
+            continue;
+        }
+        let normal = egui::vec2(-along.y, along.x).normalized();
+        let ink = ink.gamma_multiply(fade * fade);
+        let first = mesh.vertices.len() as u32;
+        for (offset, strength) in offsets {
+            mesh.colored_vertex(point + normal * offset, ink.gamma_multiply(strength));
+        }
+        if let Some(last) = previous {
+            for lane in 0..3 {
+                mesh.add_triangle(last + lane, last + lane + 1, first + lane);
+                mesh.add_triangle(last + lane + 1, first + lane + 1, first + lane);
+            }
+        }
+        previous = Some(first);
+    }
+    mesh
 }
 
 const VERTEX: &str = r"#version 300 es
@@ -248,7 +351,7 @@ impl Objects {
 }
 
 /// The callback body: blur what is behind `info.viewport` and composite it.
-fn draw(gl: &glow::Context, info: &egui::PaintCallbackInfo, radius: f32, tint: [f32; 4]) {
+fn draw(gl: &glow::Context, info: &egui::PaintCallbackInfo, composite: Composite) {
     // SAFETY: plain state queries on the callback's context. Read before
     // anything below binds this module's own framebuffers.
     let (draw_fb, read_fb, scissor) = unsafe {
@@ -258,7 +361,7 @@ fn draw(gl: &glow::Context, info: &egui::PaintCallbackInfo, radius: f32, tint: [
             gl.is_enabled(glow::SCISSOR_TEST),
         )
     };
-    draw_into(gl, info, radius, tint, draw_fb);
+    draw_into(gl, info, composite, draw_fb);
     // SAFETY: binding back exactly what was bound on entry.
     unsafe {
         gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, draw_fb);
@@ -276,10 +379,14 @@ fn draw(gl: &glow::Context, info: &egui::PaintCallbackInfo, radius: f32, tint: [
 fn draw_into(
     gl: &glow::Context,
     info: &egui::PaintCallbackInfo,
-    radius: f32,
-    tint: [f32; 4],
+    composite: Composite,
     target: Option<glow::Framebuffer>,
 ) {
+    let Composite {
+        radius,
+        tint,
+        saturation,
+    } = composite;
     let Ok(mut slot) = GL.lock() else {
         return;
     };
@@ -391,7 +498,7 @@ fn draw_into(
         );
         gl.uniform_1_f32(loc("u_radius").as_ref(), radius * info.pixels_per_point);
         gl.uniform_4_f32(loc("u_tint").as_ref(), tint[0], tint[1], tint[2], tint[3]);
-        gl.uniform_1_f32(loc("u_saturation").as_ref(), SATURATION);
+        gl.uniform_1_f32(loc("u_saturation").as_ref(), saturation);
         gl.draw_arrays(glow::TRIANGLES, 0, 3);
     }
 }

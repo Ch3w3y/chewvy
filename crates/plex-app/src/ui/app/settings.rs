@@ -2,38 +2,35 @@
 //! of playback, and how the browsing looks — each edit written straight back to
 //! `<config_dir>/settings.json`.
 
-use egui::{CursorIcon, Margin, Rect, Sense, Stroke, Vec2};
+use egui::{Frame, Margin};
 
+use crate::ui::controls::{self, Button, Kind};
 use crate::ui::rail::Entry;
-use crate::ui::{brand, chips, settings, theme};
+use crate::ui::{brand, chips, glass, settings, theme};
 
 use super::Ui;
 
-/// A settings row's height: its label and its one-line description stacked.
-const ROW_HEIGHT: f32 = 48.0;
-/// The switch a settings row ends with, at the panel's right edge.
-const SWITCH: Vec2 = Vec2::new(40.0, 22.0);
-/// The room a row keeps between its text and its switch.
-const SWITCH_GAP: f32 = 12.0;
-/// The gap between a row's two lines of text.
-const LINE_GAP: f32 = 4.0;
-/// The room a switch keeps its knob off its own edge by.
-const SWITCH_PAD: f32 = 3.0;
+/// The widest the Settings and Sources columns grow: a row is one control,
+/// and a row as wide as a large window is a target nobody means to hit.
+pub(super) const COLUMN: f32 = 720.0;
+/// A section card's corner radius.
+pub(super) const SECTION_RADIUS: f32 = 12.0;
 
 impl Ui {
     /// Draw the Settings entry.
     pub(super) fn draw_settings(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Settings");
-        // The sections are taller than a default-sized window, and a bar that
-        // is always drawn says so.
-        ui.spacing_mut().scroll = egui::style::ScrollStyle::solid();
+        // The title scrolls with the sections, so none is cut off under it.
         egui::ScrollArea::vertical()
+            .id_salt("settings-page")
             .auto_shrink([false, false])
             .show(ui, |ui| {
+                ui.set_max_width(COLUMN);
+                crate::ui::legible::label(ui, egui::RichText::new("Settings").heading());
                 self.sources_section(ui);
                 self.playback_section(ui);
                 self.hdr_section(ui);
                 self.interface_section(ui);
+                self.background_section(ui);
                 self.updates_section(ui);
                 about_section(ui);
                 ui.add_space(theme::GAP);
@@ -54,15 +51,13 @@ impl Ui {
         let summary = self.sources.summary();
         section_panel(ui, "Sources", |ui| {
             ui.label(theme::secondary(summary));
-            ui.horizontal_wrapped(|ui| {
-                if chip(
-                    ui,
-                    "Manage sources",
-                    "Add a server, or sign one of them out",
-                ) {
-                    self.go(Entry::Sources);
-                }
-            });
+            if Button::new(Kind::Secondary, "Manage sources")
+                .hint("Add a server, or sign one of them out")
+                .show(ui)
+                .clicked()
+            {
+                self.go(Entry::Sources);
+            }
         });
     }
 
@@ -127,10 +122,11 @@ impl Ui {
         section_panel(ui, "Interface", |ui| {
             ui.label(theme::secondary("Poster size"));
             ui.horizontal_wrapped(|ui| {
+                ui.spacing_mut().item_spacing.x = chips::GAP;
                 for size in settings::PosterSize::ALL {
                     let chosen = self.settings.poster_size == size;
                     let chip = chips::slot(ui, size.label());
-                    chips::paint(ui, chip.rect, size.label(), chosen, false);
+                    chips::paint(ui, &chip, size.label(), chosen, false);
                     if chip.response.clicked() && !chosen {
                         self.set_settings(|settings| settings.poster_size = size);
                     }
@@ -147,9 +143,12 @@ fn about_section(ui: &mut egui::Ui) {
         ui.label(concat!("Chewvy ", env!("CARGO_PKG_VERSION")));
         ui.label(theme::secondary(brand::NOT_AFFILIATED));
         ui.add_space(theme::SPACING_BASE);
+        // The credits read as one block, not as paragraphs.
+        ui.spacing_mut().item_spacing.y = theme::SPACING_BASE;
         for credit in brand::CREDITS {
             ui.label(theme::secondary(credit).size(theme::CAPTION_SIZE));
         }
+        photo_credits(ui);
         ui.label(
             theme::secondary("Free software under the GNU General Public License.")
                 .size(theme::CAPTION_SIZE),
@@ -157,108 +156,75 @@ fn about_section(ui: &mut egui::Ui) {
     });
 }
 
-/// One Settings section: its title and its controls inside a rounded
-/// [`theme::CARD`] panel, so the four sections read as separate cards on the
-/// screen rather than one run of labels.
+/// Every bundled photograph's credit, as its licence asks: title, author,
+/// licence, and the source page a click opens.
+fn photo_credits(ui: &mut egui::Ui) {
+    ui.label(
+        theme::secondary(
+            "Background photographs from Wikimedia Commons, cropped, resized and \
+             darkened; the browsing copies are blurred:",
+        )
+        .size(theme::CAPTION_SIZE),
+    );
+    for photo in &crate::ui::backdrop::PHOTOS {
+        let licence = if photo.licence_url.is_empty() {
+            String::new()
+        } else {
+            format!("\nLicence: {}", photo.licence_url)
+        };
+        let line = format!("{}: {}", photo.theme.name(), photo.credit());
+        let response = ui
+            .add(
+                egui::Label::new(theme::secondary(line).size(theme::CAPTION_SIZE))
+                    .sense(egui::Sense::click()),
+            )
+            .on_hover_cursor(egui::CursorIcon::PointingHand)
+            .on_hover_text(format!("{}{licence}", photo.page));
+        if response.clicked() {
+            ui.ctx().open_url(egui::OpenUrl::new_tab(photo.page));
+        }
+    }
+}
+
+/// One Settings section: its title and its controls on a glass card, so the
+/// sections read as separate cards in the app's own material.
 pub(super) fn section_panel(ui: &mut egui::Ui, title: &str, contents: impl FnOnce(&mut egui::Ui)) {
+    glass_card(ui, |ui| {
+        ui.label(theme::strong(title.to_owned()).size(theme::H2_SIZE));
+        ui.add_space(theme::SPACING_BASE);
+        contents(ui);
+    });
+}
+
+/// A footnote on the same glass as the sections, so small text never sits
+/// straight on the photograph.
+pub(super) fn note_panel(ui: &mut egui::Ui, note: &str) {
+    glass_card(ui, |ui| {
+        ui.label(theme::secondary(note).size(theme::CAPTION_SIZE));
+    });
+}
+
+fn glass_card(ui: &mut egui::Ui, contents: impl FnOnce(&mut egui::Ui)) {
     ui.add_space(theme::GAP);
-    egui::Frame::new()
-        .fill(theme::CARD)
-        .corner_radius(theme::CARD_RADIUS)
-        .inner_margin(Margin::symmetric(16, 12))
-        .stroke(Stroke::new(theme::HAIRLINE, theme::CARD_HOVER))
+    let slot = glass::reserve(ui.painter());
+    let card = Frame::NONE
+        .inner_margin(Margin::symmetric(20, 16))
         .show(ui, |ui| {
             ui.set_width(ui.available_width());
-            ui.with_layout(egui::Layout::top_down(egui::Align::Min), |ui| {
-                ui.label(theme::strong(title.to_owned()).size(theme::H2_SIZE));
-                ui.add_space(theme::SPACING_BASE);
-                contents(ui);
-            });
+            ui.with_layout(egui::Layout::top_down(egui::Align::Min), contents);
         });
+    glass::fill(
+        ui.painter(),
+        slot,
+        card.response.rect,
+        SECTION_RADIUS,
+        theme::current().glass.section,
+    );
 }
 
-/// A control drawn as one of the screen's own chips rather than egui's default
-/// button, which is a different shape from every other control in the app.
-pub(super) fn chip(ui: &mut egui::Ui, label: &str, hover: &str) -> bool {
-    let chip = chips::slot(ui, label);
-    chips::paint(ui, chip.rect, label, false, false);
-    chip.response.on_hover_text(hover).clicked()
-}
-
-/// One setting as a row of its panel: label and one-line description at the
-/// left, its switch at the right edge. The whole row is the control and answers
+/// One setting as a row of its section: label and description at the left,
+/// its switch at the right edge. The whole row is the control and answers
 /// whether it was clicked.
 pub(super) fn setting_row(ui: &mut egui::Ui, label: &str, note: &str, on: bool) -> bool {
-    let row = ui
-        .allocate_response(Vec2::new(ui.available_width(), ROW_HEIGHT), Sense::click())
-        .on_hover_cursor(CursorIcon::PointingHand);
-    let rect = row.rect;
-    if row.hovered() {
-        ui.painter()
-            .rect_filled(rect, theme::CARD_RADIUS, theme::CARD_HOVER);
-    }
-    // Both lines keep to one row of their own and end in `…` rather than
-    // crossing into the switch or lifting the row.
-    let max_width = (rect.width() - SWITCH.x - SWITCH_GAP).max(0.0);
-    let title = ui
-        .painter()
-        .layout_job(chips::label_job(label, theme::TEXT, max_width));
-    let note = ui
-        .painter()
-        .layout_job(chips::label_job(note, theme::SECONDARY, max_width));
-    let (title_h, note_h) = (title.size().y, note.size().y);
-    let left = rect.min.x + theme::SPACING_BASE;
-    let top = rect.center().y - (title_h + LINE_GAP + note_h) * 0.5;
-    ui.painter()
-        .galley(egui::pos2(left, top), title, theme::TEXT);
-    ui.painter().galley(
-        egui::pos2(left, top + title_h + LINE_GAP),
-        note,
-        theme::SECONDARY,
-    );
-    switch(ui, switch_rect(rect), on);
-    row.clicked()
+    controls::switch_row(ui, label, Some(note), on).clicked()
 }
-
-/// The switch's box: [`SWITCH`] tall and centred on the row's right edge.
-fn switch_rect(rect: Rect) -> Rect {
-    let min = egui::pos2(
-        rect.max.x - theme::SPACING_BASE - SWITCH.x,
-        rect.center().y - SWITCH.y * 0.5,
-    );
-    Rect::from_min_size(min, SWITCH)
-}
-
-/// The switch itself: an accent track with its knob to the right when the
-/// setting is on, a quiet track with its knob to the left when it is off.
-fn switch(ui: &mut egui::Ui, rect: Rect, on: bool) {
-    let radius = egui::CornerRadius::same(theme::PILL_RADIUS_U8);
-    let (fill, edge) = if on {
-        (theme::ACCENT, theme::ACCENT)
-    } else {
-        (theme::SURFACE, chips::OUTLINE)
-    };
-    ui.painter().rect_filled(rect, radius, fill);
-    ui.painter().rect_stroke(
-        rect,
-        radius,
-        Stroke::new(theme::HAIRLINE, edge),
-        egui::StrokeKind::Middle,
-    );
-    let knob = (rect.height() - 2.0 * SWITCH_PAD) * 0.5;
-    let slide = rect.width() * 0.5 - knob - SWITCH_PAD;
-    let center = rect.center() + egui::vec2(if on { slide } else { -slide }, 0.0);
-    ui.painter().circle_filled(
-        center,
-        knob,
-        if on {
-            theme::PRIMARY_TEXT
-        } else {
-            theme::SECONDARY
-        },
-    );
-}
-
-#[cfg(test)]
-#[path = "settings/tests.rs"]
-mod tests;

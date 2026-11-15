@@ -1,7 +1,7 @@
 //! The player's side of watching together: the group button's head count and
 //! the panel it opens.
 
-use egui::{pos2, vec2, Align2, Color32, CursorIcon, Rect, Sense};
+use egui::{pos2, vec2, Align2, CursorIcon, Rect, Sense};
 
 use crate::ui::{chips, theme};
 
@@ -61,13 +61,13 @@ pub(crate) enum Pick {
 pub(super) fn count(root: &egui::Ui, button: Rect, people: usize) {
     let center = button.right_top() + vec2(-6.0, 6.0);
     let painter = root.painter();
-    painter.circle_filled(center, 9.0, theme::ACCENT);
+    painter.circle_filled(center, 9.0, theme::palette().accent);
     painter.text(
         center,
         Align2::CENTER_CENTER,
         people.to_string(),
         theme::caption(),
-        theme::PRIMARY_TEXT,
+        theme::palette().primary_text,
     );
 }
 
@@ -78,13 +78,13 @@ pub(super) fn panel(ui: &mut egui::Ui, group: &Badge) -> Option<Pick> {
     ui.label(
         egui::RichText::new("WATCHING TOGETHER")
             .font(theme::caption())
-            .color(theme::SECONDARY),
+            .color(theme::palette().secondary),
     );
     ui.add_space(4.0);
     ui.label(
         egui::RichText::new(&group.name)
             .font(theme::body())
-            .color(theme::TEXT),
+            .color(theme::palette().text),
     );
     ui.label(theme::secondary(group.state).font(theme::meta()));
     ui.add_space(6.0);
@@ -92,7 +92,7 @@ pub(super) fn panel(ui: &mut egui::Ui, group: &Badge) -> Option<Pick> {
         ui.label(
             egui::RichText::new(name)
                 .font(theme::body())
-                .color(theme::TEXT),
+                .color(theme::palette().text),
         );
     }
     ui.add_space(8.0);
@@ -115,7 +115,7 @@ fn invite(ui: &mut egui::Ui, guests: &Guests) -> Option<Pick> {
     let guests = match guests {
         Guests::Finding => {
             ui.horizontal(|ui| {
-                ui.spinner();
+                crate::ui::controls::spinner(ui);
                 ui.label(theme::secondary("Finding people to invite…").font(theme::caption()));
             });
             ui.add_space(8.0);
@@ -147,7 +147,7 @@ fn invite(ui: &mut egui::Ui, guests: &Guests) -> Option<Pick> {
                 ui.label(
                     egui::RichText::new(heading)
                         .font(theme::caption())
-                        .color(theme::SECONDARY),
+                        .color(theme::palette().secondary),
                 );
                 ui.add_space(4.0);
                 ui.horizontal_wrapped(|ui| {
@@ -175,14 +175,14 @@ fn wide_button(ui: &mut egui::Ui, label: &str) -> bool {
     let (rect, resp) = ui.allocate_exact_size(vec2(ui.available_width(), 34.0), Sense::click());
     let resp = resp.on_hover_cursor(CursorIcon::PointingHand);
     let fill = if resp.hovered() {
-        theme::PRIMARY_BG
+        theme::palette().primary_bg
     } else {
-        Color32::from_white_alpha(26)
+        theme::palette().wash(26)
     };
     let ink = if resp.hovered() {
-        theme::PRIMARY_TEXT
+        theme::palette().primary_text
     } else {
-        theme::TEXT
+        theme::palette().text
     };
     ui.painter().rect_filled(rect, 8.0, fill);
     ui.painter().text(

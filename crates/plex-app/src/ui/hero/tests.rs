@@ -91,61 +91,18 @@ fn dots_line_up_left_to_right_inside_the_hero() {
     );
 }
 
-/// `Color32` alpha compositing, so the claim below is about the colour the hero
-/// actually paints rather than about the alpha it asks for.
-fn composite(over: Color32, under: Color32) -> Color32 {
-    let a = f32::from(over.a()) / 255.0;
-    let mix = |over: u8, under: u8| (f32::from(over) * a + f32::from(under) * (1.0 - a)).round();
-    Color32::from_rgb(
-        mix(over.r(), under.r()) as u8,
-        mix(over.g(), under.g()) as u8,
-        mix(over.b(), under.b()) as u8,
-    )
-}
-
-/// WCAG 2.2 relative luminance.
-fn luminance(color: Color32) -> f32 {
-    let channel = |value: u8| {
-        let s = f32::from(value) / 255.0;
-        if s <= 0.03928 {
-            s / 12.92
-        } else {
-            ((s + 0.055) / 1.055).powf(2.4)
-        }
-    };
-    0.2126 * channel(color.r()) + 0.7152 * channel(color.g()) + 0.0722 * channel(color.b())
-}
-
-fn contrast(a: Color32, b: Color32) -> f32 {
-    let (hi, lo) = (
-        luminance(a).max(luminance(b)),
-        luminance(a).min(luminance(b)),
-    );
-    (hi + 0.05) / (lo + 0.05)
-}
+/// The brightest art a server can send: the scrim alone has to carry the text.
+const WHITE_ART: egui::Color32 = egui::Color32::WHITE;
 
 #[test]
 fn hero_text_holds_over_white_art_at_the_scrim_s_darkest_stop() {
-    let alpha = (bleed::Mask::Hero.scrim().first().map_or(0.0, |s| s.1) * 255.0).round() as u8;
-    let ground = composite(
-        Color32::from_rgba_unmultiplied(
-            theme::WINDOW.r(),
-            theme::WINDOW.g(),
-            theme::WINDOW.b(),
-            alpha,
-        ),
-        Color32::WHITE,
-    );
-    assert!(
-        contrast(theme::TEXT, ground) >= 4.5,
-        "{}",
-        contrast(theme::TEXT, ground)
-    );
-    assert!(
-        contrast(theme::SECONDARY, ground) >= 3.0,
-        "{}",
-        contrast(theme::SECONDARY, ground)
-    );
+    let darkest = bleed::Mask::Hero.scrim().first().map_or(0.0, |stop| stop.1);
+    let palette = theme::SMOKE.palette;
+    let ground = theme::mix(WHITE_ART, palette.window, darkest);
+    let text = theme::contrast(palette.text, ground);
+    assert!(text >= 4.5, "text {text:.2}:1");
+    let secondary = theme::contrast(palette.secondary, ground);
+    assert!(secondary >= 3.0, "secondary {secondary:.2}:1");
 }
 
 #[test]

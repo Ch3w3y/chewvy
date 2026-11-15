@@ -1,13 +1,12 @@
 //! Watching together on screen: the panel a detail page opens, and the short
 //! notices shown over any screen.
 
-use egui::{pos2, vec2, Align2, Color32, Id, Rect, RichText, Sense, Stroke};
+use egui::{pos2, vec2, Align2, Id, Rect, RichText, Sense, Stroke};
 
 use crate::together::{Listed, Person, Room};
 use crate::ui::chips;
 use crate::ui::overlay::{self, BUTTON};
-use crate::ui::player::GLASS;
-use crate::ui::{glass, glass_tints, theme};
+use crate::ui::{glass, theme};
 
 /// What the panel shows.
 pub(crate) enum PanelView<'a> {
@@ -98,7 +97,7 @@ pub(crate) fn panel(ctx: &egui::Context, anchor: Rect, view: &PanelView<'_>) -> 
         .order(egui::Order::Foreground)
         .show(ctx, |ui| {
             if let Some(rect) = last {
-                glass::panel(ui.painter(), rect, 12.0, glass_tints::PANEL);
+                glass::panel(ui.painter(), rect, 12.0, theme::current().glass.panel);
             }
             egui::Frame::new()
                 .inner_margin(egui::Margin::same(PAD))
@@ -127,7 +126,7 @@ fn contents(ui: &mut egui::Ui, view: &PanelView<'_>) -> Option<Choice> {
     ui.label(
         RichText::new("Watch together")
             .font(theme::bold(15.0))
-            .color(theme::TEXT),
+            .color(theme::palette().text),
     );
     ui.add_space(8.0);
     match view {
@@ -141,20 +140,20 @@ fn contents(ui: &mut egui::Ui, view: &PanelView<'_>) -> Option<Choice> {
             );
             ui.add_space(12.0);
             if let Some(refusal) = refusal {
-                ui.label(RichText::new(*refusal).color(theme::DANGER));
+                ui.label(RichText::new(*refusal).color(theme::palette().danger));
                 ui.add_space(8.0);
             }
             match groups {
                 None => {
                     ui.horizontal(|ui| {
-                        ui.spinner();
+                        crate::ui::controls::spinner(ui);
                         ui.label(theme::secondary("Asking the server for its groups…"));
                     });
                     ui.add_space(12.0);
                     buttons(ui, &[("Close", Choice::Close)])
                 }
                 Some(Err(why)) => {
-                    ui.label(RichText::new(why).color(theme::DANGER));
+                    ui.label(RichText::new(why).color(theme::palette().danger));
                     ui.add_space(12.0);
                     buttons(ui, &[("Close", Choice::Close)])
                 }
@@ -178,7 +177,7 @@ fn contents(ui: &mut egui::Ui, view: &PanelView<'_>) -> Option<Choice> {
         }
         PanelView::Joining => {
             ui.horizontal(|ui| {
-                ui.spinner();
+                crate::ui::controls::spinner(ui);
                 ui.label(theme::secondary("Joining…"));
             });
             ui.add_space(12.0);
@@ -197,7 +196,11 @@ fn contents(ui: &mut egui::Ui, view: &PanelView<'_>) -> Option<Choice> {
             state,
             invite,
         } => {
-            ui.label(RichText::new(*name).font(theme::body()).color(theme::TEXT));
+            ui.label(
+                RichText::new(*name)
+                    .font(theme::body())
+                    .color(theme::palette().text),
+            );
             ui.label(theme::secondary(*state).font(theme::meta()));
             ui.add_space(6.0);
             ui.label(theme::secondary(members.join(", ")).font(theme::meta()));
@@ -256,7 +259,7 @@ fn title(
     );
     ui.add_space(12.0);
     if let Some(refusal) = refusal {
-        ui.label(RichText::new(refusal).color(theme::DANGER));
+        ui.label(RichText::new(refusal).color(theme::palette().danger));
         ui.add_space(8.0);
     }
     // The buttons come before a list of friends that can run long.
@@ -289,19 +292,19 @@ fn all_rooms(
     refusal: Option<&str>,
 ) -> Option<Choice> {
     if let Some(refusal) = refusal {
-        ui.label(RichText::new(refusal).color(theme::DANGER));
+        ui.label(RichText::new(refusal).color(theme::palette().danger));
         ui.add_space(8.0);
     }
     let mut choice = None;
     match rooms {
         None => {
             ui.horizontal(|ui| {
-                ui.spinner();
+                crate::ui::controls::spinner(ui);
                 ui.label(theme::secondary("Looking for rooms…"));
             });
         }
         Some(Err(why)) => {
-            ui.label(RichText::new(why).color(theme::DANGER));
+            ui.label(RichText::new(why).color(theme::palette().danger));
         }
         Some(Ok(rooms)) if rooms.is_empty() => {
             ui.label(theme::secondary("You are in no rooms."));
@@ -326,13 +329,13 @@ fn pick(
     let people = match people {
         None => {
             ui.horizontal(|ui| {
-                ui.spinner();
+                crate::ui::controls::spinner(ui);
                 ui.label(theme::secondary("Finding people to invite…"));
             });
             return None;
         }
         Some(Err(why)) => {
-            ui.label(RichText::new(why).color(theme::DANGER));
+            ui.label(RichText::new(why).color(theme::palette().danger));
             return None;
         }
         Some(Ok(people)) => people,
@@ -368,9 +371,11 @@ fn pick(
 fn room_row(ui: &mut egui::Ui, room: &Room) -> Option<Choice> {
     let [height, pad, ..] = BUTTON;
     let width = |text: &str| {
-        let label =
-            ui.painter()
-                .layout_no_wrap(text.to_owned(), theme::semibold(15.0), theme::TEXT);
+        let label = ui.painter().layout_no_wrap(
+            text.to_owned(),
+            theme::semibold(15.0),
+            theme::palette().text,
+        );
         pad + label.rect.width() + pad
     };
     let remove_width = width("Remove");
@@ -387,7 +392,7 @@ fn room_row(ui: &mut egui::Ui, room: &Room) -> Option<Choice> {
             ))
             .layout(egui::Layout::top_down(egui::Align::Min)),
     );
-    text.add(egui::Label::new(RichText::new(&room.title).color(theme::TEXT)).truncate());
+    text.add(egui::Label::new(RichText::new(&room.title).color(theme::palette().text)).truncate());
     let mut line = if room.people.is_empty() {
         "Only you".to_owned()
     } else {
@@ -421,7 +426,7 @@ fn room_row(ui: &mut egui::Ui, room: &Room) -> Option<Choice> {
 fn caption(text: &str) -> RichText {
     RichText::new(text)
         .font(theme::caption())
-        .color(theme::SECONDARY)
+        .color(theme::palette().secondary)
 }
 
 /// A row of the detail page's frosted buttons, spaced as its own are.
@@ -443,9 +448,11 @@ fn buttons(ui: &mut egui::Ui, row: &[(&str, Choice)]) -> Option<Choice> {
 /// One group the server listed, with its Join button at the row's end.
 fn join_row(ui: &mut egui::Ui, group: &Listed) -> bool {
     let [height, pad, ..] = BUTTON;
-    let label = ui
-        .painter()
-        .layout_no_wrap("Join".to_owned(), theme::semibold(15.0), theme::TEXT);
+    let label = ui.painter().layout_no_wrap(
+        "Join".to_owned(),
+        theme::semibold(15.0),
+        theme::palette().text,
+    );
     let join_width = pad + label.rect.width() + pad;
     let (row, _) = ui.allocate_exact_size(vec2(ui.available_width(), height), Sense::hover());
     let mut text = ui.new_child(
@@ -456,7 +463,7 @@ fn join_row(ui: &mut egui::Ui, group: &Listed) -> bool {
             ))
             .layout(egui::Layout::top_down(egui::Align::Min)),
     );
-    text.add(egui::Label::new(RichText::new(&group.name).color(theme::TEXT)).truncate());
+    text.add(egui::Label::new(RichText::new(&group.name).color(theme::palette().text)).truncate());
     let line = format!("{} · {}", group.members.join(", "), group.state.words());
     text.add(egui::Label::new(theme::secondary(line).font(theme::meta())).truncate());
     let origin = pos2(row.max.x - join_width, row.min.y);
@@ -473,15 +480,17 @@ pub(crate) fn notice(ctx: &egui::Context, text: &str) {
         .interactable(false)
         .show(ctx, |ui| {
             egui::Frame::new()
-                .fill(GLASS)
-                .stroke(Stroke::new(1.0, Color32::from_white_alpha(60)))
+                .fill(theme::palette().floating)
+                .stroke(Stroke::new(1.0, theme::palette().wash(60)))
                 .corner_radius(theme::CARD_RADIUS)
                 .inner_margin(egui::Margin::symmetric(16, 8))
                 .show(ui, |ui| {
                     // One line: the area would otherwise wrap at its first width.
                     ui.add(
                         egui::Label::new(
-                            RichText::new(text).font(theme::body()).color(theme::TEXT),
+                            RichText::new(text)
+                                .font(theme::body())
+                                .color(theme::palette().text),
                         )
                         .wrap_mode(egui::TextWrapMode::Extend),
                     );

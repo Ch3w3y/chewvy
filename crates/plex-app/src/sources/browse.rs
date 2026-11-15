@@ -223,6 +223,11 @@ impl Jellyfin {
         found
     }
 
+    /// Every server this install can browse, in registry order.
+    pub(crate) fn servers(&self) -> impl Iterator<Item = &Arc<Server>> {
+        self.servers.iter()
+    }
+
     /// One server, if this install has it.
     pub(crate) fn server(&self, id: &str) -> Option<Arc<Server>> {
         self.servers.iter().find(|s| s.id == id).cloned()
@@ -410,6 +415,29 @@ impl Server {
         &self.id
     }
 
+    /// The server's own label, as its registry row holds it.
+    pub(crate) fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// One page of every film and series this user can see, across views, in
+    /// the lean shape the theme art library reads ([`Client::catalog`]).
+    pub(crate) fn catalog(&self, start: u32, limit: u32) -> Result<QueryResult<JfItem>, String> {
+        self.client()?
+            .catalog(&[ItemKind::Movie, ItemKind::Series], start, limit)
+            .map_err(|error| error.to_string())
+    }
+
+    /// The images the server holds for one item, with the sizes it probed.
+    pub(crate) fn images(
+        &self,
+        item_id: &str,
+    ) -> Result<Vec<jellyfin_core::dto::ImageInfo>, String> {
+        self.client()?
+            .images(item_id)
+            .map_err(|error| error.to_string())
+    }
+
     /// The signed-in user's name, when the registry row recorded one.
     pub(crate) fn user_name(&self) -> Option<&str> {
         self.user_name.as_deref().filter(|name| !name.is_empty())
@@ -570,7 +598,7 @@ impl Server {
     /// One image route, answered with the server's status and bytes. The token
     /// rides the `Authorization` header the Jellyfin client builds; the path is
     /// sent as it is, size query included.
-    fn image(&self, path: &str) -> Result<(u16, Vec<u8>), String> {
+    pub(crate) fn image(&self, path: &str) -> Result<(u16, Vec<u8>), String> {
         let authorization = media_browser_header(&self.device, Some(&self.token));
         self.http
             .get(path, &[], Some(&authorization))

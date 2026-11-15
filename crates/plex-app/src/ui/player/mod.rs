@@ -7,7 +7,6 @@
 
 mod bar;
 pub(crate) mod hdr;
-mod icons;
 mod menus;
 pub(crate) mod together;
 
@@ -17,9 +16,8 @@ use egui::{pos2, vec2, Align2, Color32, CursorIcon, Key, Rect, Sense, Shape};
 
 use crate::player::{self, marker_at, Ended, MarkerKind, NextUp, Player};
 use crate::ui::images::Artwork;
-use crate::ui::theme;
-
-use icons::Icon;
+use crate::ui::marks::icon::{self, Icon, Size};
+use crate::ui::{controls, theme};
 
 /// What the app does after this frame.
 pub enum Action {
@@ -110,8 +108,6 @@ const HIDE_AFTER: Duration = Duration::from_secs(3);
 const AUTOPLAY: Duration = Duration::from_secs(10);
 /// Show the up-next card this long before the end when there is no credits marker.
 const UP_NEXT_LEAD: f64 = 30.0;
-/// Translucent fill for pills, buttons and popovers.
-pub(crate) const GLASS: Color32 = Color32::from_rgba_premultiplied(14, 15, 18, 215);
 
 impl Overlay {
     /// Draw one frame of the player screen and say what happens next.
@@ -155,7 +151,8 @@ impl Overlay {
         self.sleep_timer(p);
 
         let hidden = !self.controls_visible(p);
-        let surface = root.interact(screen, root.id().with("video"), Sense::click());
+        // The picture is clicked, never tabbed to.
+        let surface = root.interact(screen, root.id().with("video"), Sense::CLICK);
         if surface.double_clicked() {
             self.toggle_fullscreen(root.ctx());
         } else if surface.clicked() {
@@ -322,10 +319,10 @@ impl Overlay {
         root.painter().add(Shape::gradient_rect(
             band,
             egui::epaint::Direction::BottomUp,
-            [Color32::TRANSPARENT, Color32::from_black_alpha(190)],
+            [Color32::TRANSPARENT, theme::palette().scrim(190)],
         ));
         let back = Rect::from_min_size(screen.min + vec2(28.0, 28.0), vec2(44.0, 44.0));
-        let clicked = round_button(root, back, Icon::ArrowLeft, "Back (Esc)");
+        let clicked = round_button(root, back, Icon::Back, "Back (Esc)");
         let req = p.request();
         let x = back.right() + 16.0;
         let painter = root.painter();
@@ -334,7 +331,7 @@ impl Overlay {
             Align2::LEFT_TOP,
             &req.title,
             egui::FontId::proportional(22.0),
-            theme::TEXT,
+            theme::palette().text,
         );
         if let Some(sub) = &req.subtitle {
             painter.text(
@@ -342,7 +339,7 @@ impl Overlay {
                 Align2::LEFT_TOP,
                 sub,
                 theme::body(),
-                theme::SECONDARY,
+                theme::palette().secondary,
             );
         }
         bar::badges(root, pos2(screen.right() - 28.0, back.center().y), p);
@@ -378,21 +375,21 @@ impl Overlay {
         );
         let resp = root.interact(rect, root.id().with("skip"), Sense::click());
         let fill = if resp.hovered() {
-            theme::PRIMARY_BG
+            theme::palette().primary_bg
         } else {
-            GLASS
+            theme::palette().floating
         };
         let text = if resp.hovered() {
-            theme::PRIMARY_TEXT
+            theme::palette().primary_text
         } else {
-            theme::TEXT
+            theme::palette().text
         };
         let painter = root.painter();
         painter.rect_filled(rect, 23.0, fill);
         painter.rect_stroke(
             rect,
             23.0,
-            egui::Stroke::new(1.0, Color32::from_white_alpha(90)),
+            egui::Stroke::new(1.0, theme::palette().wash(90)),
             egui::StrokeKind::Inside,
         );
         painter.text(
@@ -515,32 +512,36 @@ pub(crate) fn toggle_fullscreen(ctx: &egui::Context) {
 }
 
 /// A 44 pt glass circle with an icon; `true` when clicked.
-pub(crate) fn round_button(root: &mut egui::Ui, rect: Rect, icon: Icon, hint: &str) -> bool {
+pub(crate) fn round_button(root: &mut egui::Ui, rect: Rect, glyph: Icon, hint: &str) -> bool {
     let resp = root
         .interact(rect, root.id().with(hint), Sense::click())
         .on_hover_text(hint)
         .on_hover_cursor(CursorIcon::PointingHand);
-    let fill = if resp.hovered() {
-        Color32::from_white_alpha(40)
+    let fill = if resp.is_pointer_button_down_on() {
+        theme::palette().wash(60)
+    } else if resp.hovered() {
+        theme::palette().wash(40)
     } else {
-        GLASS
+        theme::palette().floating
     };
     root.painter()
         .circle_filled(rect.center(), rect.width() / 2.0, fill);
-    icons::paint(
+    icon::paint(
         root.painter(),
-        icon,
-        rect.shrink(rect.width() * 0.22),
-        theme::TEXT,
+        glyph,
+        Size::Regular,
+        rect.center(),
+        theme::palette().text,
     );
+    controls::round_ring_when_focused(root.painter(), &resp, rect.center(), rect.width() / 2.0);
     resp.clicked()
 }
 
-/// An icon with no fill until hovered; `true` when clicked.
+/// An icon at its size with no fill until hovered; `true` when clicked.
 pub(crate) fn icon_button(
     root: &mut egui::Ui,
     rect: Rect,
-    icon: Icon,
+    (glyph, size): (Icon, Size),
     hint: &str,
     on: bool,
 ) -> bool {
@@ -549,12 +550,23 @@ pub(crate) fn icon_button(
         .on_hover_text(hint)
         .on_hover_cursor(CursorIcon::PointingHand);
     if resp.hovered() || on {
-        let alpha = if on { 46 } else { 30 };
+        let alpha = if resp.is_pointer_button_down_on() {
+            60
+        } else if on {
+            46
+        } else {
+            30
+        };
         root.painter()
-            .rect_filled(rect, 8.0, Color32::from_white_alpha(alpha));
+            .rect_filled(rect, 8.0, theme::palette().wash(alpha));
     }
-    let color = if on { theme::ACCENT } else { theme::TEXT };
-    icons::paint(root.painter(), icon, rect.shrink(rect.width() * 0.2), color);
+    let color = if on {
+        theme::palette().accent
+    } else {
+        theme::palette().text
+    };
+    icon::paint(root.painter(), glyph, size, rect.center(), color);
+    controls::ring_when_focused(root.painter(), &resp, rect, 8.0);
     resp.clicked()
 }
 
@@ -567,9 +579,12 @@ fn spinner(root: &egui::Ui, center: egui::Pos2) {
             center + vec2(a.cos(), a.sin()) * 26.0
         })
         .collect();
-    root.painter().circle_filled(center, 40.0, GLASS);
     root.painter()
-        .add(Shape::line(pts, egui::Stroke::new(4.0, theme::ACCENT)));
+        .circle_filled(center, 40.0, theme::palette().floating);
+    root.painter().add(Shape::line(
+        pts,
+        egui::Stroke::new(4.0, theme::palette().accent),
+    ));
     root.ctx().request_repaint();
 }
 

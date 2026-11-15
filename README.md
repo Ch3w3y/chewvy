@@ -9,14 +9,21 @@
 </p>
 
 <p align="center">
-  <img src="docs/media/chewvy-tour.webp" width="860" alt="Chewvy: home screen, a film's detail page, the library grid, search and the player">
+  <a href="https://ch3w3y.github.io/chewvy/">Website</a> ·
+  <a href="https://github.com/Ch3w3y/chewvy/releases/latest">Download</a> ·
+  <a href="docs/README.md">Documentation</a> ·
+  <a href="CHANGELOG.md">Changelog</a>
+</p>
+
+<p align="center">
+  <img src="docs/media/chewvy-tour.webp" width="860" alt="Chewvy: the home screen, a film's page, the library grid, search and the player">
 </p>
 
 Chewvy signs in to the media servers you already run, shows their libraries
 side by side, and plays through [mpv](https://mpv.io) with hardware decoding.
-There is no web view and no Electron: the interface is drawn with
-[egui](https://github.com/emilk/egui) straight onto the same OpenGL surface the
-video is rendered to.
+There is no web view and no Electron. The interface is drawn with
+[egui](https://github.com/emilk/egui) onto the same OpenGL surface that the
+video is rendered to, as smoked glass over a photograph.
 
 > Chewvy is an independent project, not affiliated with Plex, Inc. or the
 > Jellyfin project. "Plex" and "Jellyfin" name the services it connects to.
@@ -26,35 +33,43 @@ video is rendered to.
 
 - **Two kinds of server, one library.** A Plex account and any number of
   Jellyfin servers appear together: one home screen, one sidebar, one search.
-  Either kind is enough on its own: the first start asks which you have, and
+  Either kind is enough by itself. The first start asks which you have, and
   the switcher at the top of the sidebar lists every server and adds more.
 - **Sign in without typing a password into the app.** Plex uses the
-  `plex.tv/link` code; Jellyfin uses Quick Connect, with a password sign-in to
+  `plex.tv/link` code. Jellyfin uses Quick Connect, with a password sign-in to
   your own server as the fallback. Passwords are never stored.
 - **Home, libraries, detail pages and search.** Continue Watching, recently
   added shelves, poster grids, seasons and episodes, cast, ratings and format
-  badges (4K, HDR10, Dolby Vision, Atmos and so on).
+  badges such as 4K, HDR10, Dolby Vision and Atmos.
 - **mpv playback inside the window.** Hardware decoding where the driver
-  offers it, software decoding otherwise; audio and subtitle track selection,
+  offers it, software decoding otherwise. Audio and subtitle track selection,
   playback speed, intro and credits skip markers, next episode, a sleep timer.
 - **Falls back to the server when a file will not play.** If mpv cannot play
   the original, the item reopens at the same position as a server remux, then
   as a 1080p transcode. The quality menu offers the same choices by hand, with
   presets from 1080p 20 Mbps down to 240p, for Plex and Jellyfin.
-- **An HDR window.** HDR10, HLG and Dolby Vision can play in a separate mpv
-  `gpu-next` window that sends HDR to the display.
+- **An HDR window.** HDR10, HLG, HDR10+ and Dolby Vision can play in a
+  separate mpv `gpu-next` window that sends HDR to the display.
 - **Watch together.** Start or join a SyncPlay group on Jellyfin, or a
-  Watch Together room for a Plex film or episode, and a play, pause or seek
-  by anyone moves everyone, Plex's web app included.
-- **Watch progress stays in step with the server**, and can be switched off.
+  Watch Together room for a Plex film or episode. A play, pause or seek by
+  anyone moves everyone, Plex's web app included.
+- **Backgrounds.** The interface is neutral smoked glass over a photograph.
+  Settings picks the photograph from Aurora, six genres, two festivals and
+  four seasons, or follows the calendar. A theme can also show backdrops from
+  your own libraries.
+- **Updates from inside the app.** Chewvy says when a release is out,
+  downloads the package you installed, checks it against the release's
+  `SHA256SUMS`, installs it and restarts.
+- **Watch progress can stay in step with the server.** Progress sync is
+  off until you turn it on in Settings.
 - **Tokens stay in the system keyring** (Secret Service on Linux). They are
   sent as request headers and never appear in a URL or a log line.
 
 ## Screenshots
 
-| Home | Detail |
+| Home | Film |
 |---|---|
-| ![Home screen](docs/media/home.jpg) | ![Detail page](docs/media/detail.jpg) |
+| ![Home screen](docs/media/home.jpg) | ![A film's page](docs/media/detail.jpg) |
 
 | Library | Player |
 |---|---|
@@ -64,13 +79,25 @@ video is rendered to.
 |---|---|
 | ![Search results](docs/media/search.jpg) | ![Settings](docs/media/settings.jpg) |
 
-These are captures of the running app. The titles, people and artwork in them
-are invented for the screenshots.
+| Show | Backgrounds |
+|---|---|
+| ![A show's page with its episodes](docs/media/show.jpg) | ![Settings, Background: the photographs to choose from](docs/media/settings-background.jpg) |
+
+| First start | Playback information |
+|---|---|
+| ![First start: add a Plex account or a Jellyfin server](docs/media/first-run.jpg) | ![The player's information panel](docs/media/player-info.jpg) |
+
+These are captures of the running app, made by `site/tools/capture.sh`. The
+library in them holds real films that are public domain or Creative Commons.
+[`site/CREDITS.md`](site/CREDITS.md) lists each film and image with its source
+and licence.
 
 ## Install
 
 Packages are on the [Releases](https://github.com/Ch3w3y/chewvy/releases)
-page, each with a SHA-256 in `SHA256SUMS`.
+page, each with a SHA-256 in `SHA256SUMS`. [Install Chewvy](docs/INSTALL.md)
+has the full steps for each platform, including how to check a download,
+update and uninstall.
 
 ### Linux
 
@@ -78,42 +105,42 @@ page, each with a SHA-256 in `SHA256SUMS`.
 curl -fsSL https://raw.githubusercontent.com/Ch3w3y/chewvy/main/install.sh | sh
 ```
 
-The script installs for the current user only and never asks for root: the
-AppImage goes to `~/.local/bin/chewvy`, with a menu entry and icon under
-`~/.local/share`. It checks the download against `SHA256SUMS` before
-installing anything. Read it first if you prefer:
-[`install.sh`](install.sh).
+The script installs for the current user only and never asks for root. The
+AppImage goes to `~/.local/bin/chewvy`, with a menu entry and icons under
+`~/.local/share`. It checks the download against `SHA256SUMS` before it
+installs anything. Read it first if you prefer: [`install.sh`](install.sh).
 
 ```sh
-sh install.sh --version 0.1.0   # a specific release
+sh install.sh --version 0.3.0   # a specific release
 sh install.sh --uninstall       # remove everything it installed
 ```
 
 Or download `Chewvy-<version>-x86_64.AppImage`, make it executable and run it.
-The AppImage bundles mpv and FFmpeg; it uses your system's graphics drivers.
-Only x86_64 is built, and it needs glibc 2.39 or newer: Ubuntu 24.04, Debian
-13, Fedora 40 and current rolling distributions qualify; older releases and
-musl-based systems such as Alpine do not.
+The AppImage bundles mpv and FFmpeg, and uses the graphics drivers of your
+system. Only x86_64 is built, and it needs glibc 2.39 or newer. Ubuntu 24.04,
+Debian 13, Fedora 40 and current rolling distributions qualify. Older
+releases and musl-based systems such as Alpine do not.
 
 ### Windows
 
 Download `Chewvy-<version>-windows-x86_64-setup.exe` and run it. It installs
-for the current user, adds a Start Menu entry and an uninstaller. A portable
-`Chewvy-<version>-windows-x86_64.zip` is also provided: unpack it anywhere and
-run `chewvy.exe`.
+for the current user, and adds a Start Menu entry and an uninstaller. A
+portable `Chewvy-<version>-windows-x86_64.zip` is also provided: unpack it
+anywhere and run `chewvy.exe`.
 
-The installer is **not code-signed**, so Windows SmartScreen will warn about
-an unrecognised app: choose *More info*, then *Run anyway*. A Vulkan-capable
-graphics driver must be installed (the bundled mpv needs `vulkan-1.dll`).
+The installer is **not code-signed**, so Windows SmartScreen warns about an
+unrecognised app. Choose *More info*, then *Run anyway*. A graphics driver
+with Vulkan support must be installed, because the bundled mpv needs
+`vulkan-1.dll`.
 
 ### macOS
 
 Download `Chewvy-<version>-macos-arm64.dmg`, open it and drag Chewvy to
-Applications. It needs an Apple Silicon Mac running macOS 15 or newer.
+Applications. It needs an Apple Silicon Mac that runs macOS 15 or newer.
 
-The app is **not notarised by Apple**, so macOS will refuse to open it the
-first time. Either allow it under *System Settings > Privacy & Security >
-Open Anyway*, or clear the download flag yourself:
+The app is **not notarised by Apple**, so macOS refuses to open it the first
+time. Either allow it under *System Settings > Privacy & Security > Open
+Anyway*, or clear the download flag yourself:
 
 ```sh
 xattr -dr com.apple.quarantine /Applications/Chewvy.app
@@ -125,15 +152,16 @@ This build is experimental: see the support table below.
 
 | Platform | Package | Status |
 |---|---|---|
-| Linux x86_64 | AppImage, `install.sh` | Developed and used on KDE Plasma (Wayland) with AMD graphics and Mesa. Other desktops, X11 sessions, Intel and NVIDIA graphics are expected to work but have not been measured. |
-| Windows 10/11 x86_64 | Installer, zip | Cross-built from Linux. The zip has been started in a Windows 11 virtual machine using software OpenGL, and the installer has only been exercised under Wine; neither has been run on a real GPU, and playback on Windows is untested. The sign-in screen's "Open plex.tv/link" button does nothing on Windows yet: open the address yourself. |
-| macOS 15+ (Apple Silicon) | DMG | Experimental. Built on a GitHub-hosted runner, where the app started and drew its window with software OpenGL. **Nobody has run it on a physical Mac**: sign-in, playback and hardware decoding are untested, and "Open plex.tv/link" does nothing there yet. |
+| Linux x86_64 | AppImage, `install.sh` | Developed and used on KDE Plasma (Wayland) with AMD graphics and Mesa. On NVIDIA graphics it has played 4K H.264, VP9 and AV1 with hardware decoding in a headless session only. Other desktops, X11 sessions and Intel graphics are expected to work but have not been measured. |
+| Windows 10 and 11, x86_64 | Installer, zip | Cross-built from Linux. Both packages have been installed, started and updated in a Windows 11 virtual machine that draws with software OpenGL, and a Windows build stayed in step with a Linux one in a Watch Together room. Neither package has been run on a real GPU, so hardware decoding and HDR on Windows are untested. |
+| macOS 15 or newer, Apple Silicon | DMG | Experimental. Built on a GitHub-hosted runner, where the app started and drew its window with software OpenGL. **Nobody has run it on a physical Mac**: sign-in, playback, hardware decoding and the in-app update are untested there. |
 | Android, iOS | none | A porting plan only (`docs/MOBILE_PORT.md`). |
 
 ### Playback
 
-Chewvy does not claim to play everything. This is what has been measured, on
-the Linux development machine (AMD Radeon RX 9070 XT, Mesa VA-API, mpv 0.41):
+Chewvy does not claim to play everything. The table says what has been
+measured, on the Linux development machine (AMD Radeon RX 9070 XT, Mesa
+VA-API, mpv 0.41):
 
 | Media | Plex | Jellyfin |
 |---|---|---|
@@ -143,13 +171,14 @@ the Linux development machine (AMD Radeon RX 9070 XT, Mesa VA-API, mpv 0.41):
 | Other video codecs (VC-1, WMV, MJPEG, VVC), frames larger than 4096x2160, DTS-HD and other audio families | Handed to mpv as the original file; it may well play, but it is **unmeasured**. If it does not, the fallback below takes over. | Not claimed for direct play: the server sends its own stream (a remux or a transcode) instead. WMV8 was seen playing this way. |
 | Fallback when direct play fails | Automatic: server remux, then a 1080p 20 Mbps transcode, then an error naming the last step. Exercised against a mock server only; **not yet against a real Plex Media Server.** | Automatic, the same ladder. Each step was run against a Jellyfin 12.4.0 test server. |
 | Server remux or transcode by choice | Quality menu: remux, or presets from 1080p 20 Mbps to 240p | Quality menu, same presets |
-| HDR10, HLG, Dolby Vision | Tone-mapped to SDR in the main window; real HDR output and Dolby Vision processing in the separate HDR window. HDR output has not been verified with measuring equipment, and is untested on Windows. | Handled the same way when the item fits the row above, but no HDR item has been played from a Jellyfin server yet. |
+| HDR10, HLG, Dolby Vision | Tone-mapped to SDR in the main window; real HDR output and Dolby Vision processing in the separate HDR window. HDR output has not been verified with measuring equipment, and is untested on Windows. | Handled the same way when the item fits the row above. One HDR (PQ) item has been played from a Jellyfin server, tone-mapped in the main window. None has been played in the HDR window. |
 | Embedded text subtitles | Rendered by mpv | Rendered by mpv |
 | External subtitle files | Loaded and offered as tracks (VobSub skipped) | Not fetched |
 | Image-based subtitles (PGS, VobSub) | Untested | Untested |
+| Bitstream passthrough to a receiver | Not supported: audio is decoded to PCM | Not supported |
 
-`docs/CAPABILITIES.md` has the full matrix, how each row was measured, and the
-list of things nobody has tried yet.
+[`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) has the full matrix, how each
+row was measured, and the list of things nobody has tried yet.
 
 ## Keyboard
 
@@ -166,6 +195,9 @@ list of things nobody has tried yet.
 | N | Next episode |
 | I | Playback information |
 | Esc | Leave full screen, or leave the player |
+| `/`, Ctrl+K (browsing) | Search |
+
+[Keyboard shortcuts](docs/KEYBOARD.md) lists every key by screen.
 
 ## Build from source
 
@@ -184,17 +216,20 @@ cargo build --release --locked -p plex-app
 target/release/chewvy
 ```
 
-`docs/BUILD.md` covers the other distributions, Windows and macOS, the test
-gates, and how the packages are made.
+[`docs/BUILD.md`](docs/BUILD.md) covers the other distributions, Windows and
+macOS, the test gates, and how the packages are made.
 
 ## Documentation
 
-- [`docs/BUILD.md`](docs/BUILD.md): building, testing and the gates a change must pass
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): crates, threads, rendering and sign-in
-- [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md): the tested capability matrix
-- [`docs/PACKAGING.md`](docs/PACKAGING.md): AppImage, Windows installer, DMG and releases
-- [`docs/PLEX_AUTH.md`](docs/PLEX_AUTH.md), [`docs/JELLYFIN.md`](docs/JELLYFIN.md), [`docs/HARDWARE_DECODE.md`](docs/HARDWARE_DECODE.md): protocol and decoding notes with sources
-- [`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md): every dependency and its licence
+[`docs/README.md`](docs/README.md) is the index. The pages people ask for
+most:
+
+- [Install Chewvy](docs/INSTALL.md): install, check, update and remove it
+- [Troubleshooting](docs/TROUBLESHOOTING.md): when it will not start, sign in or play
+- [Questions and answers](docs/FAQ.md): cost, privacy, formats, platforms
+- [Capability matrix](docs/CAPABILITIES.md): what has been measured, and where
+- [Building and testing](docs/BUILD.md) and [Architecture](docs/ARCHITECTURE.md): for contributors
+- [Packaging and releases](docs/PACKAGING.md): AppImage, Windows installer, DMG
 
 ## Contributing
 
@@ -206,7 +241,7 @@ Bug reports and pull requests are welcome: see
 
 Chewvy is free software under the [GNU General Public License, version 3 or
 later](LICENSE). The packages bundle mpv, FFmpeg and other libraries under
-their own licences, and the app includes a photograph, a typeface and service
+their own licences, and the app includes photographs, a typeface and service
 logos credited in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
 Plex is a trademark of Plex, Inc. Jellyfin is a trademark of the Jellyfin

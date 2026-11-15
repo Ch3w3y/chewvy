@@ -7,10 +7,11 @@
 //! one wheel event, so those rules are testable without a window.
 
 use egui::{
-    Color32, CornerRadius, CursorIcon, Pos2, Rect, Response, Shape, Stroke, StrokeKind, TextureId,
-    Ui, Vec2,
+    Color32, CornerRadius, CursorIcon, Pos2, Rect, Response, Stroke, StrokeKind, TextureId, Ui,
+    Vec2,
 };
 
+use super::marks::icon::{self, Icon, Size};
 use super::theme;
 
 /// Card and poster radius: the design spec's 8, which [`theme::CARD_RADIUS`] already is.
@@ -25,16 +26,9 @@ pub const ARROW_INSET: f32 = 8.0;
 /// The width of the column a row gives one pager arrow: exactly its clickable
 /// box, so an arrow allocated in such a column cannot overlap a card.
 pub const ARROW_BOX: f32 = 2.0 * ARROW_RADIUS;
-/// `[run, arm]` of a painted pager chevron: how far its arms run from the tip,
-/// and how far each arm sits above and below it. The proportional fonts egui
-/// bundles name no ‹/› glyph, so the arrow is drawn, not typed.
-pub const ARROW: [f32; 2] = [5.0, 8.0];
-/// `[run, arm]` of the small chevron that marks a scrollable row: how far its
-/// arms run from the tip and how far each arm sits above and below it.
-pub const CHEVRON: [f32; 2] = [4.0, 6.0];
-/// The space a row title's chevron is given: wide enough for [`CHEVRON`] and
-/// tall enough to read against an [H2](super::theme::H2_SIZE) title.
-pub const CHEVRON_BOX: [f32; 2] = [14.0, 22.0];
+/// The space a row title's chevron is given: one icon wide and tall enough to
+/// read against an [H2](super::theme::H2_SIZE) title.
+pub const CHEVRON_BOX: [f32; 2] = [icon::SIZE, 22.0];
 
 /// The ring a card shows while the pointer is over it or it holds the keyboard
 /// focus: the accent reads as "this is the card a click or an Enter acts on".
@@ -52,10 +46,13 @@ pub fn focus_ring(ui: &Ui, rect: Rect, response: &Response, radius: CornerRadius
     if !selected && !response.hovered() && !response.has_focus() {
         return;
     }
+    if response.has_focus() {
+        super::controls::ringed(ui.ctx());
+    }
     ui.painter().rect_stroke(
         rect,
         radius,
-        Stroke::new(RING_STROKE, theme::ACCENT),
+        Stroke::new(RING_STROKE, theme::palette().accent),
         StrokeKind::Outside,
     );
 }
@@ -140,45 +137,36 @@ pub fn cover_uv_top(tex: Vec2, target: Vec2) -> Rect {
     cover_uv_at(tex, target, 0.0)
 }
 
-/// The three points of a pager arrow's chevron, centred on `center`: the tip
-/// points right (toward the content further along the row) unless `flip`
-/// points it left.
-#[must_use]
-pub fn arrow_points(center: Pos2, flip: bool) -> [Pos2; 3] {
-    let [run, arm] = ARROW;
-    let side = if flip { -1.0 } else { 1.0 };
-    [
-        center + egui::vec2(-side * run * 0.5, -arm),
-        center + egui::vec2(side * run * 0.5, 0.0),
-        center + egui::vec2(-side * run * 0.5, arm),
-    ]
-}
-
 /// One pager arrow, drawn over the row it pages: a round glass plate tinted by
-/// `tint`, with a filled chevron in [`theme::TEXT`] so it reads over art.
+/// `tint`, with a chevron in the text colour so it reads over art. It points
+/// right (toward the content further along the row) unless `flip` points it
+/// left.
 pub fn arrow(ui: &Ui, center: Pos2, flip: bool, tint: Color32) {
     crate::ui::glass::panel(ui.painter(), arrow_rect(center), ARROW_RADIUS, tint);
-    let [top, tip, bottom] = arrow_points(center, flip);
-    ui.painter().add(Shape::convex_polygon(
-        vec![top, tip, bottom],
-        theme::TEXT,
-        Stroke::new(1.5, theme::TEXT),
-    ));
+    let glyph = if flip {
+        Icon::ChevronLeft
+    } else {
+        Icon::ChevronRight
+    };
+    icon::paint(
+        ui.painter(),
+        glyph,
+        Size::Regular,
+        center,
+        theme::palette().text,
+    );
 }
 
-/// The small stroked chevron that says "this row goes on that way", centred on
-/// `center` and pointing right unless `flip` points it left.
-pub fn chevron(ui: &Ui, center: Pos2, flip: bool, color: Color32) {
-    let [run, arm] = CHEVRON;
-    let side = if flip { -1.0 } else { 1.0 };
-    ui.painter().add(Shape::line(
-        vec![
-            center + egui::vec2(-side * run * 0.5, -arm),
-            center + egui::vec2(side * run * 0.5, 0.0),
-            center + egui::vec2(-side * run * 0.5, arm),
-        ],
-        Stroke::new(1.5, color),
-    ));
+/// The small chevron that says "this row goes on that way", centred on
+/// `center`.
+pub fn chevron(ui: &Ui, center: Pos2, color: Color32) {
+    icon::paint(
+        ui.painter(),
+        Icon::ChevronRight,
+        Size::Regular,
+        center,
+        color,
+    );
 }
 
 /// How far one wheel event moves a Home row, in points: only a sideways intent

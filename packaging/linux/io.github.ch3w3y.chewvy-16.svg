@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><defs>
+<radialGradient id="lift" cx="0.18" cy="0.04" r="0.95" fx="0.18" fy="0.04">
+  <stop offset="0" stop-color="#9a9a9a" stop-opacity="0.55"/>
+  <stop offset="0.5" stop-color="#5c5c5c" stop-opacity="0.22"/>
+  <stop offset="1" stop-color="#3a3a3a" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="glow" cx="0.95" cy="1" r="0.7">
+  <stop offset="0" stop-color="#6e6e6e" stop-opacity="0.35"/>
+  <stop offset="1" stop-color="#6e6e6e" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="smoke" cx="0.5" cy="0.55" r="0.62">
+  <stop offset="0" stop-color="#0b0b0b" stop-opacity="0.70"/>
+  <stop offset="0.7" stop-color="#111111" stop-opacity="0.45"/>
+  <stop offset="1" stop-color="#161616" stop-opacity="0.25"/>
+</radialGradient>
+<linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#fff" stop-opacity="0.20"/>
+  <stop offset="0.45" stop-color="#fff" stop-opacity="0.04"/>
+  <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0.55" stop-color="#000" stop-opacity="0"/>
+  <stop offset="1" stop-color="#000" stop-opacity="0.40"/>
+</linearGradient>
+<linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#fff" stop-opacity="0.62"/>
+  <stop offset="0.5" stop-color="#fff" stop-opacity="0.12"/>
+  <stop offset="1" stop-color="#fff" stop-opacity="0.26"/>
+</linearGradient>
+<linearGradient id="ink" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#ffffff"/>
+  <stop offset="1" stop-color="#e4e4e4"/>
+</linearGradient>
+<radialGradient id="pool" cx="0.5" cy="0.5" r="0.5">
+  <stop offset="0" stop-color="#fff" stop-opacity="0.12"/>
+  <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+</radialGradient>
+</defs><rect x="0" y="0" width="16" height="16" rx="3.5" fill="#0c0c0c"/><rect x="0" y="0" width="16" height="16" rx="3.5" fill="url(#lift)"/><rect x="0" y="0" width="16" height="16" rx="3.5" fill="url(#glow)"/><rect x="0" y="0" width="16" height="16" rx="3.5" fill="url(#smoke)"/><rect x="0" y="0" width="16" height="16" rx="3.5" fill="url(#sheen)"/><rect x="0" y="0" width="16" height="16" rx="3.5" fill="url(#floor)"/><path fill="#f5f5f5" fill-rule="evenodd" d="M13.657 6A6 6 0 1 0 13.657 10L9.661 10A2.6 2.6 0 1 1 9.661 6Z"/><rect x="0.5" y="0.5" width="15" height="15" rx="3.0" fill="none" stroke="url(#rim)" stroke-width="1"/></svg>

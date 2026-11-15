@@ -1,14 +1,15 @@
-//! The UI foundation: the dark token set ([`theme`]), the app shell
+//! The UI foundation: the theme and the fixed type scale ([`theme`]), the app shell
 //! ([`app`] + [`rail`]), the library poster grid ([`grid`]), the bounded async
 //! artwork loader ([`images`]) and the artwork disk cache behind it
 //! ([`art_cache`]).
 //!
-//! [`theme::apply`] rewrites both egui styles from the design tokens,
+//! [`theme::apply`] rewrites both egui styles from the current theme,
 //! [`app::Ui`] draws the connected shell around [`rail::show`], and
 //! [`images::Artwork`] fetches, decodes, caches and holds poster textures off
 //! the UI thread.
 
-/// Dark tokens, type scale, spacing and the white pill primary button.
+/// The app's one look as runtime tokens (palette, glass, text shadows, what
+/// the backdrop needs), the type scale, spacing and the primary button.
 pub mod theme;
 
 /// The app screens, the rail-selected content area and the back history.
@@ -20,10 +21,13 @@ pub(crate) mod bleed;
 pub(crate) mod brand;
 /// The app's own window title bar, buttons and resize edges.
 pub(crate) mod chrome;
+/// The app's own controls: buttons, the text field, slider, switch, option
+/// rows, the rule, the spinner, the dialog and the keyboard focus ring.
+pub(crate) mod controls;
 /// Frosted glass panels (backdrop blur through an egui_glow paint callback).
 pub(crate) mod glass;
-/// The tints every glass surface uses, held to a WCAG contrast bar by tests.
-pub(crate) mod glass_tints;
+/// Text kept readable over artwork and the backdrop by the theme's shadows.
+pub(crate) mod legible;
 /// Dolby, DTS, HDR and BBFC logos for format and rating badges.
 pub(crate) mod marks;
 pub(crate) mod overlay;

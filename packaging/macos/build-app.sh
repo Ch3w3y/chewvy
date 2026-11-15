@@ -51,7 +51,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Framewor
 cp "$BIN" "$EXE"
 
 # Optional: never fail the build over the icon.
-ICON_SRC="$REPO_ROOT/packaging/linux/io.github.ch3w3y.chewvy.svg"
+ICON_SRC="$SCRIPT_DIR/chewvy.svg"
 ICON_FILE="__none__"
 if [[ -f "$ICON_SRC" ]] && command -v rsvg-convert >/dev/null && command -v iconutil >/dev/null; then
     # iconutil only accepts a folder whose name ends in .iconset.

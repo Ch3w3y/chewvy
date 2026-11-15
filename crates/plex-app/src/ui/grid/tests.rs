@@ -7,8 +7,10 @@
 use plex_core::library::{self, Item, SortOption};
 use serde_json::Value;
 
+use super::title::{leads, separates, title_lines};
 use super::*;
 use crate::ui::{cards, rail};
+use egui::Color32;
 
 fn fixture(name: &str) -> Value {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -505,4 +507,97 @@ fn a_row_reserves_the_lines_its_caption_draws() {
             );
         }
     }
+}
+
+#[test]
+fn an_episode_card_shows_its_show_s_poster_not_its_wide_still() {
+    let episode = Item {
+        kind: Some("episode".to_owned()),
+        title: Some("The Kingsroad".to_owned()),
+        thumb: Some("still".to_owned()),
+        parent_thumb: Some("season".to_owned()),
+        grandparent_thumb: Some("show".to_owned()),
+        ..Item::default()
+    };
+    assert_eq!(Card::from_item(&episode).thumb.as_deref(), Some("show"));
+    let movie = Item {
+        kind: Some("movie".to_owned()),
+        thumb: Some("poster".to_owned()),
+        grandparent_thumb: Some("unrelated".to_owned()),
+        ..Item::default()
+    };
+    assert_eq!(Card::from_item(&movie).thumb.as_deref(), Some("poster"));
+}
+
+/// Lay `title` out for a card `share` of its one-line width wide, as the grid
+/// does, and answer the lines, whether it was cut short, and the card width.
+fn caption_lines(title: &str, share: f32) -> (Vec<String>, bool, f32) {
+    let ctx = egui::Context::default();
+    crate::ui::theme::apply(&ctx);
+    let mut out = (Vec::new(), false, 0.0);
+    let mut output = ctx.run_ui(egui::RawInput::default(), |ui| {
+        let font = theme::card_title();
+        let full = ui
+            .painter()
+            .layout_no_wrap(title.to_owned(), font.clone(), Color32::PLACEHOLDER)
+            .size()
+            .x;
+        let width = (full * share).round();
+        let (lines, elided) = title_lines(ui.painter(), title, width, &font);
+        let widest = lines
+            .iter()
+            .map(|line| {
+                ui.painter()
+                    .layout_no_wrap(line.clone(), font.clone(), Color32::PLACEHOLDER)
+                    .size()
+                    .x
+            })
+            .fold(0.0, f32::max);
+        assert!(widest <= width, "{lines:?} is wider than {width}");
+        out = (lines, elided, width);
+    });
+    output.textures_delta.clear();
+    out
+}
+
+/// A title that needs two lines breaks where the two read best: never with
+/// a short leading word left at the end of the first ("The Lord of the
+/// Rings: The / Fellowship of the Ring"), never with a separator opening the
+/// second.
+#[test]
+fn a_two_line_title_never_leaves_a_leading_word_hanging() {
+    for title in [
+        "The Lord of the Rings: The Fellowship of the Ring",
+        "The Lord of the Rings: The Return of the King",
+        "Game of Thrones · S1E3 · Lord Snow",
+        "Birdemic: Shock and Terror",
+    ] {
+        let (lines, elided, _) = caption_lines(title, 0.62);
+        assert_eq!(lines.len(), 2, "{title}: {lines:?}");
+        assert!(!elided, "{title} fits two lines whole: {lines:?}");
+        assert_eq!(lines.join(" "), title, "nothing is lost");
+        let last = lines.first().and_then(|l| l.split_whitespace().last());
+        assert!(
+            !last.is_some_and(leads),
+            "{title}: the first line ends on {last:?}"
+        );
+        let opens = lines.get(1).and_then(|l| l.split_whitespace().next());
+        assert!(!opens.is_some_and(separates), "{title}: {lines:?}");
+    }
+}
+
+/// A title too long for two lines keeps whole words on the first, ends the
+/// second with `…`, and says it was cut short so the card shows it whole on
+/// hover.
+#[test]
+fn a_title_too_long_for_two_lines_is_elided_on_the_second() {
+    let title = "The Lord of the Rings: The Fellowship of the Ring";
+    let (lines, elided, _) = caption_lines(title, 0.36);
+    assert!(elided, "{lines:?}");
+    assert_eq!(lines.len(), 2, "{lines:?}");
+    assert!(lines.get(1).is_some_and(|l| l.ends_with('…')), "{lines:?}");
+    let first = lines.first().cloned().unwrap_or_default();
+    assert!(title.starts_with(&first), "whole words first: {lines:?}");
+    let (one, elided, _) = caption_lines("Dune", 1.5);
+    assert_eq!((one, elided), (vec!["Dune".to_owned()], false));
 }

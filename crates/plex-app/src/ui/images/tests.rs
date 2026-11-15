@@ -6,6 +6,7 @@ use std::time::Duration;
 
 use super::*;
 use crate::source;
+use egui::TextureHandle;
 use egui::{ColorImage, Context, TextureOptions};
 
 /// A `thumb` value shaped like the ones the captured server answers name.
@@ -65,6 +66,73 @@ fn poster_pair() -> (String, String) {
         panic!("a server-named thumb value must be requestable at poster size");
     };
     pair
+}
+
+/// What the tests read of a loader.
+impl Artwork {
+    /// True when `key` has a texture (test view).
+    fn has_texture(&self, key: &str) -> bool {
+        self.textures.contains(key)
+    }
+
+    fn texture_count(&self) -> usize {
+        self.textures.len()
+    }
+
+    fn queued_len(&self) -> usize {
+        lock(&self.shared.queue).len()
+    }
+
+    fn has_inflight(&self, key: &str) -> bool {
+        self.inflight.contains(key)
+    }
+
+    /// Tests shorten the retry cooldown to exercise the backoff without waiting.
+    fn set_retry_base(&mut self, base: Duration) {
+        self.retry_base = base;
+    }
+
+    /// Attempts recorded for `key` (test view).
+    fn failure_attempts(&self, key: &str) -> u32 {
+        self.failed.get(key).map_or(0, |failure| failure.attempts)
+    }
+
+    /// Keys with a recorded failure (test view).
+    fn failure_count(&self) -> usize {
+        self.failed.len()
+    }
+
+    /// Tests wait for a worker's failed attempt (no client attached) to reach
+    /// [`Artwork::drain`]: the helper waits until `at_least` attempts are
+    /// recorded, so an attempt already counted is not mistaken for the new one.
+    fn wait_for_failure(&mut self, key: &str, at_least: u32) -> bool {
+        let ctx = Context::default();
+        for _ in 0..100 {
+            self.drain(&ctx);
+            if self.failure_attempts(key) >= at_least {
+                return true;
+            }
+            std::thread::sleep(Duration::from_millis(25));
+        }
+        false
+    }
+
+    fn inflight_count(&self) -> usize {
+        self.inflight.len()
+    }
+
+    /// Tests wait for a worker to deliver without a server by pre-filling the
+    /// disk cache.
+    fn wait_for_texture(&mut self, ctx: &Context, key: &str) -> bool {
+        for _ in 0..100 {
+            self.drain(ctx);
+            if self.has_texture(key) {
+                return true;
+            }
+            std::thread::sleep(Duration::from_millis(25));
+        }
+        false
+    }
 }
 
 #[test]
@@ -134,6 +202,7 @@ fn the_queue_holds_only_validated_paths_and_keys_derived_from_them() {
                 path,
                 gen: 0,
                 size: TEST_SIZE,
+                background: false,
             },
         );
     }
@@ -169,6 +238,7 @@ fn a_full_queue_drops_the_oldest_job_and_frees_its_key() {
                 path,
                 gen: 0,
                 size: TEST_SIZE,
+                background: false,
             },
         );
     }
@@ -196,11 +266,11 @@ fn textures_stop_at_the_cap_and_the_least_recently_used_frees_first() {
         let key = format!("k{i}");
         lru.insert(key.clone(), texture(&ctx, &key));
     }
-    assert_eq!(lru.entries.len(), MAX_TEXTURES);
+    assert_eq!(lru.len(), MAX_TEXTURES);
     // Touch the first entry, so the second becomes the eviction victim.
     assert!(lru.get("k0").is_some());
     let freed = lru.insert("new".to_owned(), texture(&ctx, "new"));
-    assert_eq!(lru.entries.len(), MAX_TEXTURES, "the cap holds");
+    assert_eq!(lru.len(), MAX_TEXTURES, "the cap holds");
     assert_eq!(freed, 1, "the LRU texture is freed first");
     assert!(!lru.contains("k1"));
     assert!(lru.contains("k0"));
@@ -219,7 +289,7 @@ fn the_byte_budget_frees_the_oldest_textures_first() {
     assert_eq!(lru.insert("d".to_owned(), texture(&ctx, "d")), 1);
     assert!(!lru.contains("b"), "the least recently used goes");
     assert!(lru.contains("a") && lru.contains("c") && lru.contains("d"));
-    assert_eq!(lru.bytes, one * 3);
+    assert_eq!(lru.bytes(), one * 3);
 }
 
 #[test]
@@ -239,6 +309,7 @@ fn a_job_for_a_left_server_is_not_fetched() {
         path: request_path(THUMB),
         gen: 0,
         size: TEST_SIZE,
+        background: false,
     };
     assert!(current(&shared, &job));
     shared.generation.store(1, Ordering::SeqCst);
@@ -456,4 +527,21 @@ fn a_jellyfin_address_is_also_a_request_when_no_width_was_asked() {
     assert!(path.ends_with("&maxWidth=1"));
     // A Plex thumb value is still the other source's shape of request.
     assert_eq!(browse::path_server(&request_path(THUMB)), None);
+}
+
+#[test]
+fn a_background_the_cache_frees_takes_its_dims_with_it() {
+    let ctx = Context::default();
+    let dir = temp_cache_dir("backdrop-dims");
+    let mut artwork = Artwork::with_cache(Some(dir.clone()), 1);
+    for key in ["first-background", "second-background"] {
+        assert!(write_cached_png(&dir, key) > 0);
+        artwork.enqueue_job(key.to_owned(), request_path(THUMB), TEST_SIZE, true);
+        assert!(artwork.wait_for_texture(&ctx, key), "{key} must upload");
+    }
+    assert_eq!(artwork.texture_count(), 1);
+    assert_eq!(
+        artwork.backdrops.keys().collect::<Vec<_>>(),
+        ["second-background"]
+    );
 }

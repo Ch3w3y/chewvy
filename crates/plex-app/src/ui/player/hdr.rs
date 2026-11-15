@@ -1,9 +1,9 @@
 //! The overlay's side of the HDR window: the button that offers it while an HDR
 //! video plays here, and the card this window shows while the picture is there.
 
-use egui::{pos2, vec2, Align2, Color32, CursorIcon, Rect, Sense};
+use egui::{pos2, vec2, Align2, CursorIcon, Rect, Sense};
 
-use super::{Action, GLASS};
+use super::Action;
 use crate::player::hdr::{is_dolby_vision, is_hdr};
 use crate::player::Player;
 use crate::ui::theme;
@@ -40,13 +40,13 @@ pub(super) fn card(root: &mut egui::Ui, screen: Rect, p: &Player) -> Option<Acti
     let size = vec2(440.0, 172.0);
     let rect = Rect::from_center_size(screen.center() - vec2(0.0, 40.0), size);
     let painter = root.painter();
-    painter.rect_filled(rect, theme::CARD_RADIUS, GLASS);
+    painter.rect_filled(rect, theme::CARD_RADIUS, theme::palette().floating);
     painter.text(
         rect.center_top() + vec2(0.0, 26.0),
         Align2::CENTER_TOP,
         "Playing in the HDR window",
         egui::FontId::proportional(22.0),
-        theme::TEXT,
+        theme::palette().text,
     );
     painter.text(
         rect.center_top() + vec2(0.0, 62.0),
@@ -57,7 +57,7 @@ pub(super) fn card(root: &mut egui::Ui, screen: Rect, p: &Player) -> Option<Acti
             "Space pauses there, F toggles full screen, Q closes it."
         },
         theme::body(),
-        theme::SECONDARY,
+        theme::palette().secondary,
     );
     let back = Rect::from_min_size(rect.left_bottom() + vec2(28.0, -64.0), vec2(260.0, 40.0));
     let stop = Rect::from_min_size(back.right_top() + vec2(12.0, 0.0), vec2(112.0, 40.0));
@@ -73,16 +73,16 @@ pub(super) fn card(root: &mut egui::Ui, screen: Rect, p: &Player) -> Option<Acti
 fn glass_button(root: &mut egui::Ui, rect: Rect, id: &str, label: &str, hover: &str) -> bool {
     let resp = root.interact(rect, root.id().with(id), Sense::click());
     let (fill, text) = if resp.hovered() {
-        (theme::PRIMARY_BG, theme::PRIMARY_TEXT)
+        (theme::palette().primary_bg, theme::palette().primary_text)
     } else {
-        (GLASS, theme::TEXT)
+        (theme::palette().floating, theme::palette().text)
     };
     let painter = root.painter();
     painter.rect_filled(rect, theme::CARD_RADIUS, fill);
     painter.rect_stroke(
         rect,
         theme::CARD_RADIUS,
-        egui::Stroke::new(1.0, Color32::from_white_alpha(90)),
+        egui::Stroke::new(1.0, theme::palette().wash(90)),
         egui::StrokeKind::Inside,
     );
     painter.text(

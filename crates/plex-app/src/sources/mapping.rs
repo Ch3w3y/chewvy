@@ -52,6 +52,7 @@ pub(crate) fn item(server: &str, row: &JfItem) -> Item {
         ),
         _ => (None, None, None, None),
     };
+    let family = Family::of(server, row, kind.as_deref());
     let leaves = row.recursive_item_count;
     let unplayed = row
         .user_data
@@ -67,11 +68,15 @@ pub(crate) fn item(server: &str, row: &JfItem) -> Item {
         parent_rating_key: parent.map(named),
         grandparent_title: grandparent_title.map(str::to_owned),
         grandparent_rating_key: grandparent.map(named),
-        // An episode's 16:9 still is what its cards are drawn from, where Plex
-        // names one; otherwise the poster is the `Primary` tag.
-        thumb: address(server, row, ImageKind::Thumb)
-            .or_else(|| address(server, row, ImageKind::Primary)),
-        art: address(server, row, ImageKind::Backdrop),
+        // `Primary` is exactly what Plex's `thumb` is: a film's, show's or
+        // season's 2:3 poster and an episode's 16:9 still. Jellyfin's `Thumb`
+        // is a landscape title card that poster tiles would crop to its middle.
+        thumb: address(server, row, ImageKind::Primary)
+            .or_else(|| address(server, row, ImageKind::Thumb)),
+        art: address(server, row, ImageKind::Backdrop).or(family.backdrop.clone()),
+        parent_thumb: family.parent_poster,
+        grandparent_thumb: family.series_poster,
+        grandparent_art: family.backdrop,
         images: artwork(server, row),
         year: row
             .production_year
@@ -79,7 +84,7 @@ pub(crate) fn item(server: &str, row: &JfItem) -> Item {
         summary: row.overview.clone(),
         content_rating: row.official_rating.clone(),
         genres: row.genres.clone(),
-        roles: cast(&row.people),
+        roles: cast(server, &row.people),
         directors: directors(&row.people),
         view_offset: row
             .user_data
@@ -168,15 +173,89 @@ fn address(server: &str, row: &JfItem, kind: ImageKind) -> Option<String> {
     Some(source::artwork_address(server, &route))
 }
 
+/// The artwork a season or an episode borrows from its season and series, as
+/// Plex names it on such rows: a season card and an episode on a poster shelf
+/// draw the show's 2:3 poster, never the episode's own 16:9 still.
+struct Family {
+    /// The series poster (`grandparentThumb` on an episode).
+    series_poster: Option<String>,
+    /// An episode's season poster, else its series poster (`parentThumb`); a
+    /// season's series poster.
+    parent_poster: Option<String>,
+    /// The nearest ancestor's backdrop (`grandparentArt`).
+    backdrop: Option<String>,
+}
+
+impl Family {
+    fn of(server: &str, row: &JfItem, kind: Option<&str>) -> Self {
+        let series_poster = ancestor(
+            server,
+            row.series_id.as_deref(),
+            ImageKind::Primary,
+            row.series_primary_image_tag.as_deref(),
+        );
+        let backdrop = ancestor(
+            server,
+            row.parent_backdrop_item_id.as_deref(),
+            ImageKind::Backdrop,
+            row.parent_backdrop_image_tags.first().map(String::as_str),
+        );
+        match kind {
+            Some("episode") => Self {
+                parent_poster: ancestor(
+                    server,
+                    row.parent_primary_image_item_id.as_deref(),
+                    ImageKind::Primary,
+                    row.parent_primary_image_tag.as_deref(),
+                )
+                .or_else(|| series_poster.clone()),
+                series_poster,
+                backdrop,
+            },
+            Some("season") => Self {
+                parent_poster: series_poster,
+                series_poster: None,
+                backdrop,
+            },
+            _ => Self {
+                series_poster: None,
+                parent_poster: None,
+                backdrop: None,
+            },
+        }
+    }
+}
+
+/// The artwork address of another item's image that this row names by that
+/// item's id and the image's tag.
+fn ancestor(server: &str, id: Option<&str>, kind: ImageKind, tag: Option<&str>) -> Option<String> {
+    let route = jellyfin_core::browse::image_address(id?, kind, tag?)?;
+    Some(source::artwork_address(server, &route))
+}
+
 /// The row's artwork as the model names it by role, so the hero and the cards
 /// find a poster, a backdrop and a clear logo the same way they find Plex's.
 fn artwork(server: &str, row: &JfItem) -> Vec<ItemImage> {
+    // A season or an episode has no clear logo of its own; its show's is the
+    // one the hero sets the title in.
+    let parent_logo = || {
+        ancestor(
+            server,
+            row.parent_logo_item_id.as_deref(),
+            ImageKind::Logo,
+            row.parent_logo_image_tag.as_deref(),
+        )
+    };
     ROLES
         .iter()
         .filter_map(|(role, kind)| {
+            let url = address(server, row, *kind).or_else(|| match kind {
+                ImageKind::Logo => parent_logo(),
+                _ => None,
+            });
             Some(ItemImage {
                 image_type: Some((*role).to_owned()),
-                url: Some(address(server, row, *kind)?),
+                url: Some(url?),
                 ..ItemImage::default()
             })
         })
@@ -186,7 +265,7 @@ fn artwork(server: &str, row: &JfItem) -> Vec<ItemImage> {
 /// The cast of one row, as the model holds them. Jellyfin's own `Type` says
 /// which credit a person is and its `Role` the character they played; a credit
 /// with no name is not someone, and is left out.
-fn cast(people: &[Person]) -> Vec<Role> {
+fn cast(server: &str, people: &[Person]) -> Vec<Role> {
     people
         .iter()
         .filter(|person| person.kind.as_deref() == Some("Actor"))
@@ -194,9 +273,12 @@ fn cast(people: &[Person]) -> Vec<Role> {
             Some(Role {
                 tag: Some(person.name.clone()?),
                 role: person.role.clone(),
-                // A person's picture is not part of the row: Jellyfin keys it by
-                // the person, whom these rows name only by name.
-                thumb: None,
+                thumb: ancestor(
+                    server,
+                    person.id.as_deref(),
+                    ImageKind::Primary,
+                    person.primary_image_tag.as_deref(),
+                ),
             })
         })
         .collect()

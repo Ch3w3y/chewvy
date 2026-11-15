@@ -9,12 +9,12 @@
 //! talks to a server; paging, sort and watch-state travel as [`crate::watch::Cmd`]
 //! messages, and only fields a captured answer names are read.
 
-use egui::{Align, Color32, CornerRadius, FontId, Rect, Sense, Vec2};
+use egui::{Align, Vec2};
 
 use plex_core::library::{Item, SortOption};
 
 use crate::ui::settings::PosterSize;
-use crate::ui::{cards, chips, home, images, rail, theme};
+use crate::ui::{chips, home, images, rail, theme};
 
 /// Space between cards, in both directions.
 pub const GAP: f32 = theme::GAP;
@@ -43,7 +43,7 @@ const POSTER_GAP: f32 = 10.0;
 const TITLE_GAP: f32 = 2.0;
 /// The height one title line is given: [`CAPTION_TITLE_ROWS`] of them are
 /// reserved for every row, so a two-line title cannot push a card's meta line
-/// below its neighbours'. [`title_lines`] clips a title to that many lines.
+/// below its neighbours'. [`title::title_lines`] clips a title to that many lines.
 const TITLE_LINE: f32 = 18.0;
 /// How many title lines a row reserves.
 const CAPTION_TITLE_ROWS: usize = 2;
@@ -52,12 +52,6 @@ const META_LINE: f32 = 16.0;
 /// The caption block's own height: the reserved title lines, the gap between
 /// title and meta, and the meta line.
 const CAPTION_HEIGHT: f32 = CAPTION_TITLE_ROWS as f32 * TITLE_LINE + TITLE_GAP + META_LINE;
-/// The pill that counts a show's unwatched episodes.
-const BADGE: [f32; 2] = [26.0, 22.0];
-/// Badge and marker inset from the poster's top-right corner.
-const BADGE_INSET: f32 = 8.0;
-/// The accent dot that marks a movie never played.
-const MARK_RADIUS: f32 = 5.0;
 
 /// The card width band, `[min, max]`, one [`PosterSize`] lays out within: a
 /// wider band only ever means a wider card, never a forced one. `Medium` is the
@@ -149,6 +143,20 @@ pub struct Card {
     pub start: Option<f64>,
 }
 
+/// The 2:3 artwork a card of this kind draws. An episode's own `thumb` is its
+/// 16:9 still, which a poster card would crop to its middle, so an episode
+/// (in search results, say) shows its show's poster, else its season's.
+fn card_art<'a>(item: &'a Item, kind: &str) -> Option<&'a str> {
+    if kind == "episode" {
+        return item
+            .grandparent_thumb
+            .as_deref()
+            .or(item.parent_thumb.as_deref())
+            .or(item.thumb.as_deref());
+    }
+    item.thumb.as_deref()
+}
+
 impl Card {
     #[must_use]
     pub fn from_item(item: &Item) -> Self {
@@ -160,7 +168,7 @@ impl Card {
                 .clone()
                 .unwrap_or_else(|| "(untitled)".to_owned()),
             subtitle: subtitle(item, &kind),
-            thumb: item.thumb.clone(),
+            thumb: card_art(item, &kind).map(str::to_owned),
             unwatched: unwatched(item, &kind),
             start: home::resume_start(item),
             kind,
@@ -427,7 +435,6 @@ pub fn show(
     if let Some(action) = chips_row(ui, &view.chips, view.sorts) {
         return Some(action);
     }
-    ui.separator();
 
     // The grid holds its own gutters rather than trusting the panel it was put
     // in: columns, card width and row height all come from the width that keeps
@@ -448,6 +455,7 @@ pub fn show(
     // and only their posters are asked for: a 1,600-item library costs what one
     // screenful costs, and the texture cache never holds more than it can show.
     let area = egui::ScrollArea::vertical()
+        .id_salt(("library-page", view.title.as_str()))
         .auto_shrink([false; 2])
         .show_rows(ui, row_h, rows, |ui, visible| {
             for row in visible {
@@ -499,12 +507,12 @@ pub fn show(
 /// The section title beside the count the server gave it.
 fn header(ui: &mut egui::Ui, view: &View<'_>) {
     ui.horizontal(|ui| {
-        ui.label(theme::strong(view.title.clone()).size(theme::H1_SIZE));
+        crate::ui::legible::label(ui, theme::strong(view.title.clone()).size(theme::H1_SIZE));
         let shown = item_count(match view.total {
             Some(total) => total,
             None => view.cards.len() as u64,
         });
-        ui.label(theme::meta_text(shown));
+        crate::ui::legible::label(ui, theme::meta_text(shown));
     });
 }
 
@@ -532,7 +540,7 @@ fn chips_row(ui: &mut egui::Ui, state: &Chips, sorts: &[SortOption]) -> Option<A
             "Ask the server for only what it says is unwatched",
         );
 
-        let menu_open = chips::menu(ui, &sort_chip, |ui| {
+        let menu_open = chips::menu(&sort_chip, |ui| {
             if sorts.is_empty() {
                 ui.label(theme::meta_text("This library named no sorts."));
                 return;
@@ -565,12 +573,12 @@ fn chips_row(ui: &mut egui::Ui, state: &Chips, sorts: &[SortOption]) -> Option<A
             {
                 action = order_action.clone();
             }
-            chips::paint(ui, chip.rect, order, descending, false);
+            chips::paint(ui, chip, order, descending, false);
         }
         if unwatched_hit && action.is_none() {
             action = Some(Action::Unwatched(!state.unwatched));
         }
-        chips::paint(ui, sort_chip.rect, &label, state.sort.is_some(), menu_open);
+        chips::paint(ui, &sort_chip, &label, state.sort.is_some(), menu_open);
     });
     action
 }
@@ -645,212 +653,12 @@ fn keyboard_focus(ui: &egui::Ui, card: &Card, selection: Option<usize>, index: u
     ui.ctx().memory(|mem| mem.has_focus(id))
 }
 
-/// One poster card: 2:3 artwork with its badge or marker, then title and year,
-/// clickable while nothing is playing. Answers whether the user clicked it.
-///
-/// `mark_unwatched` is the [`Chips::unwatched`] filter in effect: only rows the
-/// server already said are unwatched get the accent dot. `focused` asks egui to
-/// hold the keyboard focus on this card, which is what draws its ring when the
-/// screen's keyboard selection is here.
-pub(crate) fn poster(
-    ui: &mut egui::Ui,
-    artwork: &mut images::Artwork,
-    card: &Card,
-    size: [f32; 2],
-    playing: bool,
-    mark_unwatched: bool,
-    focused: bool,
-) -> bool {
-    let [width, height] = size;
-    let poster = poster_size(width);
-    let clickable = !playing && (card.playable() || card.browsable());
-    // Every card is given the same box - `width` across, `height` down, the
-    // height [`Self::row_height`] reserves - so a long caption costs its own
-    // card nothing and a row's posters, titles and meta lines stay in line.
-    // The caption steps by [`Self::TITLE_GAP`]; the poster's own artwork,
-    // badge and marker are painted into one allocation, so the one stepped
-    // space before them is the [`Self::POSTER_GAP`] gap to the title.
-    let inner = ui.allocate_ui_with_layout(
-        egui::vec2(width, height),
-        egui::Layout::top_down(Align::Min),
-        |ui| {
-            ui.spacing_mut().item_spacing.y = TITLE_GAP;
-            let (rect, _) = ui.allocate_exact_size(poster, Sense::hover());
-            poster_artwork(ui, artwork, card, rect);
-            match marker(card, mark_unwatched) {
-                Marker::Count(count) => badge(ui, rect, &count.to_string()),
-                Marker::Dot => mark(ui, rect),
-                Marker::None => {}
-            }
-            ui.add_space(POSTER_GAP - TITLE_GAP);
-            caption(ui, card, width);
-        },
-    );
-    let response = ui.interact(
-        inner.response.rect,
-        card_id(ui.id(), card),
-        if clickable {
-            Sense::click()
-        } else {
-            Sense::hover()
-        },
-    );
-    if focused {
-        response.request_focus();
-    }
-    cards::focus_ring(
-        ui,
-        inner.response.rect,
-        &response,
-        cards::CARD_RADIUS,
-        focused,
-    );
-    let response = if clickable {
-        cards::pointer(response)
-    } else {
-        response
-    };
-    response.on_hover_text(tooltip(card)).clicked()
-}
+#[path = "grid/poster.rs"]
+mod poster;
+pub(crate) use poster::poster;
 
-fn poster_artwork(ui: &mut egui::Ui, artwork: &mut images::Artwork, card: &Card, rect: Rect) {
-    ui.painter()
-        .rect_filled(rect, theme::CARD_RADIUS, theme::CARD);
-    if let Some((id, tex)) = artwork.texture(
-        card.thumb.as_deref(),
-        rect.width() as u32,
-        rect.height() as u32,
-    ) {
-        cards::rounded_art(
-            ui,
-            id,
-            rect,
-            cards::cover_uv_top(tex, rect.size()),
-            theme::CARD_RADIUS,
-            Color32::WHITE,
-        );
-    }
-}
-
-/// The unwatched-episodes badge: an accent pill with the count in dark ink, in
-/// the poster's top-right corner (a poster's own title art sits at its foot,
-/// where a badge would read as part of the title). It widens for 3-digit counts.
-fn badge(ui: &mut egui::Ui, rect: Rect, text: &str) {
-    let font = theme::semibold(theme::CAPTION_SIZE);
-    let galley = ui
-        .painter()
-        .layout_no_wrap(text.to_owned(), font, theme::PRIMARY_TEXT);
-    let width = (galley.size().x + 12.0).max(BADGE[1]);
-    let box_ = Rect::from_min_size(
-        egui::pos2(rect.max.x - width - BADGE_INSET, rect.min.y + BADGE_INSET),
-        egui::vec2(width, BADGE[1]),
-    );
-    ui.painter().rect_filled(
-        box_.expand(1.5),
-        CornerRadius::same(255),
-        Color32::from_black_alpha(90),
-    );
-    ui.painter()
-        .rect_filled(box_, CornerRadius::same(255), theme::ACCENT);
-    ui.painter().galley(
-        box_.center() - galley.size() * 0.5,
-        galley,
-        theme::PRIMARY_TEXT,
-    );
-}
-
-/// A leaf marker: an accent dot ringed in dark, top-right like [`badge`].
-fn mark(ui: &mut egui::Ui, rect: Rect) {
-    let center = egui::pos2(
-        rect.max.x - BADGE_INSET - MARK_RADIUS,
-        rect.min.y + BADGE_INSET + MARK_RADIUS,
-    );
-    ui.painter()
-        .circle_filled(center, MARK_RADIUS + 2.0, Color32::from_black_alpha(180));
-    ui.painter()
-        .circle_filled(center, MARK_RADIUS, theme::ACCENT);
-}
-
-/// Title and its year or episode word, each on its own line and stepped by
-/// [`Self::TITLE_GAP`]: the title clipped to [`CAPTION_TITLE_ROWS`] lines that
-/// each fit `width`, the meta line elided to `width` too. Nothing a caption
-/// draws is ever wider than the poster above it.
-fn caption(ui: &mut egui::Ui, card: &Card, width: f32) {
-    let font = theme::card_title();
-    let lines = title_lines(ui.painter(), &card.title, width, &font);
-    ui.with_layout(egui::Layout::top_down(Align::Min), |ui| {
-        ui.spacing_mut().item_spacing.y = TITLE_GAP;
-        for line in lines {
-            ui.label(theme::title(line));
-        }
-        if !card.subtitle.is_empty() {
-            let meta = rail::elide(ui.painter(), &card.subtitle, width, &theme::meta());
-            ui.label(theme::meta_text(meta));
-        }
-    });
-}
-
-/// A `text` laid out as at most [`CAPTION_TITLE_ROWS`] lines of `width` each:
-/// whole words while they fit, and when something has to go, the last line kept
-/// ends with `…` instead. Measured, so what a card shows and what
-/// [`Self::row_height`] reserved for it are the same lines.
-fn title_lines(painter: &egui::Painter, text: &str, width: f32, font: &FontId) -> Vec<String> {
-    if width <= 0.0 {
-        return Vec::new();
-    }
-    let fits = |line: &str| {
-        painter
-            .layout_no_wrap(line.to_owned(), font.clone(), Color32::PLACEHOLDER)
-            .size()
-            .x
-            <= width
-    };
-    let mut lines: Vec<String> = Vec::new();
-    let mut rest = text.trim();
-    while !rest.is_empty() {
-        if fits(rest) {
-            lines.push(rest.to_owned());
-            return lines;
-        }
-        // The longest run of whole words that still fits this line.
-        let mut cut = 0usize;
-        for word in rest.split_whitespace() {
-            let next = if cut == 0 {
-                word.len()
-            } else {
-                cut + 1 + word.len()
-            };
-            if next <= rest.len() && fits(rest[..next].trim_end()) {
-                cut = next;
-            } else {
-                break;
-            }
-        }
-        if cut == 0 {
-            // A single word wider than the card: keep what of it fits.
-            lines.push(rail::elide(painter, rest, width, font));
-            return lines;
-        }
-        lines.push(rest[..cut].trim_end().to_owned());
-        rest = rest[cut..].trim();
-        if lines.len() == CAPTION_TITLE_ROWS {
-            lines.push(rail::elide(painter, rest, width, font));
-            return lines;
-        }
-    }
-    lines
-}
-
-fn tooltip(card: &Card) -> String {
-    let mut lines = vec![card.title.clone()];
-    if !card.subtitle.is_empty() {
-        lines.push(card.subtitle.clone());
-    }
-    if let Some(count) = card.unwatched.filter(|count| *count > 0) {
-        lines.push(format!("{count} unwatched"));
-    }
-    lines.join("\n")
-}
+#[path = "grid/title.rs"]
+mod title;
 
 #[cfg(test)]
 #[path = "grid/tests.rs"]

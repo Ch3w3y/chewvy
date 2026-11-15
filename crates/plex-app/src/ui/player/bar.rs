@@ -2,21 +2,26 @@
 
 use egui::{pos2, vec2, Align2, Color32, CursorIcon, Pos2, Rect, Sense, Shape, Stroke};
 
-use crate::player::{clock, MarkerKind, NextUp, Player};
+use crate::player::{clock, NextUp, Player};
 use crate::ui::images::Artwork;
-use crate::ui::theme;
+use crate::ui::marks::icon::{Icon, Size};
+use crate::ui::{controls, theme};
 
-use super::icons::Icon;
-use super::{icon_button, Menu, Overlay, GLASS};
+use super::{icon_button, Menu, Overlay};
 
+/// The strength of the wash over an intro's or the credits' stretch of the
+/// seek bar: between what is buffered and what is played.
+const MARKER: u8 = 150;
 /// Height of the gradient band behind the controls.
 const BAND: f32 = 190.0;
 /// Side margin of the bar and the rows.
 const SIDE: f32 = 32.0;
 /// Room for the time labels either side of the seek bar.
 const TIME_W: f32 = 76.0;
-/// Hit and icon size of the transport buttons.
+/// Hit size of the transport buttons.
 const BTN: f32 = 40.0;
+/// The loudest volume the speaker draws with one wave, of mpv's 0 to 150.
+const QUIET: f64 = 50.0;
 
 /// The whole bottom band.
 pub(super) fn bottom(
@@ -30,7 +35,7 @@ pub(super) fn bottom(
     root.painter().add(Shape::gradient_rect(
         band,
         egui::epaint::Direction::BottomUp,
-        [Color32::from_black_alpha(215), Color32::TRANSPARENT],
+        [theme::palette().scrim(215), Color32::TRANSPARENT],
     ));
     let row_y = screen.bottom() - 44.0;
     let bar_y = row_y - 46.0;
@@ -55,7 +60,7 @@ fn seek_row(
         Align2::LEFT_CENTER,
         clock(position),
         theme::meta(),
-        theme::TEXT,
+        theme::palette().text,
     );
     let remaining = format!("-{}", clock((duration - position).max(0.0)));
     painter.text(
@@ -63,7 +68,7 @@ fn seek_row(
         Align2::RIGHT_CENTER,
         remaining,
         theme::meta(),
-        theme::SECONDARY,
+        theme::palette().secondary,
     );
     let track = Rect::from_min_max(
         pos2(screen.left() + SIDE + TIME_W, y - 10.0),
@@ -110,6 +115,7 @@ fn seek_bar(
     }
     let active = resp.hovered() || ov.scrub.is_some();
     paint_track(root, hit, p, ov.scrub, active);
+    controls::ring_when_focused(root.painter(), &resp, hit, 6.0);
     if let Some(hover) = resp.hover_pos().or_else(|| {
         ov.scrub
             .map(|s| pos2(time_to_x(hit, s, duration), hit.center().y))
@@ -134,23 +140,19 @@ fn paint_track(root: &egui::Ui, hit: Rect, p: &Player, scrub: Option<f64>, activ
     let line = Rect::from_center_size(hit.center(), vec2(hit.width(), thick));
     let x = |secs: f64| time_to_x(line, secs, duration);
     let painter = root.painter();
-    painter.rect_filled(line, thick / 2.0, Color32::from_white_alpha(60));
+    painter.rect_filled(line, thick / 2.0, theme::palette().wash(60));
     let played = snap.position.unwrap_or(0.0);
     if let Some(ahead) = snap.cached_ahead {
         let r = Rect::from_x_y_ranges(line.left()..=x(played + ahead), line.y_range());
-        painter.rect_filled(r, thick / 2.0, Color32::from_white_alpha(110));
+        painter.rect_filled(r, thick / 2.0, theme::palette().wash(110));
     }
     for m in &p.request().markers {
-        let tint = match m.kind {
-            MarkerKind::Intro => Color32::from_rgba_unmultiplied(120, 170, 255, 150),
-            MarkerKind::Credits => Color32::from_rgba_unmultiplied(200, 140, 255, 150),
-        };
         let r = Rect::from_x_y_ranges(x(m.start)..=x(m.end), line.y_range());
-        painter.rect_filled(r, 0.0, tint);
+        painter.rect_filled(r, 0.0, theme::palette().wash(MARKER));
     }
     let shown = scrub.unwrap_or(played);
     let r = Rect::from_x_y_ranges(line.left()..=x(shown), line.y_range());
-    painter.rect_filled(r, thick / 2.0, theme::ACCENT);
+    painter.rect_filled(r, thick / 2.0, theme::palette().accent);
     // Gaps at chapter starts, dropped when they would crowd closer than 10 pt.
     let mut last = f32::NEG_INFINITY;
     for (start, _) in snap.chapters.iter().skip(1) {
@@ -161,12 +163,12 @@ fn paint_track(root: &egui::Ui, hit: Rect, p: &Player, scrub: Option<f64>, activ
         last = cx;
         painter.line_segment(
             [pos2(cx, line.top()), pos2(cx, line.bottom())],
-            Stroke::new(1.5, Color32::from_black_alpha(150)),
+            Stroke::new(1.5, theme::palette().scrim(150)),
         );
     }
     let knob = if active { 8.0 } else { 0.0 };
     if knob > 0.0 {
-        painter.circle_filled(pos2(x(shown), line.center().y), knob, theme::TEXT);
+        painter.circle_filled(pos2(x(shown), line.center().y), knob, theme::palette().text);
     }
 }
 
@@ -194,7 +196,7 @@ fn preview(root: &egui::Ui, track: Rect, secs: f64, x: f32, p: &Player, artwork:
         egui::Order::Tooltip,
         root.id().with("preview"),
     ));
-    painter.rect_filled(rect, 10.0, GLASS);
+    painter.rect_filled(rect, 10.0, theme::palette().floating);
     let mut text_top = rect.top() + 6.0;
     if let Some((id, _)) = image {
         let img = Rect::from_min_size(rect.min + vec2(4.0, 4.0), vec2(width - 8.0, 126.0 - 8.0));
@@ -202,7 +204,7 @@ fn preview(root: &egui::Ui, track: Rect, secs: f64, x: f32, p: &Player, artwork:
             id,
             img,
             Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
-            Color32::WHITE,
+            theme::UNTINTED,
         );
         text_top = img.bottom() + 6.0;
     }
@@ -212,7 +214,7 @@ fn preview(root: &egui::Ui, track: Rect, secs: f64, x: f32, p: &Player, artwork:
             Align2::CENTER_TOP,
             title,
             theme::caption(),
-            theme::SECONDARY,
+            theme::palette().secondary,
         );
         text_top += 16.0;
     }
@@ -221,7 +223,7 @@ fn preview(root: &egui::Ui, track: Rect, secs: f64, x: f32, p: &Player, artwork:
         Align2::CENTER_TOP,
         clock(secs),
         theme::body(),
-        theme::TEXT,
+        theme::palette().text,
     );
 }
 
@@ -231,21 +233,40 @@ fn transport(ov: &mut Overlay, root: &mut egui::Ui, screen: Rect, y: f32, p: &mu
     let mut x = screen.left() + SIDE + BTN / 2.0;
     let paused = p.snapshot().paused;
     let play = if paused { Icon::Play } else { Icon::Pause };
-    if icon_button(root, at(x).expand(4.0), play, "Play/Pause (Space)", false) {
+    let cell = at(x).expand(4.0);
+    if icon_button(
+        root,
+        cell,
+        (play, Size::Transport),
+        "Play/Pause (Space)",
+        false,
+    ) {
         p.toggle_pause();
     }
     x += BTN + 12.0;
-    if icon_button(root, at(x), Icon::Back10, "Back 10 s (←)", false) {
+    if icon_button(
+        root,
+        at(x),
+        (Icon::SeekBack, Size::Regular),
+        "Back 10 s (←)",
+        false,
+    ) {
         p.seek_by(-10.0);
     }
     x += BTN + 8.0;
-    if icon_button(root, at(x), Icon::Forward10, "Forward 10 s (→)", false) {
+    if icon_button(
+        root,
+        at(x),
+        (Icon::SeekForward, Size::Regular),
+        "Forward 10 s (→)",
+        false,
+    ) {
         p.seek_by(10.0);
     }
     if let Some(next) = ov.next_up(p) {
         x += BTN + 8.0;
         let label = format!("Next: {}", next.label);
-        if icon_button(root, at(x), Icon::Next, &label, false) {
+        if icon_button(root, at(x), (Icon::Next, Size::Regular), &label, false) {
             ov.autoplay_now(p);
         }
     }
@@ -268,11 +289,13 @@ fn volume(root: &mut egui::Ui, icon_rect: Rect, p: &Player) {
     let snap = p.snapshot();
     let (vol, muted) = (snap.volume, snap.muted);
     let icon = if muted || vol <= 0.0 {
-        Icon::Muted
+        Icon::Mute
+    } else if vol <= QUIET {
+        Icon::VolumeLow
     } else {
-        Icon::Volume
+        Icon::VolumeHigh
     };
-    if icon_button(root, icon_rect, icon, "Mute (M)", false) {
+    if icon_button(root, icon_rect, (icon, Size::Regular), "Mute (M)", false) {
         p.set_mute(!muted);
     }
     let track = Rect::from_min_size(
@@ -293,14 +316,14 @@ fn volume(root: &mut egui::Ui, icon_rect: Rect, p: &Player) {
     }
     let line = Rect::from_center_size(track.center(), vec2(track.width(), 4.0));
     let painter = root.painter();
-    painter.rect_filled(line, 2.0, Color32::from_white_alpha(60));
+    painter.rect_filled(line, 2.0, theme::palette().wash(60));
     let level = if muted {
         0.0
     } else {
         (vol / 150.0).clamp(0.0, 1.0) as f32
     };
     let fill = Rect::from_min_size(line.min, vec2(line.width() * level, line.height()));
-    painter.rect_filled(fill, 2.0, theme::TEXT);
+    painter.rect_filled(fill, 2.0, theme::palette().text);
     // 100% marker: past it mpv amplifies.
     let mark = line.left() + line.width() * (100.0 / 150.0);
     painter.line_segment(
@@ -308,22 +331,28 @@ fn volume(root: &mut egui::Ui, icon_rect: Rect, p: &Player) {
             pos2(mark, line.top() - 3.0),
             pos2(mark, line.bottom() + 3.0),
         ],
-        Stroke::new(1.0, Color32::from_white_alpha(120)),
+        Stroke::new(1.0, theme::palette().wash(120)),
     );
-    if resp.hovered() || resp.dragged() {
-        painter.circle_filled(
-            pos2(line.left() + line.width() * level, line.center().y),
-            6.0,
-            theme::TEXT,
-        );
-    }
+    // Always a thumb, so the short line reads as a control and not as a
+    // progress bar; larger while it is used.
+    let thumb = if resp.hovered() || resp.dragged() {
+        6.0
+    } else {
+        4.0
+    };
+    painter.circle_filled(
+        pos2(line.left() + line.width() * level, line.center().y),
+        thumb,
+        theme::palette().text,
+    );
+    controls::ring_when_focused(painter, &resp, track, 6.0);
 }
 
 fn right_buttons(ov: &mut Overlay, root: &mut egui::Ui, screen: Rect, y: f32, p: &Player) {
     let snap = p.snapshot();
     let mut entries: Vec<(Icon, &str, Option<Menu>)> = Vec::new();
     if ov.group.is_some() {
-        entries.push((Icon::Group, "Watching together", Some(Menu::Together)));
+        entries.push((Icon::People, "Watching together", Some(Menu::Together)));
     }
     if snap.chapters.len() > 1 {
         entries.push((Icon::Chapters, "Chapters", Some(Menu::Chapters)));
@@ -339,14 +368,14 @@ fn right_buttons(ov: &mut Overlay, root: &mut egui::Ui, screen: Rect, y: f32, p:
     entries.push((Icon::Info, "Info (I)", None));
     let mut x = screen.right() - SIDE - BTN / 2.0;
     let fs_icon = if super::is_fullscreen(root.ctx()) {
-        Icon::ExitFullscreen
+        Icon::FullscreenExit
     } else {
         Icon::Fullscreen
     };
     if icon_button(
         root,
         Rect::from_center_size(pos2(x, y), vec2(BTN, BTN)),
-        fs_icon,
+        (fs_icon, Size::Regular),
         "Fullscreen (F)",
         false,
     ) {
@@ -359,7 +388,7 @@ fn right_buttons(ov: &mut Overlay, root: &mut egui::Ui, screen: Rect, y: f32, p:
             Some(m) => ov.menu == Some(m),
             None => ov.info,
         };
-        let clicked = icon_button(root, rect, icon, hint, on);
+        let clicked = icon_button(root, rect, (icon, Size::Regular), hint, on);
         if let Some(group) = ov.group.as_ref().filter(|_| menu == Some(Menu::Together)) {
             super::together::count(root, rect, group.members.len());
         }
@@ -415,17 +444,21 @@ pub(super) fn badges(root: &egui::Ui, right: Pos2, p: &Player) {
     let painter = root.painter();
     let mut x = right.x;
     for label in items.iter().rev() {
-        let galley = painter.layout_no_wrap(label.clone(), theme::caption(), theme::TEXT);
+        let galley = painter.layout_no_wrap(label.clone(), theme::caption(), theme::palette().text);
         let w = galley.size().x + 16.0;
         let rect = Rect::from_min_size(pos2(x - w, right.y - 12.0), vec2(w, 24.0));
-        painter.rect_filled(rect, 6.0, GLASS);
+        painter.rect_filled(rect, 6.0, theme::palette().floating);
         painter.rect_stroke(
             rect,
             6.0,
-            Stroke::new(1.0, Color32::from_white_alpha(60)),
+            Stroke::new(1.0, theme::palette().wash(60)),
             egui::StrokeKind::Inside,
         );
-        painter.galley(rect.center() - galley.size() / 2.0, galley, theme::TEXT);
+        painter.galley(
+            rect.center() - galley.size() / 2.0,
+            galley,
+            theme::palette().text,
+        );
         x -= w + 8.0;
     }
 }
@@ -446,11 +479,11 @@ pub(super) fn up_next(
         size,
     );
     let painter = root.painter();
-    painter.rect_filled(card, 14.0, GLASS);
+    painter.rect_filled(card, 14.0, theme::palette().floating);
     painter.rect_stroke(
         card,
         14.0,
-        Stroke::new(1.0, Color32::from_white_alpha(50)),
+        Stroke::new(1.0, theme::palette().wash(50)),
         egui::StrokeKind::Inside,
     );
     let thumb = Rect::from_min_size(card.min + vec2(10.0, 10.0), vec2(178.0, 100.0));
@@ -460,11 +493,11 @@ pub(super) fn up_next(
                 id,
                 thumb,
                 Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
-                Color32::WHITE,
+                theme::UNTINTED,
             );
         }
         None => {
-            painter.rect_filled(thumb, 8.0, theme::CARD);
+            painter.rect_filled(thumb, 8.0, theme::palette().card);
         }
     }
     let x = thumb.right() + 12.0;
@@ -477,15 +510,15 @@ pub(super) fn up_next(
         Align2::LEFT_TOP,
         head,
         theme::caption(),
-        theme::ACCENT,
+        theme::palette().accent,
     );
     let galley = painter.layout(
         next.label.clone(),
         theme::meta(),
-        theme::TEXT,
+        theme::palette().text,
         card.right() - x - 10.0,
     );
-    painter.galley(pos2(x, card.top() + 30.0), galley, theme::TEXT);
+    painter.galley(pos2(x, card.top() + 30.0), galley, theme::palette().text);
     let play = Rect::from_min_size(pos2(x, card.bottom() - 40.0), vec2(92.0, 30.0));
     let cancel = Rect::from_min_size(pos2(play.right() + 8.0, play.top()), vec2(66.0, 30.0));
     if pill(root, play, "Play now", true) {
@@ -501,13 +534,18 @@ fn pill(root: &mut egui::Ui, rect: Rect, label: &str, primary: bool) -> bool {
     let resp = root
         .interact(rect, root.id().with(("pill", label)), Sense::click())
         .on_hover_cursor(CursorIcon::PointingHand);
+    let palette = theme::palette();
     let (fill, text) = match (primary, resp.hovered()) {
-        (true, _) => (theme::PRIMARY_BG, theme::PRIMARY_TEXT),
-        (false, true) => (Color32::from_white_alpha(50), theme::TEXT),
-        (false, false) => (Color32::from_white_alpha(22), theme::TEXT),
+        (true, true) => (palette.primary_hover, palette.primary_text),
+        (true, false) => (palette.primary_bg, palette.primary_text),
+        (false, true) => (palette.wash(50), palette.text),
+        (false, false) => (palette.wash(22), palette.text),
     };
     let painter = root.painter();
     painter.rect_filled(rect, 15.0, fill);
+    if resp.is_pointer_button_down_on() {
+        painter.rect_filled(rect, 15.0, palette.scrim(40));
+    }
     painter.text(
         rect.center(),
         Align2::CENTER_CENTER,
@@ -515,5 +553,6 @@ fn pill(root: &mut egui::Ui, rect: Rect, label: &str, primary: bool) -> bool {
         theme::caption(),
         text,
     );
+    controls::ring_when_focused(painter, &resp, rect, 15.0);
     resp.clicked()
 }

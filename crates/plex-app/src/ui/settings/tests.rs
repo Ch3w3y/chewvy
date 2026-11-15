@@ -9,6 +9,7 @@ use std::path::PathBuf;
 use std::os::unix::fs::PermissionsExt as _;
 
 use super::*;
+use crate::theme_art::ThemeId;
 
 /// A config dir of its own for one test, removed when the test ends.
 struct Dir(PathBuf);
@@ -52,6 +53,8 @@ fn a_written_settings_file_reads_back_with_its_modes() {
         hdr_fullscreen: false,
         hdr_explained: true,
         check_updates: true,
+        background: Background::Theme(ThemeId::Festival(crate::theme_art::Festival::Christmas)),
+        library_art: false,
     };
     save_to(&dir.0, wanted).unwrap_or_else(|e| panic!("settings test io: {e}"));
     #[cfg(unix)]
@@ -97,6 +100,35 @@ fn a_file_naming_only_one_field_leaves_the_others_at_their_defaults() {
     assert_eq!(settings.poster_size, PosterSize::Small);
     assert!(!settings.progress_sync);
     assert!(settings.hardware_decoding);
+}
+
+#[test]
+fn the_background_starts_automatic_with_library_art_on() {
+    let settings = Settings::default();
+    assert_eq!(settings.background, Background::Automatic);
+    assert!(settings.library_art);
+}
+
+#[test]
+fn a_chosen_theme_survives_a_restart_and_an_unknown_one_reads_as_automatic() {
+    let dir = Dir::new("background");
+    let western = Background::Theme(ThemeId::Genre(crate::theme_art::Genre::Western));
+    save_to(
+        &dir.0,
+        Settings {
+            background: western,
+            ..Settings::default()
+        },
+    )
+    .unwrap_or_else(|e| panic!("settings test io: {e}"));
+    assert_eq!(load_from(&dir.0).background, western);
+    let text = std::fs::read_to_string(dir.0.join(FILE))
+        .unwrap_or_else(|e| panic!("settings test io: {e}"));
+    assert!(text.contains(r#""background": "western""#), "{text}");
+
+    std::fs::write(dir.0.join(FILE), r#"{"background":"violet"}"#)
+        .unwrap_or_else(|e| panic!("settings test io: {e}"));
+    assert_eq!(load_from(&dir.0).background, Background::Automatic);
 }
 
 #[test]

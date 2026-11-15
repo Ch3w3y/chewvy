@@ -9,7 +9,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 # See docs/DEPENDENCIES.md, "License notes", before changing this.
 license = "GPL-3.0-or-later"
@@ -22,10 +22,10 @@ publish = false
 # Builds are offline + locked: `cargo build --offline --locked --all-targets`.
 [workspace.dependencies]
 # workspace-internal
-plex-core = { path = "crates/plex-core", version = "0.3.0" }
-jellyfin-core = { path = "crates/jellyfin-core", version = "0.3.0" }
-plex-player = { path = "crates/plex-player", version = "0.3.0" }
-plex-app = { path = "crates/plex-app", version = "0.3.0" }
+plex-core = { path = "crates/plex-core", version = "0.4.0" }
+jellyfin-core = { path = "crates/jellyfin-core", version = "0.4.0" }
+plex-player = { path = "crates/plex-player", version = "0.4.0" }
+plex-app = { path = "crates/plex-app", version = "0.4.0" }
 
 # HTTP + JSON + auth plumbing (crates/plex-core, milestones M2+)
 ureq = "3.3.0"
@@ -43,6 +43,11 @@ dirs-sys = "0.5.0"
 # other members (arboard -> image, rustls -> ring) so no new crate enters the lock.
 image = { version = "0.25.10", default-features = false, features = ["jpeg", "png"] }
 ring = "0.17.14"
+# The local UTC offset for the background calendar (crates/plex-app,
+# theme_library::system). Already in the lock through env_logger; only the
+# system time zone reader is added, which reads the zoneinfo files Linux and
+# macOS ship, so no time zone database is bundled.
+jiff = { version = "0.2.31", default-features = false, features = ["std", "tz-system", "tzdb-zoneinfo"] }
 # ureq's `rustls` feature selects the ring crypto provider (`_ring`), not aws-lc-rs.
 rustls = { version = "0.23.44", default-features = false, features = ["ring", "logging", "std", "tls12"] }
 rustls-native-certs = "0.8.4"

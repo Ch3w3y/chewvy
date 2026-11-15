@@ -1,0 +1,293 @@
+[
+ {
+  "key": "aurora",
+  "name": "Aurora",
+  "group": "default",
+  "photos": [
+   {
+    "image": "aurora",
+    "title": "Aurora",
+    "author": "Russo Francesco",
+    "licence": "CC BY 3.0",
+    "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Aurora_(140959963).jpeg"
+   }
+  ]
+ },
+ {
+  "key": "fantasy",
+  "name": "Fantasy",
+  "group": "genre",
+  "photos": [
+   {
+    "image": "fantasy-1",
+    "title": "Morning fog in the Yellowstone River Valley",
+    "author": "Yellowstone National Park",
+    "licence": "Public domain",
+    "licence_url": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Morning_fog_in_the_Yellowstone_River_Valley_(14563692904).jpg"
+   },
+   {
+    "image": "fantasy-2",
+    "title": "Eilean Donan castle",
+    "author": "Eusebius",
+    "licence": "CC BY 3.0",
+    "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Eilean_Donan_castle_-_140mm.jpg"
+   }
+  ]
+ },
+ {
+  "key": "scifi",
+  "name": "Science fiction",
+  "group": "genre",
+  "photos": [
+   {
+    "image": "scifi-1",
+    "title": "Cosmic Cliffs in the Carina Nebula (JWST)",
+    "author": "NASA, ESA, CSA, STScI",
+    "licence": "Public domain",
+    "licence_url": "",
+    "source": "https://commons.wikimedia.org/wiki/File:NASA%E2%80%99s_Webb_Reveals_Cosmic_Cliffs,_Glittering_Landscape_of_Star_Birth.jpg"
+   },
+   {
+    "image": "scifi-2",
+    "title": "Tarantula Nebula (JWST)",
+    "author": "NASA, ESA, CSA, STScI, Webb ERO Production Team",
+    "licence": "Public domain",
+    "licence_url": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Tarantula_Nebula_by_JWST.jpg"
+   }
+  ]
+ },
+ {
+  "key": "epic",
+  "name": "Epic",
+  "group": "genre",
+  "photos": [
+   {
+    "image": "epic-1",
+    "title": "Dunes at sunset, Great Sand Dunes National Park",
+    "author": "Debra Miller, National Park Service",
+    "licence": "Public domain",
+    "licence_url": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Dunes_at_sunset_along_the_southern_edge_of_the_dune_field_in_Great_Sand_Dunes_National_Park._NPS-Debra_Miller_(18659276586).jpg"
+   },
+   {
+    "image": "epic-2",
+    "title": "Dune and Cleveland Peak at sunset",
+    "author": "Great Sand Dunes National Park and Preserve",
+    "licence": "Public domain",
+    "licence_url": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Dune_and_Cleveland_Peak_at_Sunset_-_Flickr_-_Great_Sand_Dunes_National_Park_and_Preserve.jpg"
+   }
+  ]
+ },
+ {
+  "key": "horror",
+  "name": "Horror",
+  "group": "genre",
+  "photos": [
+   {
+    "image": "horror-1",
+    "title": "Moon over the dead forest, Kamchatka",
+    "author": "kuhnmi",
+    "licence": "CC BY 2.0",
+    "licence_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Kamchatka_Moon_over_the_dead_forest_(19873266190).jpg"
+   },
+   {
+    "image": "horror-2",
+    "title": "Morning fog shrouds trees, Okanogan-Wenatchee National Forest",
+    "author": "U.S. Forest Service, Pacific Northwest Region",
+    "licence": "Public domain",
+    "licence_url": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Okanogan-Wenatchee_National_Forest,_morning_fog_shrouds_trees_(37171636495).jpg"
+   }
+  ]
+ },
+ {
+  "key": "western",
+  "name": "Western",
+  "group": "genre",
+  "photos": [
+   {
+    "image": "western-1",
+    "title": "Monument Valley sunset",
+    "author": "Romain Guy",
+    "licence": "CC0 1.0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Monument_Valley_Sunset_(44943115621).jpg"
+   },
+   {
+    "image": "western-2",
+    "title": "Monument Valley",
+    "author": "Marco Bellucci",
+    "licence": "CC BY 2.0",
+    "licence_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Monument_Valley_(5067709777).jpg"
+   }
+  ]
+ },
+ {
+  "key": "adventure",
+  "name": "Adventure",
+  "group": "genre",
+  "photos": [
+   {
+    "image": "adventure-1",
+    "title": "Zagedan Lakes, Caucasus Mountains",
+    "author": "Vyacheslav Argenberg",
+    "licence": "CC BY 4.0",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Zagedan_Lakes,_Mountain_cirque,_Caucasus_Mountains.jpg"
+   },
+   {
+    "image": "adventure-2",
+    "title": "Breiðamerkurjökull glacier, Iceland",
+    "author": "Jakub Hałun",
+    "licence": "CC BY 4.0",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Brei%C3%B0amerkurj%C3%B6kull_glacier,_Iceland,_20240719_1427_2618.jpg"
+   }
+  ]
+ },
+ {
+  "key": "christmas",
+  "name": "Christmas",
+  "group": "festival",
+  "photos": [
+   {
+    "image": "christmas-1",
+    "title": "Glowing Christmas tree lights in the winter night",
+    "author": "epSos.de",
+    "licence": "CC BY 2.0",
+    "licence_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Glowing_Christmas_Tree_Lights_in_the_Winter_Night.jpg"
+   },
+   {
+    "image": "christmas-2",
+    "title": "Marketplace after Christmas",
+    "author": "J. Triepke",
+    "licence": "CC BY 2.0",
+    "licence_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Marketplace_after_christmas_(25746763234).jpg"
+   }
+  ]
+ },
+ {
+  "key": "halloween",
+  "name": "Halloween",
+  "group": "festival",
+  "photos": [
+   {
+    "image": "halloween-1",
+    "title": "Autumn in the mountains at night with moonlight",
+    "author": "Dreamy Pixel",
+    "licence": "CC BY 4.0",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Autumn_in_the_mountains_at_night_with_moonlight.jpg"
+   },
+   {
+    "image": "halloween-2",
+    "title": "Sunset east of Yaki Point with full moon rising",
+    "author": "Grand Canyon National Park",
+    "licence": "Public domain",
+    "licence_url": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Sunset_East_of_Yaki_Point_with_Full_Moon_Rising_-_Thursday,_May_4,_2023_(52888420997).jpg"
+   }
+  ]
+ },
+ {
+  "key": "winter",
+  "name": "Winter",
+  "group": "season",
+  "photos": [
+   {
+    "image": "winter-1",
+    "title": "Electric Peak at sunrise",
+    "author": "Jacob W. Frank",
+    "licence": "Public domain",
+    "licence_url": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Electric_Peak_at_sunrise_(77985b2c-ab66-4079-b503-fe42f5391b04).jpg"
+   },
+   {
+    "image": "winter-2",
+    "title": "Gore Range sunrise",
+    "author": "Zach Dischner",
+    "licence": "CC BY 2.0",
+    "licence_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Gore_Range_Sunrise_(6822005770).jpg"
+   }
+  ]
+ },
+ {
+  "key": "spring",
+  "name": "Spring",
+  "group": "season",
+  "photos": [
+   {
+    "image": "spring-1",
+    "title": "Cherry blossoms over Matsushima Bay, Miyagi",
+    "author": "Makoto_Lab",
+    "licence": "CC BY 4.0",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Miyagi-Landscape_of_cherry_blossoms_and_Matsushima_Bay-xl.jpg"
+   },
+   {
+    "image": "spring-2",
+    "title": "Pretty blossoms all in a row",
+    "author": "Savannah River Site",
+    "licence": "Public domain",
+    "licence_url": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Pretty_Blossoms_All_in_a_Row_(50326184663).jpg"
+   }
+  ]
+ },
+ {
+  "key": "summer",
+  "name": "Summer",
+  "group": "season",
+  "photos": [
+   {
+    "image": "summer-1",
+    "title": "Summer meadow, Coconino National Forest",
+    "author": "U.S. Forest Service",
+    "licence": "Public domain",
+    "licence_url": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Landscape_(20170823-FS-Coconino-DLS-012).jpg"
+   },
+   {
+    "image": "summer-2",
+    "title": "Summer wildflowers at Yaquina Head",
+    "author": "BLM Oregon & Washington",
+    "licence": "Public domain",
+    "licence_url": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Summer_wildflowers_at_Yaquina_Head_(48302262812).jpg"
+   }
+  ]
+ },
+ {
+  "key": "autumn",
+  "name": "Autumn",
+  "group": "season",
+  "photos": [
+   {
+    "image": "autumn-1",
+    "title": "Chivruay Valley in autumn colours, Murmansk Oblast",
+    "author": "Artem Abdukakharov",
+    "licence": "CC BY 4.0",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Chivruay_Valley_in_fall_colors_near_Saydozero_Lake_Murmansk_Oblast_Russia.jpg"
+   },
+   {
+    "image": "autumn-2",
+    "title": "Boggy tundra in autumn colours near Lovozero",
+    "author": "Artem Abdukakharov",
+    "licence": "CC BY 4.0",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Boggy_tundra_in_fall_colors_near_Lovozero_lake_Murmansk_Russia.jpg"
+   }
+  ]
+ }
+]

@@ -49,6 +49,16 @@ pub mod overlay;
 /// state the player controls draw from.
 pub mod player;
 
+/// Which background art a theme shows: the theme vocabulary, the seasonal
+/// calendar, the cinematography canon and the title and image scoring that
+/// picks art from the user's own library. Pure; nothing here does I/O.
+pub mod theme_art;
+
+/// The user's own servers as a source of theme backgrounds: each server's
+/// films and series read and cached on a background thread, their backdrops
+/// measured, and each theme's picks ranked with [`theme_art`].
+pub mod theme_library;
+
 /// The UI foundation: the dark token set applied to the `egui::Context` and the
 /// bounded async artwork loader behind the browse rows.
 pub mod ui;

@@ -76,6 +76,8 @@ pub enum Pick {
     Play(Resume),
     /// Open this page: the item itself, or the show an episode belongs to.
     Open(Page),
+    /// Open the Sources page, from the empty state.
+    Sources,
 }
 
 impl Pick {
@@ -445,6 +447,35 @@ pub(crate) fn hero_logo(item: &Item) -> Option<&str> {
 
 // -------------------------------------------------------------- the screen
 
+/// The empty state's height: the heading, its line and the button.
+const EMPTY_HEIGHT: f32 = 150.0;
+
+/// Home with no shelves: a heading, one line on why, and the way to Sources,
+/// centred on the page and clear of the window buttons.
+fn empty(ui: &mut egui::Ui) -> Option<Pick> {
+    let page = ui.max_rect();
+    let top = (page.center().y - EMPTY_HEIGHT * 0.5).max(page.top() + theme::PAGE_TOP);
+    let block = egui::Rect::from_min_max(egui::pos2(page.left(), top), page.max);
+    ui.scope_builder(
+        egui::UiBuilder::new()
+            .max_rect(block)
+            .layout(egui::Layout::top_down(egui::Align::Center)),
+        |ui| {
+            crate::ui::splash::heading(
+                ui,
+                "Nothing on Home yet",
+                "Shelves appear here once a server has something to show.",
+            );
+            crate::ui::controls::Button::new(crate::ui::controls::Kind::Primary, "Manage sources")
+                .wide()
+                .show(ui)
+                .clicked()
+                .then_some(Pick::Sources)
+        },
+    )
+    .inner
+}
+
 /// Draw Home: the hero, then one horizontally scrolling shelf per hub. Returns
 /// the item the user clicked to (re)play, or `None` while nothing was clicked.
 ///
@@ -458,13 +489,15 @@ pub fn show(
     servers: crate::source::Servers<'_>,
 ) -> Option<Pick> {
     if hubs.is_empty() {
-        ui.label(theme::secondary("Your server gave no home shelves yet."));
-        return None;
+        return empty(ui);
     }
     let mut play = None;
     // The wheel, keys and touch scroll the page; a bar would only draw a line
     // down the hero art.
+    // Every page is drawn in the same panel, so each names its own scroll
+    // state; a shared one would open Home at the offset Settings was left at.
     egui::ScrollArea::vertical()
+        .id_salt("home-page")
         .auto_shrink([false, false])
         .scroll_bar_visibility(ScrollBarVisibility::AlwaysHidden)
         .show(ui, |ui| {
@@ -541,13 +574,13 @@ fn shelf(
     let content = visible.len() as f32 * (card_w + SHELF_GAP);
 
     ui.horizontal(|ui| {
-        ui.label(theme::strong(title).size(theme::H2_SIZE));
+        crate::ui::legible::label(ui, theme::strong(title).size(theme::H2_SIZE));
         // The chevron that says this row goes on that way.
         let (plate, _) = ui.allocate_exact_size(
             egui::vec2(cards::CHEVRON_BOX[0], cards::CHEVRON_BOX[1]),
             Sense::hover(),
         );
-        cards::chevron(ui, plate.center(), false, theme::SECONDARY);
+        cards::chevron(ui, plate.center(), theme::palette().secondary);
     });
 
     let left = ui.cursor().min.x;
@@ -631,7 +664,13 @@ fn shelf(
             if response.clicked() {
                 paging += sign * step;
             }
-            cards::arrow(ui, center, flip, crate::ui::glass_tints::SHELF_ARROW);
+            cards::arrow(ui, center, flip, theme::current().glass.shelf_arrow);
+            crate::ui::controls::round_ring_when_focused(
+                ui.painter(),
+                &response,
+                center,
+                cards::ARROW_RADIUS,
+            );
         }
     }
     // The wheel (F38). A plain vertical wheel belongs to the page, never to a

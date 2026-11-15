@@ -1,17 +1,18 @@
-//! What the hero and the detail page draw over full-bleed art: shadowed text,
-//! the title art or title, the rating and format marks, and the primary and
-//! frosted buttons.
+//! What the hero and the detail page draw over full-bleed art: the title art
+//! or title, the rating and format marks, and the primary and frosted buttons.
 
 use std::sync::Arc;
 
 use egui::text::LayoutJob;
-use egui::{pos2, vec2, Color32, CornerRadius, Galley, Id, Painter, Pos2, Rect, Response, Sense};
+use egui::{pos2, vec2, CornerRadius, Galley, Id, Painter, Pos2, Rect, Response, Sense};
 use plex_core::library::Item;
 
-use crate::ui::{cards, detail, glass, images, marks, theme};
+use crate::ui::marks::icon::{self, Icon, Size};
+use crate::ui::{cards, controls, detail, glass, images, legible, marks, theme};
 
-/// A button's height, padding, icon size and the gap between its parts.
-pub const BUTTON: [f32; 4] = [44.0, 20.0, 18.0, 10.0];
+/// A button's height, padding, icon slot and the gap between its parts. The
+/// Play button's icon is drawn larger than its slot and centred on it.
+pub const BUTTON: [f32; 4] = [44.0, 20.0, icon::SIZE, 10.0];
 /// The meta row's height: its text and its marks centre on it.
 pub const META_HEIGHT: f32 = 22.0;
 /// A format logo's height in a meta row.
@@ -22,28 +23,14 @@ const RATING_HEIGHT: f32 = 20.0;
 const TRACK: [f32; 2] = [64.0, 4.0];
 /// A `clearLogo` request's size.
 const LOGO_ART: [u32; 2] = [800, 280];
-/// The soft copy under title art.
-const ART_SHADOW: Color32 = Color32::from_black_alpha(150);
-
-pub const META_TEXT: Color32 = Color32::from_rgb(0xe8, 0xea, 0xfb);
-pub const BODY_TEXT: Color32 = Color32::from_rgb(0xdc, 0xdf, 0xf3);
-const LEFT_TEXT: Color32 = Color32::from_rgb(0x3a, 0x3d, 0x5c);
-const TRACK_BG: Color32 = Color32::from_rgba_premultiplied(2, 2, 6, 46);
-const CHIP_LINE: Color32 = Color32::from_rgba_premultiplied(89, 89, 89, 89);
-const SECONDARY_HOVER: Color32 = Color32::from_rgba_premultiplied(48, 48, 48, 48);
-
-/// A galley over a soft dark copy of itself, so white type holds over bright
-/// art.
-pub fn shadowed(painter: &Painter, pos: Pos2, galley: Arc<Galley>) {
-    for (offset, alpha) in [(vec2(0.0, 1.0), 150), (vec2(0.0, 2.0), 70)] {
-        painter.galley_with_override_text_color(
-            pos + offset,
-            galley.clone(),
-            Color32::from_black_alpha(alpha),
-        );
-    }
-    painter.galley(pos, galley, theme::TEXT);
-}
+/// The strength of the soft copy under title art.
+const ART_SHADOW: u8 = 150;
+/// The strength of the line around a format tag.
+const CHIP_LINE: u8 = 89;
+/// The strength of the frosted button's wash while pointed at.
+const SECONDARY_HOVER: u8 = 48;
+/// The strength of the frosted button's wash while pressed.
+const SECONDARY_PRESSED: u8 = 70;
 
 /// A page heading: the server's title art, or the title set large.
 pub enum Heading {
@@ -75,8 +62,12 @@ impl Heading {
         match fitted {
             Some((texture, size)) => Heading::Logo(texture, size),
             None => {
-                let mut job =
-                    LayoutJob::simple(title.to_owned(), theme::extrabold(44.0), theme::TEXT, width);
+                let mut job = LayoutJob::simple(
+                    title.to_owned(),
+                    theme::extrabold(44.0),
+                    theme::palette().text,
+                    width,
+                );
                 job.wrap.max_rows = 2;
                 Heading::Title(painter.layout_job(job))
             }
@@ -102,11 +93,11 @@ impl Heading {
                     texture,
                     rect.translate(vec2(0.0, 4.0)),
                     cards::FULL_UV,
-                    ART_SHADOW,
+                    theme::palette().scrim(ART_SHADOW),
                 );
-                painter.image(texture, rect, cards::FULL_UV, Color32::WHITE);
+                painter.image(texture, rect, cards::FULL_UV, theme::UNTINTED);
             }
-            Heading::Title(galley) => shadowed(painter, origin, galley),
+            Heading::Title(galley) => legible::on_art(painter, origin, galley),
         }
     }
 }
@@ -125,7 +116,7 @@ pub fn meta_row(
     let mut x = origin.x;
     if meta.rect.width() > 0.0 {
         x += meta.rect.width() + 12.0;
-        shadowed(painter, pos2(origin.x, cy - meta.rect.height() / 2.0), meta);
+        legible::on_art(painter, pos2(origin.x, cy - meta.rect.height() / 2.0), meta);
     }
     let rating = item
         .content_rating
@@ -146,7 +137,7 @@ pub fn meta_row(
         }
         match mark {
             marks::Mark::Logo(logo) => {
-                marks::paint_tinted(painter, logo, x, cy, height, Color32::WHITE);
+                marks::paint_tinted(painter, logo, x, cy, height, theme::UNTINTED);
             }
             marks::Mark::Text(text) => {
                 chip(painter, x, cy, &text);
@@ -158,7 +149,11 @@ pub fn meta_row(
 }
 
 fn chip_galley(painter: &Painter, text: &str) -> Arc<Galley> {
-    painter.layout_no_wrap(text.to_owned(), theme::extrabold(11.5), theme::TEXT)
+    painter.layout_no_wrap(
+        text.to_owned(),
+        theme::extrabold(11.5),
+        theme::palette().text,
+    )
 }
 
 fn chip_width(painter: &Painter, text: &str) -> f32 {
@@ -202,10 +197,14 @@ fn chip(painter: &Painter, left: f32, cy: f32, text: &str) -> f32 {
     painter.rect_stroke(
         rect,
         CornerRadius::same(4),
-        (1.0, CHIP_LINE),
+        (1.0, theme::palette().wash(CHIP_LINE)),
         egui::StrokeKind::Inside,
     );
-    painter.galley(rect.center() - galley.size() * 0.5, galley, theme::TEXT);
+    painter.galley(
+        rect.center() - galley.size() * 0.5,
+        galley,
+        theme::palette().text,
+    );
     rect.width()
 }
 
@@ -235,57 +234,65 @@ pub fn primary(
     enabled: bool,
 ) -> Response {
     let painter = ui.painter().clone();
-    let [height, pad, icon, gap] = BUTTON;
-    let label =
-        painter.layout_no_wrap(label.to_owned(), theme::semibold(15.0), theme::PRIMARY_TEXT);
-    let left = progress
-        .as_ref()
-        .map(|p| painter.layout_no_wrap(p.left.clone(), theme::medium(15.0), LEFT_TEXT));
-    let mut width = pad + icon + gap + label.rect.width() + pad;
+    let palette = theme::palette();
+    let [height, pad, slot, gap] = BUTTON;
+    let label = painter.layout_no_wrap(
+        label.to_owned(),
+        theme::semibold(15.0),
+        theme::palette().primary_text,
+    );
+    let left = progress.as_ref().map(|p| {
+        painter.layout_no_wrap(p.left.clone(), theme::medium(15.0), palette.primary_muted)
+    });
+    let mut width = pad + slot + gap + label.rect.width() + pad;
     width += progress.as_ref().map_or(0.0, |_| gap + TRACK[0]);
     width += left.as_ref().map_or(0.0, |g| gap + g.rect.width());
     let rect = Rect::from_min_size(origin, vec2(width, height));
     let response = cards::pointer(ui.interact(rect, id, sense(enabled)));
     let fill = if response.is_pointer_button_down_on() {
-        theme::SECONDARY
+        theme::mix(palette.primary_hover, palette.shadow, 0.12)
     } else if response.hovered() {
-        Color32::WHITE
+        palette.primary_hover
     } else {
-        theme::PRIMARY_BG
+        palette.primary_bg
     };
     painter.rect_filled(rect, CornerRadius::same(theme::PILL_RADIUS_U8), fill);
     let cy = rect.center().y;
     let mut x = rect.min.x + pad;
-    marks::paint_tinted(
+    icon::paint(
         &painter,
-        marks::icon::PLAY,
-        x,
-        cy,
-        icon,
-        theme::PRIMARY_TEXT,
+        Icon::Play,
+        Size::Primary,
+        pos2(x + slot / 2.0, cy),
+        theme::palette().primary_text,
     );
-    x += icon + gap;
+    x += slot + gap;
     let label_width = label.rect.width();
     painter.galley(
         pos2(x, cy - label.rect.height() / 2.0),
         label,
-        theme::PRIMARY_TEXT,
+        theme::palette().primary_text,
     );
     x += label_width + gap;
     if let Some(progress) = progress {
         let track = Rect::from_min_size(pos2(x, cy - TRACK[1] / 2.0), vec2(TRACK[0], TRACK[1]));
-        painter.rect_filled(track, CornerRadius::same(2), TRACK_BG);
+        painter.rect_filled(track, CornerRadius::same(2), palette.primary_track());
         let done = vec2(TRACK[0] * progress.fraction.clamp(0.0, 1.0), TRACK[1]);
         painter.rect_filled(
             Rect::from_min_size(track.min, done),
             CornerRadius::same(2),
-            theme::PRIMARY_TEXT,
+            theme::palette().primary_text,
         );
         x += TRACK[0] + gap;
     }
     if let Some(galley) = left {
-        painter.galley(pos2(x, cy - galley.rect.height() / 2.0), galley, LEFT_TEXT);
+        painter.galley(
+            pos2(x, cy - galley.rect.height() / 2.0),
+            galley,
+            palette.primary_muted,
+        );
     }
+    controls::ring_when_focused(&painter, &response, rect, f32::from(theme::PILL_RADIUS_U8));
     response
 }
 
@@ -294,27 +301,44 @@ pub fn secondary(
     ui: &mut egui::Ui,
     origin: Pos2,
     id: Id,
-    icon: Option<marks::Logo>,
+    glyph: Option<Icon>,
     label: &str,
     enabled: bool,
 ) -> Response {
     let painter = ui.painter().clone();
-    let [height, pad, icon_size, gap] = BUTTON;
-    let label = painter.layout_no_wrap(label.to_owned(), theme::semibold(15.0), theme::TEXT);
-    let lead = icon.map_or(0.0, |_| icon_size + gap);
+    let [height, pad, slot, gap] = BUTTON;
+    let label = painter.layout_no_wrap(
+        label.to_owned(),
+        theme::semibold(15.0),
+        theme::palette().text,
+    );
+    let lead = glyph.map_or(0.0, |_| slot + gap);
     let rect = Rect::from_min_size(origin, vec2(pad + lead + label.rect.width() + pad, height));
     let response = cards::pointer(ui.interact(rect, id, sense(enabled)));
-    let tint = if response.hovered() {
-        SECONDARY_HOVER
+    let tint = if response.is_pointer_button_down_on() {
+        theme::palette().wash(SECONDARY_PRESSED)
+    } else if response.hovered() {
+        theme::palette().wash(SECONDARY_HOVER)
     } else {
-        theme::SECONDARY_BG
+        theme::palette().secondary_bg()
     };
     glass::panel(&painter, rect, f32::from(theme::PILL_RADIUS_U8), tint);
     let cy = rect.center().y;
-    if let Some(icon) = icon {
-        marks::paint_tinted(&painter, icon, rect.min.x + pad, cy, icon_size, theme::TEXT);
+    if let Some(glyph) = glyph {
+        icon::paint(
+            &painter,
+            glyph,
+            Size::Regular,
+            pos2(rect.min.x + pad + slot / 2.0, cy),
+            theme::palette().text,
+        );
     }
     let x = rect.min.x + pad + lead;
-    painter.galley(pos2(x, cy - label.rect.height() / 2.0), label, theme::TEXT);
+    painter.galley(
+        pos2(x, cy - label.rect.height() / 2.0),
+        label,
+        theme::palette().text,
+    );
+    controls::ring_when_focused(&painter, &response, rect, f32::from(theme::PILL_RADIUS_U8));
     response
 }

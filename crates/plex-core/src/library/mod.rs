@@ -108,6 +108,11 @@ pub const QUERY_INCLUDE_CHAPTERS: &str = "includeChapters";
 /// sent with.
 pub const QUERY_ENABLED: &str = "1";
 
+/// Query key that asks a section listing to name each row's `Guid[]` external
+/// ids, which a metadata read names unasked; sent by [`catalog_page`] with
+/// [`QUERY_ENABLED`].
+pub const QUERY_INCLUDE_GUIDS: &str = "includeGuids";
+
 /// Paging query keys (this project's own choice of a container window).
 ///
 /// The **response** paging keys a server uses are `offset`/`size`/`totalSize`
@@ -261,6 +266,31 @@ pub fn browse_items(
     if options.unwatched {
         query.push((QUERY_UNWATCHED, QUERY_UNWATCHED_ON));
     }
+    let response = server.get(&format!("{SECTION_ITEMS_PATH}/{key}/all"), &query)?;
+    let (rows, meta) = read_container::<WireItem>(response.status, &response.body)?;
+    let (items, total, start, identifier) = into_items(rows, meta);
+    Ok(ItemPage {
+        items,
+        total,
+        start,
+        identifier,
+    })
+}
+
+/// `GET /library/sections/{key}/all` for one page of one section with each
+/// row's external ids ([`QUERY_INCLUDE_GUIDS`]): what the theme art library
+/// reads a section with, so that a film held by this server and a Jellyfin
+/// server is known to be one film. The same route and paging as
+/// [`browse_items`] with default options.
+pub fn catalog_page(server: &Server, section_key: &str, page: Page) -> Result<ItemPage, CoreError> {
+    let key = validate_segment(section_key)?;
+    let start = page.start.to_string();
+    let size = page.size.to_string();
+    let query = [
+        (CONTAINER_START_QUERY, start.as_str()),
+        (CONTAINER_SIZE_QUERY, size.as_str()),
+        (QUERY_INCLUDE_GUIDS, QUERY_ENABLED),
+    ];
     let response = server.get(&format!("{SECTION_ITEMS_PATH}/{key}/all"), &query)?;
     let (rows, meta) = read_container::<WireItem>(response.status, &response.body)?;
     let (items, total, start, identifier) = into_items(rows, meta);

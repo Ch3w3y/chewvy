@@ -33,6 +33,12 @@ use crate::{media_browser_header, SecretString};
 pub const ITEM_FIELDS: &str =
     "Overview,Genres,People,MediaSources,MediaStreams,ProviderIds,Taglines,DateCreated,PrimaryImageAspectRatio";
 
+/// The `Fields` a catalog page asks for: what picks a title's background art
+/// (its genres and keywords, its original title, and the ids that tell two
+/// servers' copies of a film apart). The ratings, the year and the backdrop
+/// tags come without being asked for.
+pub const CATALOG_FIELDS: &str = "Genres,Tags,ProviderIds,OriginalTitle";
+
 /// The `EnableImageTypes` the captured requests ask for. `Logo` is Jellyfin's
 /// name for what Plex calls `clearLogo`; `Thumb` is the episode preview.
 pub const ENABLE_IMAGE_TYPES: &str = "Primary,Backdrop,Logo,Thumb";
@@ -172,15 +178,6 @@ impl ImageKind {
             other => item.image_tags.get(other.as_str()).map(String::as_str),
         }
     }
-
-    /// The image index this route addresses: backdrops are indexed by their
-    /// position in `BackdropImageTags`, everything else has one image.
-    const fn index_suffix(self) -> &'static str {
-        match self {
-            Self::Backdrop => "/0",
-            _ => "",
-        }
-    }
 }
 
 /// The artwork path of one image, in the shape the server routes:
@@ -217,13 +214,30 @@ pub fn image_address(item_id: &str, kind: ImageKind, tag: &str) -> Option<String
     ))
 }
 
-/// The route of one image type, without a query: the `/0` index is a backdrop's
-/// position in `BackdropImageTags`.
+/// One of an item's backdrops by its position in `BackdropImageTags`, without
+/// the requested size: `/Items/{id}/Images/Backdrop/{index}?tag=`. A path, as
+/// [`image_address`]'s is; `index` 0 is the address [`image_address`] gives a
+/// backdrop.
+#[must_use]
+pub fn backdrop_address(item_id: &str, index: usize, tag: &str) -> Option<String> {
+    validate_id(item_id).ok()?;
+    Some(format!(
+        "/Items/{item_id}/Images/Backdrop/{index}?tag={tag}",
+        tag = crate::header::escape(tag),
+    ))
+}
+
+/// The route of one image type, without a query. Backdrops are a list on an
+/// item, addressed by position, so the first one is `/0`; every other type
+/// has one image.
 fn image_route(item_id: &str, kind: ImageKind) -> String {
+    let index = match kind {
+        ImageKind::Backdrop => "/0",
+        _ => "",
+    };
     format!(
         "/Items/{item_id}/Images/{image_type}{index}",
         image_type = kind.as_str(),
-        index = kind.index_suffix(),
     )
 }
 
@@ -337,6 +351,44 @@ impl<'a> Client<'a> {
         query.push(("sortBy", "SortName"));
         query.push(("fields", ITEM_FIELDS));
         query.push(("enableImageTypes", ENABLE_IMAGE_TYPES));
+        self.get_json(ITEMS_PATH, &query)
+    }
+
+    /// One page of this user's whole catalog of `kinds`, across every view:
+    /// `GET /Items?userId=…&recursive=true&includeItemTypes=…&sortBy=SortName
+    /// &startIndex=…&limit=…&fields=Genres,Tags,ProviderIds,OriginalTitle
+    /// &enableImageTypes=Backdrop`.
+    ///
+    /// Lean on purpose: no versions, tracks or credits, so a library of
+    /// thousands pages through in small answers. `TotalRecordCount` is the
+    /// catalog's size whatever `limit` is, so a page of one is how a caller
+    /// asks whether the catalog has changed size.
+    ///
+    /// # Errors
+    ///
+    /// As [`Client::me`].
+    pub fn catalog(
+        &self,
+        kinds: &[ItemKind],
+        start: u32,
+        limit: u32,
+    ) -> Result<QueryResult<Item>, JfError> {
+        let kinds = kinds
+            .iter()
+            .map(|kind| kind.as_str())
+            .collect::<Vec<_>>()
+            .join(",");
+        let (start, limit) = (start.to_string(), limit.to_string());
+        let query = [
+            ("userId", self.user_id),
+            ("recursive", "true"),
+            ("includeItemTypes", kinds.as_str()),
+            ("sortBy", "SortName"),
+            ("startIndex", start.as_str()),
+            ("limit", limit.as_str()),
+            ("fields", CATALOG_FIELDS),
+            ("enableImageTypes", ImageKind::Backdrop.as_str()),
+        ];
         self.get_json(ITEMS_PATH, &query)
     }
 

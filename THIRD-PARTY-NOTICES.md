@@ -10,7 +10,7 @@ These are compiled into the `chewvy` binary.
 
 | Work | Author | Licence | Notes |
 |---|---|---|---|
-| Backdrop photograph "Aurora" | Russo Francesco | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) | Source: <https://commons.wikimedia.org/wiki/File:Aurora_(140959963).jpeg>. **Modified:** cropped to 16:9, resized, colour-graded toward violet, darkened and blurred (`crates/plex-app/assets/backdrop/`). |
+| Backdrop photographs (25) | Named per photograph in `crates/plex-app/assets/backdrop/SOURCES.md` | Public domain, [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/), [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/), [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) or [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), as listed per photograph | All from Wikimedia Commons; each source page is linked in `SOURCES.md`. **Modified:** cropped to 16:9, resized, darkened, and in some cases lightly softened (`grade.py`); the app blurs a copy when it loads one. Each credit is also shown in Settings > About. |
 | Plus Jakarta Sans typeface | The Plus Jakarta Sans Project Authors | [SIL Open Font License 1.1](crates/plex-app/assets/fonts/OFL-PlusJakartaSans.txt) | Source: <https://github.com/tokotype/PlusJakartaSans>. Unmodified. |
 | Jellyfin icon | The Jellyfin project | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | Source: <https://github.com/jellyfin/jellyfin-ux>. Unmodified; identifies Jellyfin sources. |
 | Interface icons | Chewvy contributors | GPL-3.0-or-later | Drawn for this project (`crates/plex-app/assets/icons/`). |

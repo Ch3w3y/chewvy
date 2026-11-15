@@ -14,15 +14,21 @@ bundled in the package and, for hardware decoding, on the GPU and its driver.
 |---|---|---|---|
 | Linux x86_64, KDE Plasma on Wayland, AMD Radeon RX 9070 XT, Mesa | yes | yes | yes |
 | Linux, X11 session | yes | yes, through Xwayland | yes, through Xwayland; a native X11 session with EGL is not re-measured |
-| Linux, Intel or NVIDIA graphics | yes | not tried | not tried |
-| Windows 11 x86_64, virtual machine, Mesa llvmpipe software OpenGL | yes, cross-built | yes: the window process stays up | not tried |
+| Linux, NVIDIA GeForce RTX 5070 Ti (driver 615.78), headless gamescope session through Xwayland | yes | yes | yes, with `nvdec`: see "Video: the demo library on NVIDIA" |
+| Linux, NVIDIA graphics in a desktop session | yes | not tried | not tried |
+| Linux, Intel graphics | yes | not tried | not tried |
+| Windows 11 x86_64, virtual machine, Mesa llvmpipe software OpenGL | yes, cross-built | yes: the window draws and its screens were driven | yes, in a Plex Watch Together room; nothing about decoding was recorded |
 | Windows on a real GPU | yes, cross-built | **not tried** | **not tried** |
 | macOS 15 arm64, GitHub-hosted runner, software OpenGL | yes | yes: the window opened and drew 60 frames | **not tried** |
 | macOS on a physical Mac | yes, on the runner | **not tried** | **not tried** |
 
-The Windows virtual-machine run proves that every DLL the executables import
-resolves and that the app survives start-up. It does not prove that the window
-drew anything, and it says nothing about hardware decoding or sign-in there.
+What the Windows virtual machine has shown: every DLL the executables import
+resolves, the app starts, the in-app update runs through its real screens for
+the installer and the zip ([ARCHITECTURE.md](ARCHITECTURE.md), "Updates"), and
+a Windows Chewvy stayed in step with a Linux one in a Plex Watch Together room
+([PLEX_WATCH_TOGETHER.md](PLEX_WATCH_TOGETHER.md) 4). The virtual machine
+draws with software OpenGL, so none of these runs says anything about hardware
+decoding, HDR or frame rates on Windows.
 
 ## Video: direct play
 
@@ -55,6 +61,27 @@ images) are not supported.
 The older formats were measured with `scripts/format-fixtures.sh`: 16
 generated clips, each played for 5 seconds by mpv with no dropped frames, then
 14 of them played through the app from a Jellyfin 12.4.0 test server.
+
+## Video: the demo library on NVIDIA
+
+Measured on 2026-11-15 on a second machine: NVIDIA GeForce RTX 5070 Ti,
+driver 615.78. Chewvy ran in a headless gamescope session through Xwayland
+(`site/tools/capture/launch.sh`) and played real films from the demo Jellyfin
+12.4.0 server that `site/tools/capture.sh` sets up. The session has no audio
+device. Each result is what the player's information panel showed (key I) and
+what the log line `mpv hwdec-current` said.
+
+| File | Result |
+|---|---|
+| H.264 High, 3840x2160 at 60 fps, MP4 (Big Buck Bunny) | direct play, hardware decoded (`nvdec`); the panel counted 14 dropped frames in the first seconds |
+| VP9 profile 0, 3840x2160, WebM (Glass Half) | direct play, hardware decoded (`nvdec`) |
+| AV1 Main, 1440x1080, WebM (A Trip to the Moon) | direct play, hardware decoded (`nvdec`) |
+| VP9 profile 2, 10-bit, 2960x2160, PQ in BT.2020, WebM (His Girl Friday) | direct play, hardware decoded (`nvdec`, `p010`), tone-mapped in the main window; the panel reads "HDR (PQ)". The HDR window was not tried. |
+| VP8, 3840x1714, WebM (Tears of Steel) | outside the profile, so the server sent its own H.264 stream, which played with `nvdec` |
+| H.264 High, 4096x1744, MKV with AC-3 5.1 and ten subtitle tracks (Sintel) | **stopped drawing**: the player opened at the resume position with a black picture and the window produced no more frames. Seen in 2 of 2 tries. See "Known issues". |
+
+Not measured there: frame pacing, HDR output, the HDR window, and anything in
+a desktop session.
 
 ## Audio
 
@@ -118,7 +145,7 @@ the measured shapes above, and the server's answer to that profile decides.
 | Anything outside that profile | not handed to mpv on faith: the server answers it not direct-playable and its own HLS stream plays instead. Seen with WMV8 in ASF, which arrived as the server's H.264 stream. A DTS-HD file carries the codec name `dts`, so it is handed over as it sits. |
 | Server remux and transcode | yes, automatically as above and from the quality menu. A remux copied 3840x2160 HEVC into MPEG-TS segments; transcodes are H.264, sized by the preset. Unmeasured: AC-3/E-AC-3 copy, more than two audio channels, subtitles in a stream, HDR sources, a server with transcoding disabled. |
 | Automatic fallback when direct play fails | yes, the same ladder as Plex; each step was run against a Jellyfin 12.4.0 test server. A failure on the client that the server then repairs was not reproduced. |
-| HDR and Dolby Vision items inside those ceilings | not excluded by the profile, so they are direct-played and handled like a Plex HDR item. **No HDR item has been played from a Jellyfin server yet.** |
+| HDR and Dolby Vision items inside those ceilings | not excluded by the profile, so they are direct-played and handled like a Plex HDR item. One PQ item (VP9 profile 2, 2960x2160) has been direct-played from the demo server in the main window, tone-mapped; see "Video: the demo library on NVIDIA". **No Jellyfin item has been played in the HDR window, and no Dolby Vision item from a Jellyfin server at all.** |
 | Resume position and progress reports | yes (`/Sessions/Playing`, `Progress`, `Stopped`); can be switched off |
 | Items with several versions | the first version the server calls direct-playable is used; there is no picker |
 | Quick Connect and password sign-in, LAN discovery, several servers | yes |
@@ -214,10 +241,14 @@ build answers. Source comments marked **[U]** point here.
   stopped producing frames just after a file was requested; all four happened
   while a second headless session shared the GPU, and the cause is not
   established.
-- On Windows and macOS the sign-in screen's "Open plex.tv/link" button does
-  nothing; open the address by hand.
 - Subtitles are drawn by mpv at the bottom of the picture and can sit under
   the player's control bar while it is showing.
+- On the NVIDIA machine above, one file stopped the window: Sintel's official
+  4096x1744 H.264 MKV, resumed from the middle, in the headless capture
+  session. The picture stayed black and no further frame was drawn. Which of
+  the file's properties causes it (the frame width, the AC-3 5.1 track with no
+  audio device, the subtitle tracks, the resume seek) is not established, and
+  it has not been tried in a desktop session.
 
 ## Reproducing the measurements
 

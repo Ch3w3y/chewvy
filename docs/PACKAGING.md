@@ -4,8 +4,8 @@
 |---|---|---|---|
 | Linux x86_64 | `Chewvy-<version>-x86_64.AppImage` | `packaging/linux/build-appimage.sh` | built in a Debian 13 container; started and played its test clip headless on the development machine |
 | Linux x86_64 | `install.sh` (installs the AppImage per user) | repository root | tested in Debian 13, Ubuntu 24.04, Arch and Alpine containers; see below |
-| Windows x86_64 | `Chewvy-<version>-windows-x86_64-setup.exe` | `packaging/windows/build-installer.sh` | built; installed and uninstalled silently under Wine; **not run on real Windows** |
-| Windows x86_64 | `Chewvy-<version>-windows-x86_64.zip` | `packaging/windows/build-zip.sh` | built; an earlier build was started in a Windows 11 virtual machine with software OpenGL |
+| Windows x86_64 | `Chewvy-<version>-windows-x86_64-setup.exe` | `packaging/windows/build-installer.sh` | built; installed and uninstalled silently under Wine; installed and updated in a Windows 11 virtual machine; **not run on a real GPU** |
+| Windows x86_64 | `Chewvy-<version>-windows-x86_64.zip` | `packaging/windows/build-zip.sh` | built; started and updated in a Windows 11 virtual machine with software OpenGL |
 | macOS arm64 | `Chewvy-<version>-macos-arm64.dmg` | `packaging/macos/build-app.sh` | built on a GitHub-hosted runner, where the app started and drew its window; **not run on a physical Mac** |
 
 Every release also carries `SHA256SUMS`. None of the packages is code-signed.
@@ -178,8 +178,10 @@ Windows SmartScreen shows an "unrecognised app" warning.
 The installer has been exercised under Wine only: `/S` installed the seven
 files, the Start Menu shortcut and the registry entries; `chewvy-cli.exe`
 ran from the installed directory; the uninstaller removed all of it. That is
-evidence the script is sound, not a test on Windows. Nobody has run it on a
-real Windows machine yet.
+evidence the script is sound, not a test on Windows. The in-app update test
+later ran the installer in a Windows 11 virtual machine
+([ARCHITECTURE.md](ARCHITECTURE.md), "Updates"). Nobody has run it on a
+Windows machine with a real GPU yet.
 
 ## macOS
 
@@ -227,6 +229,16 @@ workflow for the same tag then adds the disk image and its checksum.
 To cut a release: update `version` in `Cargo.toml` and `CHANGELOG.md`, run
 the gates, commit, tag `vX.Y.Z`, push the tag.
 
+At present the `release` and `ci` workflows are disabled on GitHub and the
+project has no self-hosted runner, so a pushed tag builds nothing. The 0.3.0
+packages were built by running the workflow's steps by hand in a
+`debian:trixie` container and uploading the result as a draft with
+`gh release create`. The `macos` workflow is active and runs on a
+GitHub-hosted runner.
+
+The website in `site/` is published separately: see
+[`site/DEPLOY.md`](../site/DEPLOY.md).
+
 ### Runners and pull requests
 
 The workflows run on self-hosted runners labelled `chewvy` and have no
@@ -245,10 +257,35 @@ crates that target links.
 
 ### Icons
 
-`packaging/linux/io.github.ch3w3y.chewvy.svg` is the source. The Windows icon
-is generated from it:
+The app icon is the Chewvy mark (a film reel whose fifth hole opens into a
+lower-case c) in white on a tile of neutral smoked glass. Its sources:
+
+- `packaging/linux/io.github.ch3w3y.chewvy.svg`: the 512-unit tile. It is the
+  scalable icon in the AppImage and the menu entry, the README image, and the
+  source of every raster 48 px and up.
+- `packaging/linux/io.github.ch3w3y.chewvy-{16,24,32}.svg`: the tile redrawn
+  for those pixel sizes, with every straight edge on a pixel boundary. 16 and
+  24 drop the reel's holes. Their PNGs sit beside them;
+  `build-appimage.sh` installs each as
+  `usr/share/icons/hicolor/NxN/apps/io.github.ch3w3y.chewvy.png`, and
+  `install.sh` copies them out of the AppImage, so panels and task bars do not
+  scale the large design down.
+- `packaging/macos/chewvy.svg`: the same tile on Apple's 824/1024 grid, so the
+  Dock icon matches its neighbours. `packaging/macos/build-app.sh` renders the
+  `.icns` from it.
+
+Every icon SVG uses only paths, rects and linear or radial gradients, so
+librsvg and resvg (the app's renderer) draw the same picture, and Qt's
+renderer supports everything they use. The in-app mark is
+`crates/plex-app/assets/brand/reel.svg`, the glyph alone in black, tinted
+where it is drawn.
+
+To regenerate the PNGs and the Windows icon after changing a source (the
+small sizes come from their own SVGs, so the pixel fitting survives):
 
 ```sh
-rsvg-convert -w 256 -h 256 packaging/linux/io.github.ch3w3y.chewvy.svg -o icon.png
-python3 -c "from PIL import Image; Image.open('icon.png').save('packaging/windows/chewvy.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])"
+d=packaging/linux; t=$(mktemp -d)
+for n in 16 24 32; do rsvg-convert -w $n -h $n $d/io.github.ch3w3y.chewvy-$n.svg -o $d/io.github.ch3w3y.chewvy-$n.png; cp $d/io.github.ch3w3y.chewvy-$n.png $t/$n.png; done
+for n in 48 64 128 256; do rsvg-convert -w $n -h $n $d/io.github.ch3w3y.chewvy.svg -o $t/$n.png; done
+python3 -c "import sys; from PIL import Image; d=sys.argv[1]; ims=[Image.open(f'{d}/{n}.png') for n in (16,24,32,48,64,128,256)]; ims[-1].save('packaging/windows/chewvy.ico', sizes=[i.size for i in ims], append_images=ims[:-1])" $t
 ```

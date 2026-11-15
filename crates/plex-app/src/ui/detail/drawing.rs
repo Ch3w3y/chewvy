@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 use egui::text::LayoutJob;
 
-use egui::{pos2, vec2, Color32, CornerRadius, Galley, Response, ScrollArea, Sense, Stroke, Ui};
+use egui::{pos2, vec2, CornerRadius, Galley, Response, ScrollArea, Sense, Stroke, Ui};
 use plex_core::library::Item;
 
 use super::{
@@ -37,23 +37,26 @@ const EPISODE_TEXT_GAP: f32 = theme::SPACING_BASE;
 /// Draw one detail page and answer with what the user clicked.
 ///
 /// `playing` disables every play affordance: the window already has an item in
-/// its player, and one click is one playback request. A season chip answers
+/// its player, and one click is one playback request. `pinned` says the
+/// background is this title's backdrop. A season chip answers
 /// with the season whose episodes to read, and takes the selection in place.
 pub fn show(
     ui: &mut Ui,
     page: &mut Page,
     artwork: &mut images::Artwork,
     playing: bool,
+    pinned: bool,
     servers: crate::source::Servers<'_>,
 ) -> Option<Action> {
     let mut action = None;
     // The head scrolls with the page: a pinned one would cover the episodes a
     // narrow window has room for.
     ScrollArea::vertical()
+        .id_salt(("detail-page", page.item.rating_key.as_deref()))
         .auto_shrink([false; 2])
         .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden)
         .show(ui, |ui| {
-            action = super::head::show(ui, page, artwork, playing, servers);
+            action = super::head::show(ui, page, artwork, [playing, pinned], servers);
             // A show's season pills sit right above the episodes they pick, so
             // choosing a season unfolds its episodes under the pill.
             if let Some(key) = season_chips(ui, page) {
@@ -84,9 +87,9 @@ fn chips_row(ui: &Ui, labels: Vec<String>, font: egui::FontId) -> Vec<Chip> {
     labels
         .into_iter()
         .map(|label| {
-            let galley = ui
-                .painter()
-                .layout_no_wrap(label, font.clone(), Color32::WHITE);
+            let galley =
+                ui.painter()
+                    .layout_no_wrap(label, font.clone(), theme::palette().highlight);
             let width = galley.size().x + 2.0 * chips::PAD_X;
             Chip { galley, width }
         })
@@ -100,18 +103,18 @@ fn paint_chip(ui: &Ui, box_rect: egui::Rect, galley: &Arc<Galley>) {
         ui.painter(),
         box_rect,
         f32::from(theme::CARD_RADIUS_U8),
-        crate::ui::glass_tints::PANEL,
+        theme::current().glass.panel,
     );
     ui.painter().rect_stroke(
         box_rect,
         chips::RADIUS,
-        Stroke::new(theme::HAIRLINE, chips::OUTLINE),
+        Stroke::new(theme::HAIRLINE, theme::palette().outline),
         egui::StrokeKind::Middle,
     );
     ui.painter().galley(
         box_rect.center() - galley.size() * 0.5,
         galley.clone(),
-        theme::SECONDARY,
+        theme::palette().secondary,
     );
 }
 
@@ -209,21 +212,31 @@ fn cast_row(ui: &mut Ui, item: &Item, artwork: &mut images::Artwork) {
                     let name = ui.painter().layout(
                         person.name.clone(),
                         theme::card_title(),
-                        theme::TEXT,
+                        theme::palette().text,
                         cell,
                     );
                     let role = person.role.as_deref().map(|role| {
-                        ui.painter()
-                            .layout(role.to_owned(), theme::meta(), theme::SECONDARY, cell)
+                        ui.painter().layout(
+                            role.to_owned(),
+                            theme::meta(),
+                            theme::palette().secondary,
+                            cell,
+                        )
                     });
                     let height = name.size().y + role.as_ref().map_or(0.0, |g| g.size().y + 2.0);
                     let (box_rect, _) = ui.allocate_at_least(vec2(cell, height), Sense::hover());
-                    ui.painter().galley(box_rect.min, name.clone(), theme::TEXT);
+                    crate::ui::legible::on_backdrop(
+                        ui.painter(),
+                        box_rect.min,
+                        name.clone(),
+                        theme::palette().text,
+                    );
                     if let Some(galley) = role {
-                        ui.painter().galley(
+                        crate::ui::legible::on_backdrop(
+                            ui.painter(),
                             pos2(box_rect.min.x, box_rect.min.y + name.size().y + 2.0),
                             galley,
-                            theme::SECONDARY,
+                            theme::palette().secondary,
                         );
                     }
                 });
@@ -238,9 +251,8 @@ fn cast_row(ui: &mut Ui, item: &Item, artwork: &mut images::Artwork) {
         } else {
             format!("Show all {} cast and crew", people.len())
         };
-        let press =
-            ui.add(egui::Button::new(theme::strong(label).color(theme::ACCENT)).frame(false));
-        if crate::ui::cards::pointer(press).clicked() {
+        let press = crate::ui::controls::button(ui, crate::ui::controls::Kind::Quiet, &label);
+        if press.clicked() {
             ui.data_mut(|d| d.insert_temp(expanded_id, !expanded));
         }
         ui.add_space(theme::GAP);
@@ -257,7 +269,7 @@ fn cast_link(ui: &mut Ui, name: &str, rect: egui::Rect) {
         ui.painter().circle_stroke(
             center,
             CAST_THUMB / 2.0 + 2.0,
-            egui::Stroke::new(2.0, theme::ACCENT),
+            egui::Stroke::new(2.0, theme::palette().accent),
         );
     }
     if press.clicked() {
@@ -287,7 +299,7 @@ fn cast_photo(ui: &mut Ui, name: &str, thumb: Option<&str>, artwork: &mut images
             plate,
             cards::cover_uv(tex, size),
             CornerRadius::same(radius as u8),
-            Color32::WHITE,
+            theme::UNTINTED,
         ),
         None => initials(ui, name, plate),
     }
@@ -303,12 +315,15 @@ fn initials(ui: &Ui, name: &str, plate: egui::Rect) {
         .collect();
     let center = plate.center();
     ui.painter()
-        .circle_filled(center, plate.width() / 2.0, theme::ACCENT_TINT);
+        .circle_filled(center, plate.width() / 2.0, theme::palette().accent_tint());
     let galley = ui
         .painter()
-        .layout_no_wrap(letters, theme::h2(), theme::ACCENT);
-    ui.painter()
-        .galley(center - galley.size() * 0.5, galley, theme::ACCENT);
+        .layout_no_wrap(letters, theme::h2(), theme::palette().accent);
+    ui.painter().galley(
+        center - galley.size() * 0.5,
+        galley,
+        theme::palette().accent,
+    );
 }
 
 /// The season chips of a show page, clickable while the page has seasons: a
@@ -364,7 +379,7 @@ fn season_chips(ui: &mut Ui, page: &mut Page) -> Option<String> {
     ui.add_space(height + theme::SPACING_BASE * 2.0);
     let progress = selected_season(&*page).and_then(super::season_progress);
     if let Some(progress) = progress {
-        ui.label(theme::secondary(progress).font(theme::meta()));
+        crate::ui::legible::label(ui, theme::secondary(progress).font(theme::meta()));
     }
     ui.add_space(theme::GAP);
     asked
@@ -390,11 +405,23 @@ fn season_state(
     press: &Response,
 ) {
     let (fill, stroke, ink) = if active {
-        (theme::ACCENT_TINT, theme::ACCENT, theme::TEXT)
+        (
+            theme::palette().accent_tint(),
+            theme::palette().accent,
+            theme::palette().text,
+        )
     } else if press.is_pointer_button_down_on() {
-        (theme::SURFACE, chips::OUTLINE, theme::TEXT)
+        (
+            theme::palette().surface,
+            theme::palette().outline,
+            theme::palette().text,
+        )
     } else if press.hovered() {
-        (theme::CARD_HOVER, theme::SECONDARY, theme::TEXT)
+        (
+            theme::palette().card_hover,
+            theme::palette().secondary,
+            theme::palette().text,
+        )
     } else {
         return;
     };
@@ -416,7 +443,9 @@ fn season_state(
 fn loading_rows(ui: &mut Ui) {
     let time = ui.input(|i| i.time) as f32;
     let pulse = 0.5 + 0.5 * (time * 3.0).sin();
-    let fill = theme::CARD.lerp_to_gamma(theme::CARD_HOVER, pulse);
+    let fill = theme::palette()
+        .card
+        .lerp_to_gamma(theme::palette().card_hover, pulse);
     for _ in 0..3 {
         let (rect, _) = ui.allocate_exact_size(vec2(ui.available_width(), 96.0), Sense::hover());
         let thumb = egui::Rect::from_min_size(rect.min, vec2(170.0, 96.0));
@@ -495,7 +524,7 @@ fn episode_text(ui: &mut Ui, episode: &Item) -> EpisodeText {
     let heading = ui.painter().layout(
         caption,
         theme::card_title(),
-        theme::TEXT,
+        theme::palette().text,
         EPISODE_TEXT_WIDTH,
     );
     let summary = episode
@@ -507,7 +536,7 @@ fn episode_text(ui: &mut Ui, episode: &Item) -> EpisodeText {
             let mut job = LayoutJob::simple(
                 summary.to_owned(),
                 theme::body(),
-                theme::SECONDARY,
+                theme::palette().secondary,
                 EPISODE_TEXT_WIDTH,
             );
             job.wrap.max_rows = EPISODE_SUMMARY_ROWS;
@@ -524,7 +553,7 @@ fn episode_text(ui: &mut Ui, episode: &Item) -> EpisodeText {
         ui.painter().layout(
             meta_text,
             theme::meta(),
-            theme::SECONDARY,
+            theme::palette().secondary,
             EPISODE_TEXT_WIDTH,
         )
     });
@@ -571,12 +600,12 @@ pub(super) fn episode_row(
                 thumb,
                 cards::cover_uv(tex, thumb.size()),
                 cards::CARD_RADIUS,
-                Color32::WHITE,
+                theme::UNTINTED,
             );
         }
         None => {
             ui.painter()
-                .rect_filled(thumb, cards::CARD_RADIUS, theme::CARD);
+                .rect_filled(thumb, cards::CARD_RADIUS, theme::palette().card);
         }
     }
     if let Some(fraction) = home::progress_fraction(episode.view_offset, episode.duration) {
@@ -591,7 +620,7 @@ pub(super) fn episode_row(
                 sw: cards::CARD_RADIUS.sw,
                 se: 0,
             },
-            theme::ACCENT,
+            theme::palette().accent,
         );
     }
     if watched(episode) {
@@ -599,13 +628,21 @@ pub(super) fn episode_row(
     }
     let x = thumb.max.x + theme::GAP;
     let mut y = rect.min.y + (row_size.y - text.height()) * 0.5;
-    ui.painter()
-        .galley(pos2(x, y), text.heading.clone(), theme::TEXT);
+    crate::ui::legible::on_backdrop(
+        ui.painter(),
+        pos2(x, y),
+        text.heading.clone(),
+        theme::palette().text,
+    );
     y += text.heading.size().y;
     for galley in text.summary.into_iter().chain(text.meta) {
         y += EPISODE_TEXT_GAP;
-        ui.painter()
-            .galley(pos2(x, y), galley.clone(), theme::SECONDARY);
+        crate::ui::legible::on_backdrop(
+            ui.painter(),
+            pos2(x, y),
+            galley.clone(),
+            theme::palette().secondary,
+        );
         y += galley.size().y;
     }
     if !playing {
@@ -616,16 +653,16 @@ pub(super) fn episode_row(
     press.clicked()
 }
 
-/// The watched tick: the three arms [`chips::check_points`] draws, as a filled
-/// circle plate over an episode thumbnail's corner.
+/// The watched tick: [`chips::check`] on a round dark plate over an episode
+/// thumbnail's corner.
 fn tick(ui: &Ui, center: egui::Pos2) {
     ui.painter()
-        .circle_filled(center, 11.0, egui::Color32::from_black_alpha(200));
+        .circle_filled(center, 11.0, theme::palette().scrim(200));
     chips::check(ui, center);
 }
 
 /// A body section's own heading, in the theme's `h2`.
 fn section_heading(ui: &mut Ui, text: &str) {
-    ui.label(theme::strong(text).size(theme::H2_SIZE));
+    crate::ui::legible::label(ui, theme::strong(text).size(theme::H2_SIZE));
     ui.add_space(theme::SPACING_BASE);
 }

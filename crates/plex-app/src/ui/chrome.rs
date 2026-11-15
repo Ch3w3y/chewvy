@@ -10,10 +10,9 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use egui::viewport::ResizeDirection;
-use egui::{
-    pos2, vec2, Align2, Color32, CursorIcon, Id, Order, Rect, Sense, Stroke, ViewportCommand,
-};
+use egui::{pos2, vec2, Align2, CursorIcon, Id, Order, Rect, Sense, ViewportCommand};
 
+use crate::ui::marks::icon::{self, Icon, Size};
 use crate::ui::theme;
 
 /// Whether the window keeps the desktop's own title bar and border.
@@ -28,15 +27,9 @@ const EDGE: f32 = 6.0;
 /// One window button's hit box.
 const BUTTON: [f32; 2] = [40.0, TITLE_BAR];
 /// The round hover fill's radius.
-const HOVER_RADIUS: f32 = 14.0;
+const HOVER_RADIUS: f32 = 16.0;
 /// The group's inset from the window's top-right corner.
 const INSET: [f32; 2] = [10.0, 6.0];
-/// The glyph's half-size inside a button.
-const GLYPH: f32 = 5.0;
-/// The close button's hover fill.
-const CLOSE_HOVER: Color32 = Color32::from_rgb(0xc4, 0x2b, 0x1c);
-/// The dark line under each glyph, so it reads over bright hero art.
-const GLYPH_SHADOW: Color32 = Color32::from_rgba_premultiplied(0, 0, 0, 120);
 
 /// Set by the close button; the host exits its event loop when it reads it.
 static QUIT: AtomicBool = AtomicBool::new(false);
@@ -61,7 +54,9 @@ pub fn behind(root: &mut egui::Ui) {
     let maximized = ctx.input(|i| i.viewport().maximized.unwrap_or(false));
 
     let strip = Rect::from_min_size(screen.min, vec2(screen.width(), DRAG_STRIP));
-    let drag = root.interact(strip, Id::new("chrome-drag"), Sense::click_and_drag());
+    // The strip and the edges are the window's frame, not controls: the
+    // keyboard's Tab never stops on them.
+    let drag = root.interact(strip, Id::new("chrome-drag"), Sense::CLICK | Sense::DRAG);
     if drag.drag_started() {
         ctx.send_viewport_cmd(ViewportCommand::StartDrag);
     }
@@ -72,11 +67,7 @@ pub fn behind(root: &mut egui::Ui) {
         return;
     }
     for (rect, direction, icon) in edges(screen) {
-        let edge = root.interact(
-            rect,
-            Id::new(("chrome-edge", direction as u8)),
-            Sense::drag(),
-        );
+        let edge = root.interact(rect, Id::new(("chrome-edge", direction as u8)), Sense::DRAG);
         if edge.hovered() || edge.dragged() {
             ctx.set_cursor_icon(icon);
         }
@@ -187,56 +178,35 @@ enum Kind {
     Close,
 }
 
-/// One button: a hover fill and a thin glyph; true when clicked.
+/// One button: a hover fill and its icon; true when clicked.
 fn button(ui: &mut egui::Ui, cell: Rect, kind: Kind, maximized: bool) -> bool {
     let response = ui.interact(cell, Id::new(("chrome-button", kind as u8)), Sense::click());
     let painter = ui.painter();
-    if response.hovered() {
-        let fill = if kind == Kind::Close {
-            CLOSE_HOVER
-        } else {
-            Color32::from_white_alpha(30)
-        };
-        painter.circle_filled(cell.center(), HOVER_RADIUS, fill);
-    } else {
-        glyph(
-            painter,
-            cell.center() + vec2(0.0, 1.0),
-            kind,
-            maximized,
-            Stroke::new(2.4, GLYPH_SHADOW),
-        );
-    }
-    glyph(
-        painter,
-        cell.center(),
-        kind,
-        maximized,
-        Stroke::new(1.3, theme::TEXT),
+    // The disc's centre on a device pixel, so its edge is as crisp as the
+    // glyph the icon set already places on whole pixels.
+    let center = pos2(
+        painter.round_to_pixel_center(cell.center().x),
+        painter.round_to_pixel_center(cell.center().y),
     );
+    let pressed = response.is_pointer_button_down_on();
+    if response.hovered() || pressed {
+        let palette = theme::palette();
+        let fill = match (kind, pressed) {
+            (Kind::Close, false) => palette.danger_fill,
+            (Kind::Close, true) => theme::mix(palette.danger_fill, palette.shadow, 0.2),
+            (_, false) => palette.wash(30),
+            (_, true) => palette.wash(52),
+        };
+        painter.circle_filled(center, HOVER_RADIUS, fill);
+    }
+    crate::ui::controls::round_ring_when_focused(painter, &response, center, HOVER_RADIUS);
+    let glyph = match kind {
+        Kind::Minimise => Icon::WinMinimise,
+        Kind::Maximise if maximized => Icon::WinRestore,
+        Kind::Maximise => Icon::WinMaximise,
+        Kind::Close => Icon::Close,
+    };
+    icon::paint(painter, glyph, Size::Regular, center, theme::palette().text);
     let response = crate::ui::cards::pointer(response);
     response.clicked()
-}
-
-/// One button's glyph centred on `c`.
-fn glyph(painter: &egui::Painter, c: egui::Pos2, kind: Kind, maximized: bool, stroke: Stroke) {
-    match kind {
-        Kind::Minimise => {
-            painter.line_segment([pos2(c.x - GLYPH, c.y), pos2(c.x + GLYPH, c.y)], stroke);
-        }
-        Kind::Maximise if maximized => {
-            let back = Rect::from_center_size(c + vec2(1.5, -1.5), vec2(GLYPH * 1.6, GLYPH * 1.6));
-            let front = Rect::from_center_size(c + vec2(-1.5, 1.5), vec2(GLYPH * 1.6, GLYPH * 1.6));
-            painter.rect_stroke(back, 1.0, stroke, egui::StrokeKind::Inside);
-            painter.rect_stroke(front, 1.0, stroke, egui::StrokeKind::Inside);
-        }
-        Kind::Maximise => {
-            let square = Rect::from_center_size(c, vec2(GLYPH * 2.0, GLYPH * 2.0));
-            painter.rect_stroke(square, 1.0, stroke, egui::StrokeKind::Inside);
-        }
-        Kind::Close => {
-            painter.line_segment([c + vec2(-GLYPH, -GLYPH), c + vec2(GLYPH, GLYPH)], stroke);
-            painter.line_segment([c + vec2(-GLYPH, GLYPH), c + vec2(GLYPH, -GLYPH)], stroke);
-        }
-    }
 }

@@ -191,12 +191,12 @@ impl Ui {
 /// Black with one line of text while the next item resolves.
 pub(super) fn handoff_screen(root: &mut egui::Ui, text: &str) {
     let rect = root.max_rect();
-    root.painter().rect_filled(rect, 0.0, egui::Color32::BLACK);
+    root.painter().rect_filled(rect, 0.0, theme::LETTERBOX);
     root.painter().text(
         rect.center(),
         egui::Align2::CENTER_CENTER,
         text,
         theme::h2(),
-        theme::SECONDARY,
+        theme::palette().secondary,
     );
 }

@@ -54,6 +54,10 @@ impl Driver {
 
     /// Inject at most one command's input before the egui frame runs.
     pub fn before_frame(&mut self, input: &mut egui::RawInput, pixels_per_point: f32) {
+        // The script is the window's user, so the window counts as focused
+        // whatever the desktop says: egui hides the keyboard focus and the
+        // caret of a window that is not.
+        input.focused = true;
         self.take_commands();
         if self.wait > 0 {
             self.wait -= 1;

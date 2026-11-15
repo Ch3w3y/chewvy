@@ -1,6 +1,19 @@
-//! The aurora photograph every screen sits on (`assets/backdrop`, credited in
-//! Settings › About). Sign-in screens show the light-blur copy; browsing shows
-//! the heavier, dimmer copy so posters and text stay in front of it.
+//! The photograph behind the glass: one of the bundled, freely licensed
+//! photographs (`assets/backdrop`, credited in Settings › About) or a
+//! backdrop from the user's own servers. Sign-in screens show the scene
+//! itself; browsing shows a blurred copy so posters and text stay in front.
+//!
+//! # Data shape
+//!
+//! * [`Photo`] is one bundled photograph with its credit, and [`PHOTOS`]
+//!   lists them in the theme picker's order; `grade.py` writes the table with
+//!   the files.
+//! * [`Showing`] is what the background is: a photo by its place in
+//!   [`PHOTOS`], or a server backdrop by its artwork address.
+//! * [`Stage`] paints it. It keeps what is on screen until the next picture
+//!   has loaded, then cross-fades, and says what the picture needs over it
+//!   through [`theme::set_backdrop`]: the dims are measured from each
+//!   picture's own pixels ([`legibility`]), so a brighter one is dimmed more.
 //!
 //! It is painted on egui's background layer, so whatever a screen draws later,
 //! and every glass panel's blur, sits over it whatever order the panels ran in.
@@ -8,49 +21,89 @@
 //! for a page's full-bleed art ([`crate::ui::bleed`]), which a page decides on
 //! only after the sidebar has drawn.
 
-use std::sync::Mutex;
+pub mod choice;
+pub mod decode;
+pub mod legibility;
+mod photos;
+mod stage;
 
-use egui::{pos2, vec2, Color32, LayerId, Rect, TextureHandle};
+#[cfg(test)]
+#[allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::indexing_slicing,
+    reason = "tests may unwrap; product code keeps these lints on"
+)]
+mod tests;
 
-use crate::ui::theme;
+use egui::{pos2, vec2, LayerId, Rect};
 
-const SHARP: &[u8] = include_bytes!("../../assets/backdrop/aurora.jpg");
-const SOFT: &[u8] = include_bytes!("../../assets/backdrop/aurora-soft.jpg");
+use crate::theme_art::ThemeId;
+
+pub use photos::PHOTOS;
+pub use stage::Stage;
+
+/// One bundled photograph.
+pub struct Photo {
+    /// The file's name without `.jpg`.
+    pub id: &'static str,
+    /// The theme it belongs to.
+    pub theme: ThemeId,
+    /// The graded JPEG.
+    pub bytes: &'static [u8],
+    /// Its size in pixels.
+    pub size: [u32; 2],
+    /// Which part stays when a window is not 16:9 (0..1 in each axis).
+    pub focus: [f32; 2],
+    /// What the photographer or the archive called it.
+    pub title: &'static str,
+    /// Who made it.
+    pub author: &'static str,
+    /// Its licence's short name.
+    pub licence: &'static str,
+    /// The licence's deed, empty for the public domain.
+    pub licence_url: &'static str,
+    /// Its page on Wikimedia Commons.
+    pub page: &'static str,
+}
+
+impl Photo {
+    /// The credit line: `“Eilean Donan castle” by Eusebius, CC BY 3.0`.
+    #[must_use]
+    pub fn credit(&self) -> String {
+        let licence = match self.licence {
+            "Public domain" => "public domain",
+            other => other,
+        };
+        format!("“{}” by {}, {licence}", self.title, self.author)
+    }
+}
+
+/// The places in [`PHOTOS`] of `theme`'s photographs.
+pub fn photos_of(theme: ThemeId) -> impl Iterator<Item = usize> {
+    PHOTOS
+        .iter()
+        .enumerate()
+        .filter(move |(_, photo)| photo.theme == theme)
+        .map(|(index, _)| index)
+}
+
+/// What the background shows.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Showing {
+    /// A bundled photograph, by its place in [`PHOTOS`].
+    Photo(usize),
+    /// A server backdrop, by the artwork address the loader fetches.
+    Library(String),
+}
 
 /// Which copy of the photograph a screen shows.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Kind {
     /// Sign-in, first run and the server picker: the scene itself.
     Sharp,
     /// Browsing screens: blurred and dimmed behind the content.
     Soft,
-}
-
-static TEXTURES: Mutex<[Option<TextureHandle>; 2]> = Mutex::new([None, None]);
-
-fn texture(ctx: &egui::Context, kind: Kind) -> Option<TextureHandle> {
-    let mut slots = TEXTURES.lock().ok()?;
-    let [sharp, soft] = &mut *slots;
-    let (slot, bytes, name) = match kind {
-        Kind::Sharp => (sharp, SHARP, "backdrop-sharp"),
-        Kind::Soft => (soft, SOFT, "backdrop-soft"),
-    };
-    if slot.is_none() {
-        let decoded = image::load_from_memory_with_format(bytes, image::ImageFormat::Jpeg).ok()?;
-        let rgba = decoded.to_rgba8();
-        let size = [rgba.width() as usize, rgba.height() as usize];
-        let image = egui::ColorImage::from_rgba_unmultiplied(size, rgba.as_raw());
-        *slot = Some(ctx.load_texture(name, image, egui::TextureOptions::LINEAR));
-    }
-    slot.clone()
-}
-
-/// Drop the sign-in copy once browsing starts; it is only shown before then.
-pub fn release_sharp() {
-    if let Ok(mut slots) = TEXTURES.lock() {
-        let [sharp, _] = &mut *slots;
-        *sharp = None;
-    }
 }
 
 /// The part of a `tex`-sized image that covers `target` without stretching,
@@ -68,29 +121,16 @@ pub fn cover_uv(tex: egui::Vec2, target: egui::Vec2, focus: egui::Vec2) -> Rect 
     Rect::from_min_size(min, vec2(w, h))
 }
 
-/// Paint the photograph over the whole of `rect`, then `dim` (0..1) of the
-/// window colour over it.
-pub fn paint(ctx: &egui::Context, rect: Rect, kind: Kind, dim: f32) {
+fn slot_id() -> egui::Id {
+    egui::Id::new("backdrop-art-slot")
+}
+
+/// Keep this pass's slot above the photograph for [`paint_above`].
+fn keep_slot(ctx: &egui::Context) {
     let painter = ctx.layer_painter(LayerId::background());
-    painter.rect_filled(rect, 0.0, theme::WINDOW);
-    if let Some(texture) = texture(ctx, kind) {
-        let focus = match kind {
-            Kind::Sharp => vec2(0.5, 0.4),
-            Kind::Soft => vec2(0.5, 0.7),
-        };
-        let uv = cover_uv(texture.size_vec2(), rect.size(), focus);
-        painter.image(texture.id(), rect, uv, Color32::WHITE);
-    }
-    if dim > 0.0 {
-        painter.rect_filled(rect, 0.0, theme::WINDOW.gamma_multiply(dim.clamp(0.0, 1.0)));
-    }
     let slot = painter.add(egui::Shape::Noop);
     let pass = ctx.cumulative_pass_nr();
     ctx.data_mut(|data| data.insert_temp(slot_id(), (pass, slot)));
-}
-
-fn slot_id() -> egui::Id {
-    egui::Id::new("backdrop-art-slot")
 }
 
 /// Put `shape` in this pass's slot above the photograph, under every panel;
@@ -104,27 +144,5 @@ pub fn paint_above(ctx: &egui::Context, shape: egui::Shape) {
         _ => {
             painter.add(shape);
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn both_copies_decode_at_full_hd_or_more() {
-        for bytes in [SHARP, SOFT] {
-            let image = image::load_from_memory(bytes).unwrap_or_else(|e| panic!("backdrop: {e}"));
-            assert!(image.width() >= 1920 && image.height() >= 1080);
-        }
-    }
-
-    #[test]
-    fn cover_keeps_the_aspect_and_stays_inside_the_image() {
-        let uv = cover_uv(vec2(2048.0, 1152.0), vec2(1280.0, 1000.0), vec2(0.5, 0.7));
-        assert!(uv.min.x >= 0.0 && uv.max.x <= 1.0 + 1e-6);
-        assert!(uv.min.y >= 0.0 && uv.max.y <= 1.0 + 1e-6);
-        let drawn = (uv.width() * 2048.0) / (uv.height() * 1152.0);
-        assert!((drawn - 1.28).abs() < 0.01);
     }
 }

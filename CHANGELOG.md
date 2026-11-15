@@ -6,6 +6,48 @@ All notable changes to Chewvy are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-15
+
+### Added
+
+- Backgrounds. Settings > Background picks the photograph behind the glass:
+  Aurora, six genres (fantasy, science fiction, epic, horror, western,
+  adventure), Christmas, Halloween and the four seasons, or Automatic, which
+  follows the date and the hemisphere you live in. Each theme has two freely
+  licensed photographs that take turns; About credits every one. With "Use
+  art from my libraries" on, a theme shows backdrops from your own servers
+  instead, chosen from well-rated films known for their photography (Die
+  Hard counts as Christmas). "Use as background" on a film's or show's page
+  pins its art until you unpin it. Backgrounds cross-fade, and each is dimmed
+  only as far as the text over it needs.
+- A new app icon and logo, the reel mark, with sharp small sizes for the
+  Linux panel and taskbar.
+- Home says what to do when no source has anything to show yet, with a link
+  to Manage sources.
+- Enter in the sidebar's search field opens the search page.
+
+### Changed
+
+- The interface is neutral smoked glass: grey and black only, with the
+  colour coming from the photograph behind it.
+- Every button, switch, field and menu is drawn by the app itself, with a
+  visible keyboard focus ring and hover and press states; the icons are one
+  sharp set at every size.
+- Jellyfin artwork matches Plex's: film and show cards show the 2:3 poster
+  rather than a cropped landscape card, episodes and seasons on poster shelves
+  show their show's poster, an episode's page takes its show's backdrop and
+  logo, and cast members have photos.
+- Long titles in the library and search wrap in balanced lines instead of
+  leaving a word alone on a line.
+- The window can no longer be made smaller than 960x560, where the layout
+  stops fitting.
+
+### Fixed
+
+- The Jellyfin password field no longer runs past its card in a narrow
+  window.
+- The first start no longer jumps when the sign-in card appears.
+
 ## [0.3.0] - 2026-11-14
 
 ### Added

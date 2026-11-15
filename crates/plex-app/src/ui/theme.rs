@@ -1,59 +1,87 @@
-//! The dark token set the app draws with, applied once to the `egui::Context`.
+//! The look of the app: every colour and material value the UI draws with,
+//! in one place, and the one place egui's own styles are built from them.
+//!
+//! # The data shape
+//!
+//! The app has one look, smoky glass: neutral greys and blacks, with no hue
+//! but the danger red. A background theme changes the photograph behind the
+//! app and nothing about the UI's colours, so there is one [`Theme`] value
+//! ([`SMOKE`]) and it has two kinds of part.
+//!
+//! The same whatever is behind the app:
+//!
+//! - [`Palette`]: opaque colours by role. Surfaces (`window`, `surface`,
+//!   `card`, `card_hover`, `outline`, `floating`, `plate`), text levels
+//!   (`text`, `secondary`, `muted`, the sidebar's `nav` and `nav_sub`, the
+//!   three levels drawn over art, the app mark), the neutral `accent` with
+//!   the ink that goes on it, the primary action's fill and inks, the two
+//!   danger colours, and the two overlay inks `highlight` and `shadow`.
+//! - [`Glass`]: the frosted-glass material. One tint per glass surface, the
+//!   rim and sheen, the saturation of the blur, and the opacity added where
+//!   the blur cannot run.
+//! - `art_shadow`: the [`TextShadow`]s under text drawn over an item's own
+//!   artwork.
+//!
+//! Following the photograph:
+//!
+//! - [`Backdrop`]: how much of the window colour lies over each copy of the
+//!   photograph, and the shadows under text drawn straight on it. A brighter
+//!   photograph needs more of both, and [`set_backdrop`] is the hook the code
+//!   that changes the photograph calls.
+//!
+//! What can be derived is a method, not a field, so it cannot be stated
+//! wrongly: [`Palette::accent_tint`] mixes the accent into the card colour,
+//! and [`Palette::wash`] and [`Palette::scrim`] are the overlay inks at a
+//! strength the component names. The strength of a hover fill or a track is
+//! part of a component's shape, like its radius; the ink is the palette's.
+//!
+//! Radii, spacing, the type scale and the fonts are constants of this module.
+//!
+//! Two colours are fixed and are not tokens: [`UNTINTED`] (artwork is never
+//! tinted) and [`LETTERBOX`] (what surrounds video). They live here too, so
+//! this module and its children are the only place under `ui` that names a
+//! colour; a test holds the rest of `ui` to it.
+//!
+//! # Reading and changing the theme
+//!
+//! [`current`] answers the theme in effect and [`palette`] its palette; both
+//! are a copy out of a thread-local, cheap enough to call wherever a colour is
+//! needed, every frame. Nothing caches a colour across frames. The value is
+//! per thread because the UI runs on one thread.
+//!
+//! No screen replaces the palette or the glass. [`install`] exists so a test
+//! or a probe build can swap every token at once and see that nothing on
+//! screen keeps a colour of its own; it replaces the current theme and
+//! rebuilds both egui styles from it.
 //!
 //! [`apply`] runs where the window host creates its `egui::Context`
-//! ([`crate::shell::host`]) and rewrites both egui styles, so every panel,
-//! frame and widget inherits these colors, radii, type scale and spacing
-//! instead of egui's defaults. Named text styles (`display`, `h1`, `h2`,
-//! `body`, `meta`, `caption`) plus [`primary`] give the UI one place to take
-//! sizes and the white pill button from.
+//! ([`crate::shell::host`]): it loads the fonts and styles egui from the
+//! current theme, so every panel, frame and widget inherits the tokens, radii,
+//! type scale and spacing instead of egui's defaults.
+
+mod tokens;
+
+#[cfg(test)]
+mod tests;
 
 use std::collections::BTreeMap;
 use std::sync::{Arc, LazyLock};
 
 use egui::{
-    style::WidgetVisuals, Color32, CornerRadius, FontId, Margin, RichText, Stroke, Style,
-    TextStyle, Visuals,
+    style::WidgetVisuals, CornerRadius, FontId, Margin, RichText, Stroke, Style, TextStyle, Visuals,
 };
 
-/// Window/background fill: the night sky under the backdrop photo.
-pub const WINDOW: Color32 = Color32::from_rgb(0x05, 0x06, 0x1a);
-/// Panel fill where no glass or backdrop shows through.
-pub const SURFACE: Color32 = Color32::from_rgb(0x0b, 0x0d, 0x22);
-/// Card, field and inactive-widget fill.
-pub const CARD: Color32 = Color32::from_rgb(0x16, 0x1a, 0x33);
-/// Hovered card fill: `CARD` lifted one step.
-pub const CARD_HOVER: Color32 = Color32::from_rgb(0x20, 0x25, 0x4a);
-/// Primary text.
-pub const TEXT: Color32 = Color32::from_rgb(0xee, 0xf0, 0xff);
-/// Secondary text (`weak` labels, meta lines).
-pub const SECONDARY: Color32 = Color32::from_rgb(0xa3, 0xa9, 0xcc);
-/// Small capitals over groups (library and settings captions).
-pub const MUTED: Color32 = Color32::from_rgb(0x8a, 0x8f, 0xb6);
-/// Accent for selection, progress and highlighted rows: aurora teal.
-pub const ACCENT: Color32 = Color32::from_rgb(0x38, 0xe1, 0xb8);
-/// Accent selection fill: [`ACCENT`] at ~18% over [`CARD`], so [`TEXT`] on it
-/// stays high contrast. A solid `ACCENT` fill under light text is unreadable.
-pub const ACCENT_TINT: Color32 = Color32::from_rgb(0x1c, 0x3e, 0x4b);
-/// Primary button fill: near-white, so the one main action reads first.
-pub const PRIMARY_BG: Color32 = Color32::from_rgb(0xf4, 0xf6, 0xff);
-/// Primary button text.
-pub const PRIMARY_TEXT: Color32 = Color32::from_rgb(0x0b, 0x0c, 0x22);
-/// Secondary button fill: white at 12% over whatever is behind it.
-pub const SECONDARY_BG: Color32 = Color32::from_rgba_premultiplied(31, 31, 31, 31);
-/// Hairlines between rows and along panel edges: white at 8%.
-pub const RULE: Color32 = Color32::from_rgba_premultiplied(20, 20, 20, 20);
-/// Failure text, kept distinct from the accent.
-pub const DANGER: Color32 = Color32::from_rgb(0xff, 0x8a, 0x80);
-/// Status dots: reachable, degraded.
-pub const OK: Color32 = Color32::from_rgb(0x5f, 0xe3, 0xa1);
-/// A server reachable only with limits (relay, low bandwidth).
-pub const WARN: Color32 = Color32::from_rgb(0xf3, 0xc0, 0x63);
+pub use tokens::{
+    contrast, current, luminance, mix, palette, pixel, set_backdrop, Backdrop, Glass, Palette,
+    TextShadow, Theme, LETTERBOX, SMOKE, UNTINTED,
+};
 
 /// Radius used for cards, panels and normal widgets (design spec: 8).
 pub const CARD_RADIUS_U8: u8 = 8;
 /// [`CARD_RADIUS_U8`] as an egui corner radius.
 pub const CARD_RADIUS: CornerRadius = CornerRadius::same(CARD_RADIUS_U8);
-/// Buttons are small-radius rectangles, not pills.
+/// Buttons and fields are small-radius rectangles; only a chip, which holds
+/// a state rather than starting an action, is a full pill.
 pub const PILL_RADIUS_U8: u8 = CARD_RADIUS_U8;
 
 /// Spacing unit every gap is a multiple of.
@@ -96,31 +124,6 @@ pub static H2: LazyLock<TextStyle> = LazyLock::new(|| TextStyle::Name(Arc::from(
 pub static META: LazyLock<TextStyle> = LazyLock::new(|| TextStyle::Name(Arc::from("meta")));
 /// Type-scale name for the smallest labels.
 pub static CAPTION: LazyLock<TextStyle> = LazyLock::new(|| TextStyle::Name(Arc::from("caption")));
-
-/// WCAG 2.2 relative luminance of a colour: what its brightness is worth to a
-/// reader, the half of the contrast ratio a surface is measured against.
-#[must_use]
-pub fn luminance(c: Color32) -> f32 {
-    fn channel(v: u8) -> f32 {
-        let s = f32::from(v) / 255.0;
-        if s <= 0.040_45 {
-            s / 12.92
-        } else {
-            ((s + 0.055) / 1.055).powf(2.4)
-        }
-    }
-    let [r, g, b, _] = c.to_array();
-    0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
-}
-
-/// The WCAG 2.2 contrast ratio between two colours, in either order: the
-/// `4.5:1` body-text and `3:1` secondary-text bars are what a page is held to.
-#[must_use]
-pub fn contrast(a: Color32, b: Color32) -> f32 {
-    let (la, lb) = (luminance(a), luminance(b));
-    let (hi, lo) = (la.max(lb), la.min(lb));
-    (hi + 0.05) / (lo + 0.05)
-}
 
 const fn proportional(size: f32) -> FontId {
     FontId::new(size, egui::FontFamily::Proportional)
@@ -255,13 +258,13 @@ pub fn strong(text: impl Into<RichText>) -> RichText {
     text.into().strong().family(family(SEMIBOLD))
 }
 
-/// Text drawn in [`SECONDARY`].
+/// Text drawn in the palette's `secondary`.
 #[must_use]
 pub fn secondary(text: impl Into<RichText>) -> RichText {
-    text.into().color(SECONDARY)
+    text.into().color(palette().secondary)
 }
 
-/// An item title: [`TEXT`] stated as an explicit colour.
+/// An item title: the palette's `text` stated as an explicit colour.
 ///
 /// egui resolves `RichText::strong()` through `Visuals::strong_text_color()`,
 /// which is the *active widget* foreground. Leaving titles to that resolution
@@ -269,28 +272,20 @@ pub fn secondary(text: impl Into<RichText>) -> RichText {
 /// colour is pinned here.
 #[must_use]
 pub fn title(text: impl Into<RichText>) -> RichText {
-    text.into().color(TEXT).strong()
+    text.into().color(palette().text).strong()
 }
 
-/// A meta line under a title: [`SECONDARY`] at the [`META`] size.
+/// A meta line under a title: the palette's `secondary` at the [`META`] size.
 #[must_use]
 pub fn meta_text(text: impl Into<RichText>) -> RichText {
-    text.into().color(SECONDARY).size(META_SIZE)
+    text.into().color(palette().secondary).size(META_SIZE)
 }
 
-/// The near-white primary button.
-pub fn primary(text: impl Into<RichText>) -> egui::Button<'static> {
-    egui::Button::new(text.into().color(PRIMARY_TEXT))
-        .fill(PRIMARY_BG)
-        .stroke(Stroke::new(0.0, PRIMARY_BG))
-        .corner_radius(CornerRadius::same(PILL_RADIUS_U8))
-}
-
-/// The `Style` [`apply`] installs: dark tokens, type scale and spacing.
+/// The `Style` egui gets for `theme`: its tokens, the type scale and spacing.
 #[must_use]
-pub fn style() -> Style {
+pub fn style(theme: &Theme) -> Style {
     let mut style = Style::default();
-    apply_to(&mut style);
+    apply_to(&mut style, theme);
     style
 }
 
@@ -310,190 +305,102 @@ fn text_styles() -> BTreeMap<TextStyle, FontId> {
     ])
 }
 
-/// Mutate an existing style in place; used by [`apply`] so both egui styles end
-/// up identical and no widget can fall back to egui's light defaults.
-pub fn apply_to(style: &mut Style) {
+/// Rebuild an existing style from `theme`; both egui styles get the same one,
+/// so no widget can fall back to egui's light defaults.
+fn apply_to(style: &mut Style, theme: &Theme) {
     style.text_styles = text_styles();
     style.override_text_style = Some(TextStyle::Body);
     style.spacing.item_spacing = egui::Vec2::new(GAP, GAP);
     style.spacing.window_margin = Margin::same(PAGE_PADDING as i8);
     style.spacing.button_padding = egui::Vec2::new(GAP / 2.0, GAP / 4.0);
     style.spacing.indent = SPACING_BASE * 4.0;
+    style.spacing.menu_margin = Margin::symmetric(10, 6);
+    style.spacing.scroll = scroll();
+    style.interaction.tooltip_delay = TOOLTIP_DELAY;
+    style.visuals = visuals(&theme.palette);
+}
 
+/// How long the pointer rests on a control before its tooltip shows.
+const TOOLTIP_DELAY: f32 = 0.45;
+
+/// One scroll bar for every scrolling page: a thin handle that floats over
+/// the content's edge with no gutter, brighter while it is used.
+fn scroll() -> egui::style::ScrollStyle {
+    egui::style::ScrollStyle {
+        bar_width: 6.0,
+        floating_width: 3.0,
+        floating_allocated_width: 0.0,
+        dormant_background_opacity: 0.0,
+        active_background_opacity: 0.0,
+        interact_background_opacity: 0.0,
+        dormant_handle_opacity: 0.0,
+        active_handle_opacity: 0.35,
+        interact_handle_opacity: 0.6,
+        ..egui::style::ScrollStyle::floating()
+    }
+}
+
+/// egui's own widget colours, from the palette.
+fn visuals(palette: &Palette) -> Visuals {
+    let widget = |fill, edge| WidgetVisuals {
+        bg_fill: fill,
+        weak_bg_fill: fill,
+        bg_stroke: Stroke::new(HAIRLINE, edge),
+        corner_radius: CARD_RADIUS,
+        fg_stroke: Stroke::new(0.0, palette.text),
+        expansion: 0.0,
+    };
     let mut visuals = Visuals::dark();
-    visuals.window_fill = WINDOW;
-    visuals.panel_fill = SURFACE;
-    visuals.extreme_bg_color = WINDOW;
-    visuals.faint_bg_color = CARD;
-    visuals.code_bg_color = CARD;
-    visuals.text_edit_bg_color = Some(CARD);
+    visuals.window_fill = palette.window;
+    visuals.panel_fill = palette.surface;
+    visuals.extreme_bg_color = palette.window;
+    visuals.faint_bg_color = palette.card;
+    visuals.code_bg_color = palette.card;
+    visuals.text_edit_bg_color = Some(palette.card);
     visuals.window_corner_radius = CARD_RADIUS;
     visuals.menu_corner_radius = CARD_RADIUS;
-    visuals.window_stroke = Stroke::new(HAIRLINE, CARD);
-    visuals.hyperlink_color = ACCENT;
-    visuals.override_text_color = Some(TEXT);
-    visuals.weak_text_color = Some(SECONDARY);
-    visuals.warn_fg_color = ACCENT;
-    visuals.error_fg_color = DANGER;
-    visuals.selection.bg_fill = ACCENT_TINT;
-    visuals.selection.stroke = Stroke::new(HAIRLINE, ACCENT);
-    visuals.widgets.noninteractive = WidgetVisuals {
-        bg_fill: SURFACE,
-        weak_bg_fill: SURFACE,
-        bg_stroke: Stroke::new(HAIRLINE, CARD),
-        corner_radius: CARD_RADIUS,
-        fg_stroke: Stroke::new(0.0, TEXT),
-        expansion: 0.0,
+    visuals.window_stroke = Stroke::new(HAIRLINE, palette.outline);
+    visuals.popup_shadow = egui::Shadow {
+        offset: [0, 4],
+        blur: 16,
+        spread: 0,
+        color: palette.scrim(110),
     };
-    visuals.widgets.inactive = WidgetVisuals {
-        bg_fill: CARD,
-        weak_bg_fill: CARD,
-        bg_stroke: Stroke::new(HAIRLINE, SECONDARY),
-        corner_radius: CARD_RADIUS,
-        fg_stroke: Stroke::new(0.0, TEXT),
-        expansion: 0.0,
-    };
-    visuals.widgets.hovered = WidgetVisuals {
-        bg_fill: CARD_HOVER,
-        weak_bg_fill: CARD_HOVER,
-        bg_stroke: Stroke::new(HAIRLINE, ACCENT),
-        corner_radius: CARD_RADIUS,
-        fg_stroke: Stroke::new(0.0, TEXT),
-        expansion: 0.0,
-    };
-    visuals.widgets.active = WidgetVisuals {
-        bg_fill: ACCENT_TINT,
-        weak_bg_fill: ACCENT_TINT,
-        bg_stroke: Stroke::new(HAIRLINE, ACCENT),
-        corner_radius: CARD_RADIUS,
-        fg_stroke: Stroke::new(0.0, TEXT),
-        expansion: 0.0,
-    };
+    visuals.hyperlink_color = palette.accent;
+    visuals.override_text_color = Some(palette.text);
+    visuals.weak_text_color = Some(palette.secondary);
+    visuals.warn_fg_color = palette.accent;
+    visuals.error_fg_color = palette.danger;
+    visuals.selection.bg_fill = palette.accent_tint();
+    visuals.selection.stroke = Stroke::new(HAIRLINE, palette.accent);
+    visuals.text_cursor.stroke.color = palette.text;
+    visuals.ime_composition.active_underline_stroke.color = palette.text;
+    visuals.ime_composition.inactive_underline_stroke.color = palette.muted;
+    visuals.widgets.noninteractive = widget(palette.surface, palette.card);
+    visuals.widgets.inactive = widget(palette.card, palette.outline);
+    visuals.widgets.hovered = widget(palette.card_hover, palette.accent);
+    visuals.widgets.active = widget(palette.accent_tint(), palette.accent);
     visuals.widgets.open = visuals.widgets.active;
-    style.visuals = visuals;
+    visuals
 }
 
-/// Install the tokens on a context (both themes) so the app is dark from the
-/// first frame.
+/// Load the fonts and style both egui themes from the current theme, so the
+/// app is in its own look from the first frame.
 pub fn apply(ctx: &egui::Context) {
     ctx.set_fonts(fonts());
-    ctx.all_styles_mut(apply_to);
+    restyle(ctx);
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use egui::{text::LayoutJob, FontSelection};
+/// Make `theme` the current one and restyle `ctx` from it. Everything the app
+/// paints itself reads the theme each frame, so the next frame is in `theme`.
+/// The app has one look and never calls this; tests and probe builds do.
+pub fn install(ctx: &egui::Context, theme: Theme) {
+    tokens::set_current(theme);
+    restyle(ctx);
+    ctx.request_repaint();
+}
 
-    #[test]
-    fn tokens_match_the_design_spec() {
-        assert_eq!(WINDOW, Color32::from_rgb(0x05, 0x06, 0x1a));
-        assert_eq!(SURFACE, Color32::from_rgb(0x0b, 0x0d, 0x22));
-        assert_eq!(CARD, Color32::from_rgb(0x16, 0x1a, 0x33));
-        assert_eq!(TEXT, Color32::from_rgb(0xee, 0xf0, 0xff));
-        assert_eq!(SECONDARY, Color32::from_rgb(0xa3, 0xa9, 0xcc));
-        assert_eq!(ACCENT, Color32::from_rgb(0x38, 0xe1, 0xb8));
-        assert_eq!(PRIMARY_BG, Color32::from_rgb(0xf4, 0xf6, 0xff));
-        assert_eq!(PRIMARY_TEXT, Color32::from_rgb(0x0b, 0x0c, 0x22));
-    }
-
-    /// WCAG relative luminance ratio, so the contrast a user actually gets is
-    /// checked rather than eyeballed.
-    fn contrast(a: Color32, b: Color32) -> f64 {
-        fn channel(v: u8) -> f64 {
-            let s = f64::from(v) / 255.0;
-            if s <= 0.040_45 {
-                s / 12.92
-            } else {
-                ((s + 0.055) / 1.055).powf(2.4)
-            }
-        }
-        fn luminance(c: Color32) -> f64 {
-            let [r, g, b, _] = c.to_array();
-            0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
-        }
-        let (hi, lo) = (
-            luminance(a).max(luminance(b)),
-            luminance(a).min(luminance(b)),
-        );
-        (hi + 0.05) / (lo + 0.05)
-    }
-
-    #[test]
-    fn text_and_selected_fills_are_readable() {
-        assert!(contrast(TEXT, WINDOW) > 15.0);
-        assert!(contrast(TEXT, SURFACE) > 12.0);
-        assert!(contrast(TEXT, ACCENT_TINT) > 7.0);
-        assert!(contrast(SECONDARY, SURFACE) > 4.5);
-        assert!(contrast(MUTED, SURFACE) > 4.5);
-        assert!(contrast(PRIMARY_TEXT, PRIMARY_BG) > 15.0);
-        // A solid accent fill under light text is what the live run reported.
-        assert!(contrast(TEXT, ACCENT) < 4.5);
-        let s = style();
-        assert_eq!(s.visuals.selection.bg_fill, ACCENT_TINT);
-        assert_eq!(s.visuals.widgets.active.bg_fill, ACCENT_TINT);
-        assert_eq!(s.visuals.widgets.active.fg_stroke.color, TEXT);
-        assert_eq!(s.visuals.widgets.open.bg_fill, ACCENT_TINT);
-        // What the widgets actually get painted with, read out of the layout job.
-        let s = style();
-        let drawn = |rt: RichText| {
-            let mut job = LayoutJob::default();
-            rt.append_to(&mut job, &s, FontSelection::Default, egui::Align::Center);
-            job.sections.last().map(|section| section.format.color)
-        };
-        assert_eq!(drawn(title("Heat")), Some(TEXT));
-        assert_eq!(drawn(meta_text("movie · 1h41m")), Some(SECONDARY));
-        assert_eq!(drawn(strong("Heat")), Some(TEXT));
-    }
-
-    #[test]
-    fn type_scale_sizes() {
-        assert_eq!(display(), FontId::new(32.0, family(BOLD)));
-        assert_eq!(h1(), FontId::new(24.0, family(BOLD)));
-        assert_eq!(h2(), FontId::new(19.0, family(SEMIBOLD)));
-        assert_eq!(body(), FontId::new(15.0, egui::FontFamily::Proportional));
-        assert_eq!(meta(), FontId::new(13.0, egui::FontFamily::Proportional));
-        assert_eq!(caption(), FontId::new(12.0, egui::FontFamily::Proportional));
-    }
-
-    #[test]
-    fn every_named_style_is_in_the_scale() {
-        let styles = style().text_styles;
-        for name in [&*DISPLAY, &*H1, &*H2, &*META, &*CAPTION] {
-            assert!(styles.contains_key(name), "{name:?} missing");
-        }
-        assert_eq!(styles.get(&TextStyle::Body), Some(&body()));
-        assert_eq!(styles.get(&TextStyle::Heading), Some(&h1()));
-    }
-
-    #[test]
-    fn radii_and_spacing_follow_the_grid() {
-        let s = style();
-        assert_eq!(s.visuals.window_corner_radius, CornerRadius::same(8));
-        assert_eq!(
-            s.visuals.widgets.noninteractive.corner_radius,
-            CornerRadius::same(8)
-        );
-        assert_eq!(
-            s.visuals.widgets.inactive.corner_radius,
-            CornerRadius::same(8)
-        );
-        assert_eq!(s.spacing.item_spacing, egui::Vec2::new(16.0, 16.0));
-        assert_eq!(s.spacing.window_margin, Margin::same(24));
-        assert_eq!(s.spacing.indent, 16.0);
-    }
-
-    #[test]
-    fn apply_replaces_visuals_on_the_context() {
-        let ctx = egui::Context::default();
-        apply(&ctx);
-        let s = ctx.style_of(egui::Theme::Dark);
-        assert_eq!(s.visuals.window_fill, WINDOW);
-        assert_eq!(s.visuals.panel_fill, SURFACE);
-        assert_eq!(s.visuals.widgets.inactive.bg_fill, CARD);
-        assert_eq!(s.visuals.hyperlink_color, ACCENT);
-        assert_eq!(s.text_styles.get(&TextStyle::Body), Some(&body()));
-        let light = ctx.style_of(egui::Theme::Light);
-        assert_eq!(light.visuals.window_fill, WINDOW);
-    }
+fn restyle(ctx: &egui::Context) {
+    let theme = current();
+    ctx.all_styles_mut(|style| apply_to(style, &theme));
 }

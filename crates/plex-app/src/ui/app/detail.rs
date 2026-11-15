@@ -22,20 +22,29 @@ impl Ui {
         // The page is taken out so `show` can ask the artwork loader while the
         // shell still owns it.
         let Some(mut page) = self.detail.take() else {
-            ui.spinner();
+            crate::ui::controls::spinner(ui);
             ui.label(&self.status);
             return;
         };
+        let pinned = page
+            .item
+            .rating_key
+            .as_deref()
+            .is_some_and(|key| self.backgrounds.is_pinned(key));
         let action = detail::show(
             ui,
             &mut page,
             &mut self.artwork,
             player::is_active(),
+            pinned,
             crate::source::Servers {
                 plex: &self.server,
                 jellyfin: &self.sources.jellyfin,
             },
         );
+        if action == Some(Action::Background) {
+            self.toggle_pin(&page.item);
+        }
         self.detail = Some(page);
         match action {
             Some(Action::Play(target)) => {
@@ -66,7 +75,7 @@ impl Ui {
                     title,
                 });
             }
-            None => {}
+            Some(Action::Background) | None => {}
         }
     }
 

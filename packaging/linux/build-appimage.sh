@@ -94,6 +94,11 @@ fi
 # window's app id, so desktops match a running window to this entry.
 install -m 0644 "$SCRIPT_DIR/$APP_ID.desktop" "$APPDIR/usr/share/applications/$APP_ID.desktop"
 install -m 0644 "$SCRIPT_DIR/$APP_ID.svg" "$APPDIR/usr/share/icons/hicolor/scalable/apps/$APP_ID.svg"
+# Panels and task bars draw 16 to 32 px: the pixel-fitted renderings, not the
+# large design scaled down.
+for n in 16 24 32; do
+    install -D -m 0644 "$SCRIPT_DIR/$APP_ID-$n.png" "$APPDIR/usr/share/icons/hicolor/${n}x${n}/apps/$APP_ID.png"
+done
 
 # The licences travel inside the package, next to what they cover.
 DOC_DIR=$APPDIR/usr/share/doc/chewvy

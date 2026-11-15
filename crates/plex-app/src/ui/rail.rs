@@ -11,7 +11,8 @@
 use egui::{pos2, vec2, Align2, Color32, FontId, Rect, Sense, Ui};
 
 use crate::source::{Library, Origin};
-use crate::ui::{brand, chips, glass, glass_tints, marks, theme};
+use crate::ui::marks::icon::{self, Icon, Size};
+use crate::ui::{brand, chips, controls, glass, marks, theme};
 
 /// Sidebar width the shell reserves.
 pub const WIDTH: f32 = 248.0;
@@ -29,14 +30,12 @@ const PAD_X: f32 = 14.0;
 const PAD_TOP: f32 = 22.0;
 /// A row's text inset from its left edge.
 const INSET: f32 = 12.0;
-/// A row's icon box.
-const ICON: f32 = 14.0;
-/// The fill of the selected row: white at 9%.
-const SELECTED: Color32 = Color32::from_rgba_premultiplied(23, 23, 23, 23);
-/// The fill of a hovered row: white at 5%.
-const HOVER: Color32 = Color32::from_rgba_premultiplied(13, 13, 13, 13);
-/// A library row's label colour.
-const SUB_TEXT: Color32 = Color32::from_rgb(0xa9, 0xae, 0xd0);
+/// The strength of the wash under the selected row: 9%.
+const SELECTED: u8 = 23;
+/// A row's corner radius, which its focus ring follows.
+const RADIUS: f32 = theme::CARD_RADIUS_U8 as f32;
+/// The strength of the wash under a hovered row: 5%.
+const HOVER: u8 = 13;
 /// The switcher's label when no single server is in front.
 pub const ALL_SOURCES: &str = "All sources";
 
@@ -218,11 +217,18 @@ pub fn show(
             // The glass is added before anything the sidebar draws, so the blur
             // of the backdrop and hero art sits under its labels.
             let panel = ui.max_rect();
-            glass::panel(ui.painter(), panel, 0.0, glass_tints::RAIL);
+            // Reaching one point past the window's left, top and bottom edges,
+            // the glass's rim and sheen fall outside the window: only the
+            // rule along its right edge is drawn.
+            let glass = Rect::from_min_max(
+                panel.min - vec2(1.0, 1.0),
+                pos2(panel.max.x, panel.max.y + 1.0),
+            );
+            glass::panel(ui.painter(), glass, 0.0, theme::current().glass.rail);
             ui.painter().vline(
                 panel.right() - 0.5,
                 panel.y_range(),
-                egui::Stroke::new(1.0, theme::RULE),
+                egui::Stroke::new(1.0, theme::palette().rule()),
             );
             let inner = Rect::from_min_max(
                 pos2(panel.min.x + PAD_X, panel.min.y + PAD_TOP),
@@ -256,12 +262,13 @@ fn contents(
     let mut choice = None;
     ui.spacing_mut().item_spacing.y = ROW_GAP;
     let (logo, _) = ui.allocate_exact_size(vec2(ui.available_width(), 46.0), Sense::hover());
-    brand::wordmark(ui.painter(), pos2(logo.min.x + 8.0, logo.min.y), 28.0, 20.0);
+    brand::wordmark(ui.painter(), logo.min.x + 8.0, logo.min.y + 16.0, 20.0);
     if let Some(asked) = switch_row(ui, switcher) {
         choice = Some(asked);
     }
     ui.add_space(6.0);
-    if let Some((query, submitted)) = search_field(ui, field) {
+    let searching = matches!(current, Some(Entry::Search));
+    if let Some((query, submitted)) = search_field(ui, field, searching) {
         choice = Some(Choice::Search { query, submitted });
     }
     ui.add_space(12.0);
@@ -273,7 +280,7 @@ fn contents(
     for entry in entries.iter().filter(|e| matches!(e, Entry::Home)) {
         go(
             entry,
-            nav_row(ui, entry.label(), marks::icon::HOME, section == Some(entry)),
+            nav_row(ui, entry.label(), Icon::Home, section == Some(entry)),
         );
     }
     // One header per server, drawn once above that server's own rows.
@@ -319,12 +326,12 @@ fn contents(
     ui.painter().hline(
         rule.x_range(),
         rule.top(),
-        egui::Stroke::new(1.0, theme::RULE),
+        egui::Stroke::new(1.0, theme::palette().rule()),
     );
     for entry in entries.iter().filter(|e| matches!(e, Entry::Settings)) {
         go(
             entry,
-            nav_row(ui, entry.label(), marks::icon::GEAR, section == Some(entry)),
+            nav_row(ui, entry.label(), Icon::Settings, section == Some(entry)),
         );
     }
     choice.or(opened)
@@ -344,23 +351,23 @@ fn switch_row(ui: &mut Ui, switcher: &Switcher<'_>) -> Option<Choice> {
     };
     let mut choice = None;
     let rect = slot.rect;
-    let open = chips::menu(ui, &slot, |ui| {
+    let open = chips::menu(&slot, |ui| {
         // The list is as wide as the row it hangs from, not as the window.
         ui.set_width(rect.width() - 8.0);
         choice = switcher_menu(ui, switcher);
     });
-    let fill = if open {
+    let fill = theme::palette().wash(if open {
         SELECTED
     } else if slot.response.hovered() {
         HOVER
     } else {
-        Color32::from_white_alpha(10)
-    };
+        10
+    });
     ui.painter().rect_filled(rect, theme::CARD_RADIUS, fill);
     ui.painter().rect_stroke(
         rect,
         theme::CARD_RADIUS,
-        egui::Stroke::new(theme::HAIRLINE, theme::RULE),
+        egui::Stroke::new(theme::HAIRLINE, theme::palette().rule()),
         egui::StrokeKind::Inside,
     );
     let left = rect.min.x + INSET;
@@ -368,8 +375,11 @@ fn switch_row(ui: &mut Ui, switcher: &Switcher<'_>) -> Option<Choice> {
         Some(origin) => marks::paint_source(ui.painter(), &origin, left, rect.center().y, 10.0),
         // Several sources: a plain dot rather than one service's mark.
         None => {
-            ui.painter()
-                .circle_filled(pos2(left + 4.0, rect.center().y), 4.0, theme::ACCENT);
+            ui.painter().circle_filled(
+                pos2(left + 4.0, rect.center().y),
+                4.0,
+                theme::palette().accent,
+            );
             8.0
         }
     };
@@ -380,15 +390,17 @@ fn switch_row(ui: &mut Ui, switcher: &Switcher<'_>) -> Option<Choice> {
         left + mark + 8.0,
         switcher.label(),
         theme::medium(14.0),
-        theme::TEXT,
+        theme::palette().text,
     );
+    controls::ring_when_focused(ui.painter(), &slot.response, rect, RADIUS);
     // The chevron that says the row opens a list.
-    let tip = pos2(rect.max.x - 16.0, rect.center().y + 2.5);
-    let stroke = egui::Stroke::new(1.5, theme::MUTED);
-    ui.painter()
-        .line_segment([tip + vec2(-4.0, -4.5), tip], stroke);
-    ui.painter()
-        .line_segment([tip, tip + vec2(4.0, -4.5)], stroke);
+    icon::paint(
+        ui.painter(),
+        Icon::ChevronDown,
+        Size::Regular,
+        pos2(rect.max.x - 6.0 - icon::SIZE / 2.0, rect.center().y),
+        theme::palette().muted,
+    );
     choice
 }
 
@@ -429,7 +441,7 @@ fn switcher_menu(ui: &mut Ui, switcher: &Switcher<'_>) -> Option<Choice> {
     ui.painter().hline(
         rule.x_range(),
         rule.center().y,
-        egui::Stroke::new(1.0, theme::RULE),
+        egui::Stroke::new(1.0, theme::palette().rule()),
     );
     if chips::menu_row(ui, "Manage sources", false) {
         choice = Some(Choice::Go(Entry::Sources));
@@ -456,7 +468,7 @@ fn menu_caption(ui: &mut Ui, origin: &Origin) {
             Align2::LEFT_CENTER,
             origin.label().to_uppercase(),
             theme::semibold(11.0),
-            theme::MUTED,
+            theme::palette().muted,
         );
     }
 }
@@ -473,36 +485,14 @@ fn menu_caption(ui: &mut Ui, origin: &Origin) {
 /// leading or trailing whitespace. Only a change from [`Field::reported`] asks
 /// for anything; the Search screen's own debounce decides when the query is
 /// asked for.
-fn search_field(ui: &mut Ui, field: &mut Field<'_>) -> Option<(String, bool)> {
+fn search_field(ui: &mut Ui, field: &mut Field<'_>, selected: bool) -> Option<(String, bool)> {
     let last = field.reported.clone();
-    let (well, _) = ui.allocate_exact_size(vec2(ui.available_width(), ROW_HEIGHT), Sense::hover());
-    ui.painter()
-        .rect_filled(well, theme::CARD_RADIUS, Color32::from_white_alpha(18));
-    marks::paint_tinted(
-        ui.painter(),
-        marks::icon::SEARCH,
-        well.min.x + INSET,
-        well.center().y,
-        13.0,
-        theme::MUTED,
-    );
-    let text = Rect::from_min_max(
-        pos2(well.min.x + 38.0, well.min.y),
-        pos2(well.max.x - 8.0, well.max.y),
-    );
-    let edit = ui
-        .scope_builder(egui::UiBuilder::new().max_rect(text), |ui| {
-            ui.add_sized(
-                text.size(),
-                egui::TextEdit::singleline(field.query)
-                    .hint_text(egui::RichText::new(SEARCH_HINT).color(theme::MUTED))
-                    .font(theme::body())
-                    .frame(egui::Frame::NONE)
-                    .vertical_align(egui::Align::Center)
-                    .desired_width(text.width()),
-            )
-        })
-        .inner;
+    let answer = controls::Field::new(field.query, SEARCH_HINT, "rail-search")
+        .leading(Icon::Search)
+        .height(ROW_HEIGHT)
+        .selected(selected)
+        .show(ui);
+    let edit = answer.response;
     if *field.focus {
         edit.request_focus();
         *field.focus = false;
@@ -510,7 +500,7 @@ fn search_field(ui: &mut Ui, field: &mut Field<'_>) -> Option<(String, bool)> {
     // The focus reported here is what gates the screen's card selection this
     // frame and its Backspace/`/` keys in the frame after.
     field.typed |= edit.has_focus();
-    let submitted = edit.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
+    let submitted = answer.submitted;
     let query = field.query.trim().to_owned();
     let changed = query != last;
     if submitted || changed {
@@ -520,36 +510,33 @@ fn search_field(ui: &mut Ui, field: &mut Field<'_>) -> Option<(String, bool)> {
 }
 
 /// A main navigation row: icon and label, lit when selected.
-fn nav_row(ui: &mut Ui, label: &str, icon: marks::Logo, selected: bool) -> bool {
+fn nav_row(ui: &mut Ui, label: &str, glyph: Icon, selected: bool) -> bool {
     let response = ui.allocate_response(vec2(ui.available_width(), ROW_HEIGHT), Sense::click());
     let response = crate::ui::cards::pointer(response);
     let rect = response.rect;
     let fill = if selected {
-        SELECTED
+        theme::palette().wash(SELECTED)
     } else if response.hovered() {
-        HOVER
+        theme::palette().wash(HOVER)
     } else {
         Color32::TRANSPARENT
     };
     ui.painter().rect_filled(rect, theme::CARD_RADIUS, fill);
     let (ink, text) = if selected {
-        (theme::ACCENT, theme::TEXT)
+        (theme::palette().accent, theme::palette().text)
     } else {
-        (
-            Color32::from_rgb(0xc3, 0xc8, 0xe4),
-            Color32::from_rgb(0xc3, 0xc8, 0xe4),
-        )
+        (theme::palette().nav, theme::palette().nav)
     };
-    marks::paint_tinted(
+    icon::paint(
         ui.painter(),
-        icon,
-        rect.min.x + INSET,
-        rect.center().y,
-        ICON,
+        glyph,
+        Size::Regular,
+        pos2(rect.min.x + INSET + icon::SIZE / 2.0, rect.center().y),
         ink,
     );
     let left = rect.min.x + INSET + 30.0;
     draw_label(ui, rect, left, label, theme::medium(14.5), text);
+    controls::ring_when_focused(ui.painter(), &response, rect, RADIUS);
     response.clicked()
 }
 
@@ -564,9 +551,9 @@ fn sub_response(ui: &mut Ui, label: &str, selected: bool) -> egui::Response {
     let response = crate::ui::cards::pointer(response);
     let rect = response.rect;
     let fill = if selected {
-        SELECTED
+        theme::palette().wash(SELECTED)
     } else if response.hovered() {
-        HOVER
+        theme::palette().wash(HOVER)
     } else {
         Color32::TRANSPARENT
     };
@@ -575,10 +562,14 @@ fn sub_response(ui: &mut Ui, label: &str, selected: bool) -> egui::Response {
         ui.painter().circle_filled(
             pos2(rect.min.x + INSET - 4.0, rect.center().y),
             2.5,
-            theme::ACCENT,
+            theme::palette().accent,
         );
     }
-    let color = if selected { theme::TEXT } else { SUB_TEXT };
+    let color = if selected {
+        theme::palette().text
+    } else {
+        theme::palette().nav_sub
+    };
     draw_label(
         ui,
         rect,
@@ -587,6 +578,7 @@ fn sub_response(ui: &mut Ui, label: &str, selected: bool) -> egui::Response {
         theme::body(),
         color,
     );
+    controls::ring_when_focused(ui.painter(), &response, rect, RADIUS);
     response
 }
 
@@ -611,7 +603,7 @@ fn caption(ui: &mut Ui, origin: &Origin, server: &str) {
         Align2::LEFT_CENTER,
         shown,
         font,
-        theme::MUTED,
+        theme::palette().muted,
     );
 }
 
@@ -627,7 +619,7 @@ fn note_row(ui: &mut Ui, note: &str) {
         rect.min.x + INSET + 4.0,
         note,
         theme::body(),
-        theme::MUTED,
+        theme::palette().muted,
     );
 }
 
@@ -678,7 +670,7 @@ pub(crate) fn elide(painter: &egui::Painter, text: &str, width: f32, font: &Font
         }
     }
     let kept: String = chars.iter().take(lo).collect();
-    format!("{kept}…")
+    format!("{}…", kept.trim_end())
 }
 
 #[cfg(test)]

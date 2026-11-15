@@ -97,6 +97,9 @@ pub struct Item {
     pub kind: Option<String>,
     /// Display title.
     pub title: Option<String>,
+    /// The title in its original language (`originalTitle`), when the server
+    /// records one apart from the display title (`#표류` for `#Adrift`).
+    pub original_title: Option<String>,
     /// Number of this item inside its parent (episode number, season number).
     pub index: Option<u64>,
     /// Number of the parent (season) inside the grandparent (show).
@@ -130,20 +133,30 @@ pub struct Item {
     pub tagline: Option<String>,
     /// Content advisory as recorded (`gb/PG`, `TV-MA`, …).
     pub content_rating: Option<String>,
-    /// Audience score as recorded; the captured answers carry 10-point values
-    /// (`audienceRating` 7.1 for a film whose `audienceRatingImage` is
-    /// `RottenTomatoes::v2_100pt_supercredpop`).
+    /// Audience score, **out of 10** (`audienceRating`): TMDb's vote average
+    /// as recorded, or a Rotten Tomatoes audience percentage divided by ten.
+    /// The scale is read off the captures in `tests/fixtures/real/`: every
+    /// `rottentomatoes://image.rating.spilled` value is under 6.0 and every
+    /// `…upright` one at or over it, which is Rotten Tomatoes' 60 % line on a
+    /// tenth of the percentage (`tests/library_ratings.rs` holds it).
     pub audience_rating: Option<f64>,
-    /// The server's `rating` value, **unit not asserted**: the captured answer
-    /// carries 5.7 next to a 100-point Tomatometer `ratingImage`, and `rating`
-    /// is `null` on an episode whose `audienceRating` is 10-point, so the scale
-    /// is stored verbatim rather than guessed. Fractional network values are
-    /// also why `Item` and [`ItemPage`] derive `PartialEq` but not `Eq`: a float
-    /// has no reflexive equality, so anything that needs items as map keys must
-    /// key on `rating_key`.
+    /// Critics' score, **out of 10** (`rating`): a Tomatometer percentage
+    /// divided by ten (`5.7` next to `rottentomatoes://image.rating.rotten`,
+    /// every `…rotten` value under 6.0 and every `…ripe` one at or over it), or
+    /// an IMDb or TMDb score as it stands. `null` on an episode. Fractional
+    /// network values are also why `Item` and [`ItemPage`] derive `PartialEq`
+    /// but not `Eq`: a float has no reflexive equality, so anything that needs
+    /// items as map keys must key on `rating_key`.
     pub rating: Option<f64>,
     /// `Genre[].tag` values, in the order recorded.
     pub genres: Vec<String>,
+    /// External ids, `Guid[].id` as recorded (`imdb://tt2172380`,
+    /// `tmdb://22969`, `tvdb://1648`). A metadata read names them; a section
+    /// listing names them only when asked with [`super::QUERY_INCLUDE_GUIDS`].
+    pub guids: Vec<String>,
+    /// `Collection[].tag` values: the collections this item belongs to, which
+    /// the server names in the same tag shape as `Genre[]`.
+    pub collections: Vec<String>,
     /// `Role[]` credited people, in the order recorded.
     pub roles: Vec<Role>,
     /// `Director[].tag` values, in the order recorded.
@@ -293,6 +306,12 @@ pub(crate) struct WireGenre {
 }
 
 #[derive(Deserialize)]
+pub(crate) struct WireGuid {
+    #[serde(rename = "id", default)]
+    id: Option<String>,
+}
+
+#[derive(Deserialize)]
 pub(crate) struct WireDirector {
     #[serde(rename = "tag", default)]
     tag: Option<String>,
@@ -328,6 +347,8 @@ pub(crate) struct WireItem {
     kind: Option<String>,
     #[serde(rename = "title", default)]
     title: Option<String>,
+    #[serde(rename = "originalTitle", default)]
+    original_title: Option<String>,
     #[serde(rename = "index", default)]
     index: Option<u64>,
     #[serde(rename = "parentIndex", default)]
@@ -366,6 +387,10 @@ pub(crate) struct WireItem {
     rating: Option<f64>,
     #[serde(rename = "Genre", default)]
     genres: Vec<WireGenre>,
+    #[serde(rename = "Guid", default)]
+    guids: Vec<WireGuid>,
+    #[serde(rename = "Collection", default)]
+    collections: Vec<WireGenre>,
     #[serde(rename = "Role", default)]
     roles: Vec<WireRole>,
     #[serde(rename = "Director", default)]
@@ -430,6 +455,7 @@ fn into_item(row: WireItem) -> Item {
         key: clean(row.key),
         kind: clean(row.kind),
         title: clean(row.title),
+        original_title: clean(row.original_title),
         index: row.index,
         parent_index: row.parent_index,
         parent_title: clean(row.parent_title),
@@ -460,6 +486,16 @@ fn into_item(row: WireItem) -> Item {
             .genres
             .into_iter()
             .filter_map(|genre| clean(genre.tag))
+            .collect(),
+        guids: row
+            .guids
+            .into_iter()
+            .filter_map(|guid| clean(guid.id))
+            .collect(),
+        collections: row
+            .collections
+            .into_iter()
+            .filter_map(|collection| clean(collection.tag))
             .collect(),
         roles: row
             .roles

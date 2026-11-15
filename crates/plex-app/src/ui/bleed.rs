@@ -6,7 +6,7 @@
 //! cards and the sidebar's glass both sit over it.
 
 use egui::epaint::{Mesh, Vertex};
-use egui::{pos2, vec2, Color32, Pos2, Rect, Shape, TextureId};
+use egui::{pos2, vec2, Pos2, Rect, Shape, TextureId};
 
 use crate::ui::{backdrop, theme};
 
@@ -107,7 +107,7 @@ fn masked(texture: TextureId, rect: Rect, uv: Rect, mask: Mask) -> Mesh {
                     rect.min.y + v * rect.height(),
                 ),
                 uv: pos2(uv.min.x + u * uv.width(), uv.min.y + v * uv.height()),
-                color: Color32::WHITE.gamma_multiply(alpha),
+                color: theme::UNTINTED.gamma_multiply(alpha),
             });
         }
     }
@@ -126,6 +126,7 @@ fn masked(texture: TextureId, rect: Rect, uv: Rect, mask: Mask) -> Mesh {
 /// out over the art's lower part as the art itself does.
 fn scrim(rect: Rect, mask: Mask) -> Mesh {
     let mut mesh = Mesh::default();
+    let scrim = theme::palette().window;
     let x = |u: f32| rect.min.x + u * rect.width();
     let rows = [(0.0, 1.0), (mask.bottom_fade(), 1.0), (1.0, 0.0)];
     for pair in mask.scrim().windows(2) {
@@ -144,7 +145,7 @@ fn scrim(rect: Rect, mask: Mask) -> Mesh {
                 (pos2(x(u0), y(v1)), a0 * k1),
                 (pos2(x(u1), y(v1)), a1 * k1),
             ] {
-                mesh.colored_vertex(p, theme::WINDOW.gamma_multiply(a));
+                mesh.colored_vertex(p, scrim.gamma_multiply(a));
             }
             mesh.add_triangle(base, base + 1, base + 2);
             mesh.add_triangle(base + 1, base + 3, base + 2);

@@ -7,13 +7,15 @@
 
 use std::f32::consts::TAU;
 
-use egui::{pos2, vec2, Align2, Color32, CursorIcon, Margin, Rect, Sense, Stroke};
+use egui::{pos2, vec2, Align2, CursorIcon, Margin, Rect, Sense, Stroke};
 
+use crate::ui::controls::{self, Button, Kind};
+use crate::ui::marks::icon::{self, Icon, Size};
 use crate::ui::rail::Entry;
-use crate::ui::{chrome, marks, theme};
+use crate::ui::{chrome, glass, theme};
 use crate::update::{Release, State, Updater, CURRENT};
 
-use super::app_settings::{chip, section_panel, setting_row};
+use super::app_settings::{section_panel, setting_row};
 use super::Ui;
 
 /// The prompt's width.
@@ -22,8 +24,12 @@ const PROMPT_WIDTH: f32 = 420.0;
 const NOTES_HEIGHT: f32 = 200.0;
 /// The notice's round icon.
 const ICON: f32 = 34.0;
+/// The notice's close target.
+const CLOSE: f32 = 28.0;
 /// A progress bar's height.
 const BAR: f32 = 6.0;
+/// The notice card's corner radius.
+const NOTICE_RADIUS: f32 = 12.0;
 
 /// What a click in the update screens asked for.
 enum Ask {
@@ -72,23 +78,26 @@ impl Ui {
             ) {
                 self.set_settings(|stored| stored.check_updates = !auto);
             }
-            ui.horizontal_wrapped(|ui| {
-                let offer = matches!(
-                    state,
-                    State::Available(_)
-                        | State::Manual(..)
-                        | State::Downloading { .. }
-                        | State::Installing { .. }
-                        | State::Ready(_)
-                );
-                if offer {
-                    if chip(ui, "Open update", "See the update and install it") {
-                        ask = Some(Ask::Open);
-                    }
-                } else if chip(ui, "Check now", "Ask GitHub for the latest release") {
-                    ask = Some(Ask::Check);
-                }
-            });
+            let offer = matches!(
+                state,
+                State::Available(_)
+                    | State::Manual(..)
+                    | State::Downloading { .. }
+                    | State::Installing { .. }
+                    | State::Ready(_)
+            );
+            let (label, hint, wanted) = if offer {
+                ("Open update", "See the update and install it", Ask::Open)
+            } else {
+                ("Check now", "Ask GitHub for the latest release", Ask::Check)
+            };
+            if Button::new(Kind::Secondary, label)
+                .hint(hint)
+                .show(ui)
+                .clicked()
+            {
+                ask = Some(wanted);
+            }
         });
         self.answer_update(ui.ctx(), ask);
     }
@@ -203,19 +212,17 @@ fn notice(ctx: &egui::Context, state: &State) -> Option<Ask> {
         _ => return None,
     };
     let icon = match state {
-        State::Ready(_) => marks::icon::CHECK,
-        _ => marks::icon::DOWNLOAD,
+        State::Ready(_) => Icon::Check,
+        _ => Icon::Download,
     };
     let mut ask = None;
     egui::Area::new(egui::Id::new("update-notice"))
         .order(egui::Order::Foreground)
         .anchor(Align2::RIGHT_BOTTOM, vec2(-24.0, -24.0))
         .show(ctx, |ui| {
-            let frame = egui::Frame::new()
-                .fill(theme::CARD)
-                .corner_radius(theme::CARD_RADIUS)
-                .inner_margin(Margin::symmetric(12, 10))
-                .stroke(Stroke::new(theme::HAIRLINE, theme::CARD_HOVER))
+            let slot = glass::reserve(ui.painter());
+            let frame = egui::Frame::NONE
+                .inner_margin(Margin::symmetric(14, 12))
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         let (rect, _) = ui.allocate_exact_size(vec2(ICON, ICON), Sense::hover());
@@ -227,17 +234,22 @@ fn notice(ctx: &egui::Context, state: &State) -> Option<Ask> {
                             ui.label(theme::secondary(line).size(theme::CAPTION_SIZE));
                         });
                         ui.add_space(8.0);
-                        let close = ui
-                            .add(egui::Button::new("×").frame(false))
-                            .on_hover_text("Hide until Chewvy next opens");
-                        if close.clicked() {
+                        if close_button(ui).clicked() {
                             ask = Some(Ask::Dismiss);
                         }
                     });
                 });
+            glass::fill(
+                ui.painter(),
+                slot,
+                frame.response.rect,
+                NOTICE_RADIUS,
+                theme::current().glass.section,
+            );
             let card = ui
                 .interact(frame.response.rect, ui.id().with("open"), Sense::click())
                 .on_hover_cursor(CursorIcon::PointingHand);
+            controls::ring_when_focused(ui.painter(), &card, frame.response.rect, NOTICE_RADIUS);
             if card.clicked() && ask.is_none() {
                 ask = Some(Ask::Open);
             }
@@ -250,14 +262,18 @@ fn notice(ctx: &egui::Context, state: &State) -> Option<Ask> {
 
 /// A round icon, with a progress ring round it while there is work under way:
 /// `Some(Some(f))` fills it to `f`, `Some(None)` turns a short arc.
-fn round_icon(ui: &egui::Ui, rect: Rect, icon: marks::Logo, progress: Option<Option<f32>>) {
+fn round_icon(ui: &egui::Ui, rect: Rect, glyph: Icon, progress: Option<Option<f32>>) {
     let painter = ui.painter();
     let center = rect.center();
     let radius = rect.width() / 2.0;
-    painter.circle_filled(center, radius, theme::ACCENT_TINT);
-    let size = rect.width() * 0.45;
-    let left = center.x - marks::width_at(icon, size) / 2.0;
-    marks::paint_tinted(painter, icon, left, center.y, size, theme::ACCENT);
+    painter.circle_filled(center, radius, theme::palette().accent_tint());
+    icon::paint(
+        painter,
+        glyph,
+        Size::Regular,
+        center,
+        theme::palette().accent,
+    );
     let Some(progress) = progress else {
         return;
     };
@@ -271,7 +287,28 @@ fn round_icon(ui: &egui::Ui, rect: Rect, icon: marks::Logo, progress: Option<Opt
             center + vec2(a.cos(), a.sin()) * (radius - 1.5)
         })
         .collect();
-    painter.add(egui::Shape::line(points, Stroke::new(3.0, theme::ACCENT)));
+    painter.add(egui::Shape::line(
+        points,
+        Stroke::new(3.0, theme::palette().accent),
+    ));
+}
+
+/// The notice's close: a cross in a round target that lights when pointed at.
+fn close_button(ui: &mut egui::Ui) -> egui::Response {
+    let (rect, response) = ui.allocate_exact_size(vec2(CLOSE, CLOSE), Sense::click());
+    let response = response
+        .on_hover_text("Hide until Chewvy next opens")
+        .on_hover_cursor(CursorIcon::PointingHand);
+    let ink = if response.hovered() {
+        ui.painter()
+            .circle_filled(rect.center(), CLOSE / 2.0, theme::palette().wash(30));
+        theme::palette().text
+    } else {
+        theme::palette().secondary
+    };
+    icon::paint(ui.painter(), Icon::Close, Size::Regular, rect.center(), ink);
+    controls::round_ring_when_focused(ui.painter(), &response, rect.center(), CLOSE / 2.0);
+    response
 }
 
 // ------------------------------------------------------------------ prompt
@@ -279,20 +316,12 @@ fn round_icon(ui: &egui::Ui, rect: Rect, icon: marks::Logo, progress: Option<Opt
 /// The update prompt, which follows the updater from the offer to the
 /// restart. While work is under way it can only be hidden, not cancelled.
 fn prompt(ctx: &egui::Context, state: &State, offered: Option<&Release>) -> Option<Ask> {
-    let mut ask = None;
-    let frame = egui::Frame::new()
-        .fill(theme::CARD)
-        .corner_radius(theme::CARD_RADIUS)
-        .inner_margin(Margin::same(20))
-        .stroke(Stroke::new(theme::HAIRLINE, theme::CARD_HOVER));
-    let modal = egui::Modal::new(egui::Id::new("update-prompt"))
-        .frame(frame)
-        .show(ctx, |ui| {
-            ui.set_width(PROMPT_WIDTH);
-            ui.spacing_mut().item_spacing.y = 10.0;
-            ask = prompt_body(ui, state, offered);
+    let (asked, close) =
+        controls::dialog(ctx, egui::Id::new("update-prompt"), PROMPT_WIDTH, |ui| {
+            prompt_body(ui, state, offered)
         });
-    if modal.should_close() && ask.is_none() {
+    let mut ask = asked;
+    if close && ask.is_none() {
         ask = Some(Ask::Close);
     }
     if matches!(
@@ -308,10 +337,7 @@ fn prompt_body(ui: &mut egui::Ui, state: &State, offered: Option<&Release>) -> O
     match state {
         State::Idle | State::Checking => {
             heading(ui, "Checking for updates");
-            ui.horizontal(|ui| {
-                ui.spinner();
-                ui.label(theme::secondary("Asking GitHub for the latest release…"));
-            });
+            controls::working(ui, "Asking GitHub for the latest release…");
             buttons(ui, None, Some(("Close", Ask::Close)))
         }
         State::Current => {
@@ -383,7 +409,7 @@ fn prompt_body(ui: &mut egui::Ui, state: &State, offered: Option<&Release>) -> O
         }
         State::Failed(why) => {
             heading(ui, "The update did not finish");
-            ui.label(egui::RichText::new(why.as_str()).color(theme::DANGER));
+            ui.label(egui::RichText::new(why.as_str()).color(theme::palette().danger));
             let again = if offered.is_some() {
                 Ask::Retry
             } else {
@@ -485,46 +511,20 @@ fn buttons(
     primary: Option<(&str, Ask)>,
     secondary: Option<(&str, Ask)>,
 ) -> Option<Ask> {
-    let mut ask = None;
-    ui.add_space(4.0);
-    // A row of its own height: a layout that took the rest of the prompt
-    // would keep it as tall as the tallest state it has shown.
-    let row = vec2(ui.available_width(), 32.0);
-    let layout = egui::Layout::right_to_left(egui::Align::Center);
-    ui.allocate_ui_with_layout(row, layout, |ui| {
+    controls::actions(ui, |ui| {
+        let mut ask = None;
         if let Some((label, action)) = primary {
-            let button = egui::Button::new(
-                egui::RichText::new(label)
-                    .color(theme::PRIMARY_TEXT)
-                    .strong(),
-            )
-            .fill(theme::PRIMARY_BG)
-            .corner_radius(theme::CARD_RADIUS)
-            .min_size(vec2(0.0, 32.0));
-            if ui
-                .add(button)
-                .on_hover_cursor(CursorIcon::PointingHand)
-                .clicked()
-            {
+            if controls::button(ui, Kind::Primary, label).clicked() {
                 ask = Some(action);
             }
         }
         if let Some((label, action)) = secondary {
-            let button = egui::Button::new(label)
-                .fill(Color32::TRANSPARENT)
-                .stroke(Stroke::new(theme::HAIRLINE, theme::CARD_HOVER))
-                .corner_radius(theme::CARD_RADIUS)
-                .min_size(vec2(0.0, 32.0));
-            if ui
-                .add(button)
-                .on_hover_cursor(CursorIcon::PointingHand)
-                .clicked()
-            {
+            if controls::button(ui, Kind::Secondary, label).clicked() {
                 ask = ask.take().or(Some(action));
             }
         }
-    });
-    ask
+        ask
+    })
 }
 
 /// A progress bar the prompt's width: filled to `fraction`, or a sliding
@@ -533,7 +533,7 @@ fn bar(ui: &mut egui::Ui, fraction: Option<f32>) {
     let (rect, _) = ui.allocate_exact_size(vec2(ui.available_width(), BAR), Sense::hover());
     let painter = ui.painter();
     let round = BAR / 2.0;
-    painter.rect_filled(rect, round, theme::SURFACE);
+    painter.rect_filled(rect, round, theme::palette().wash(30));
     let fill = match fraction {
         Some(fraction) => {
             Rect::from_min_size(rect.min, vec2(rect.width() * fraction.clamp(0.0, 1.0), BAR))
@@ -549,7 +549,7 @@ fn bar(ui: &mut egui::Ui, fraction: Option<f32>) {
         }
     };
     if fill.width() > 0.0 {
-        painter.rect_filled(fill, round, theme::ACCENT);
+        painter.rect_filled(fill, round, theme::palette().accent);
     }
 }
 

@@ -210,3 +210,146 @@ fn a_sign_in_code_takes_the_window_and_back_leaves_it() {
     ui.open_without_plex();
     assert!(matches!(ui.screen, Screen::Welcome));
 }
+
+/// Enter in the rail's field opens Search from any page, even when the field
+/// still holds the query it last reported, and asks for that query at once.
+#[test]
+fn enter_in_the_rail_field_opens_search_with_an_unchanged_query() {
+    let (cmd, sent) = mpsc::channel();
+    let (_ev_tx, ev) = mpsc::channel();
+    let mut ui = Ui::new(cmd, ev);
+    ui.go(Entry::Sources);
+    ui.rail_search("zzzz", true);
+    assert_eq!(ui.current, Some(Entry::Search));
+    let asked: Vec<String> = sent
+        .try_iter()
+        .filter_map(|cmd| match cmd {
+            Cmd::SearchHubs(query) => Some(query),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(asked, vec!["zzzz".to_owned()]);
+}
+
+/// A query stays in the rail only while Search, or a result opened from it,
+/// is on screen: going anywhere else empties the field.
+#[test]
+fn leaving_search_empties_the_rail_field_unless_a_result_was_opened() {
+    let (cmd, _sent) = mpsc::channel();
+    let (_ev_tx, ev) = mpsc::channel();
+    let mut ui = Ui::new(cmd, ev);
+    ui.query = "lord".to_owned();
+    ui.rail_search("lord", true);
+    ui.go(Entry::Detail {
+        id: "1".to_owned(),
+        title: "The Lord of the Rings".to_owned(),
+    });
+    assert_eq!(ui.query, "lord");
+    ui.go(Entry::Search);
+    ui.go(Entry::Settings);
+    assert!(ui.query.is_empty());
+}
+
+/// One Search frame: the repaint delay it asked for, and every text it drew.
+fn search_frame(ui: &mut Ui, ctx: &egui::Context) -> (std::time::Duration, Vec<String>) {
+    let mut output = ctx.run_ui(egui::RawInput::default(), |root| {
+        ui.draw_search(root);
+    });
+    output.textures_delta.clear();
+    let delay = output
+        .viewport_output
+        .get(&egui::ViewportId::ROOT)
+        .map_or(std::time::Duration::MAX, |v| v.repaint_delay);
+    let texts = output
+        .shapes
+        .iter()
+        .filter_map(|clipped| match &clipped.shape {
+            egui::Shape::Text(text) => Some(text.galley.text().to_owned()),
+            _ => None,
+        })
+        .collect();
+    (delay, texts)
+}
+
+fn searching(query: &str) -> Ui {
+    let (cmd, _sent) = mpsc::channel();
+    let (_ev_tx, ev) = mpsc::channel();
+    let mut ui = Ui::new(cmd, ev);
+    ui.query = query.to_owned();
+    ui.rail_search(query, true);
+    ui
+}
+
+/// A search the server could not answer says so, and the page stops
+/// repainting: a spinner waiting on an answer that is not coming would
+/// repaint every frame for as long as the page is open.
+#[test]
+fn a_failed_search_says_why_and_stops_spinning() {
+    let ctx = egui::Context::default();
+    crate::ui::theme::apply(&ctx);
+    let mut ui = searching("dune");
+    ui.apply(Ev::SearchFailed {
+        query: "dune".to_owned(),
+        error: "The server did not answer: 503".to_owned(),
+    });
+    assert!(!ui.search.waiting());
+    for _ in 0..3 {
+        search_frame(&mut ui, &ctx);
+    }
+    let (delay, texts) = search_frame(&mut ui, &ctx);
+    assert!(
+        delay > std::time::Duration::from_millis(16),
+        "no spinner repaints the page: {delay:?}"
+    );
+    assert!(
+        texts.iter().any(|t| t.contains("Could not search for")),
+        "{texts:?}"
+    );
+    assert!(texts.iter().any(|t| t.contains("503")), "{texts:?}");
+}
+
+/// A failure for a query the field no longer holds files nothing.
+#[test]
+fn a_failure_for_an_older_query_is_ignored() {
+    let mut ui = searching("dune");
+    ui.apply(Ev::SearchFailed {
+        query: "dun".to_owned(),
+        error: "gone".to_owned(),
+    });
+    assert!(ui.search.waiting());
+}
+
+/// While a newer query is on its way, the results on screen keep the name
+/// of the query they answer.
+#[test]
+fn results_are_headed_by_the_query_they_answer() {
+    let ctx = egui::Context::default();
+    crate::ui::theme::apply(&ctx);
+    let mut ui = searching("dune");
+    let hub = Hub {
+        kind: Some("movie".to_owned()),
+        title: Some("Movies".to_owned()),
+        items: vec![item("movie", "Dune")],
+        ..Hub::default()
+    };
+    ui.apply(Ev::SearchHubs {
+        query: "dune".to_owned(),
+        hubs: vec![hub],
+    });
+    let (_, texts) = search_frame(&mut ui, &ctx);
+    assert!(
+        texts
+            .iter()
+            .any(|t| t == "Results for \u{201c}dune\u{201d}"),
+        "{texts:?}"
+    );
+    ui.query = "dune 2".to_owned();
+    let (_, texts) = search_frame(&mut ui, &ctx);
+    assert!(
+        texts
+            .iter()
+            .any(|t| t == "Results for \u{201c}dune\u{201d}"),
+        "{texts:?}"
+    );
+    assert!(!texts.iter().any(|t| t.contains("dune 2")), "{texts:?}");
+}
