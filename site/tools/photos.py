@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
-"""Make the site's theme photographs from the ones the app bundles.
+"""Make the site's page background from the app's bundled Aurora photograph.
 
-Reads crates/plex-app/assets/backdrop/SOURCES.md and the JPEGs beside it, and
-writes into site/assets/themes/:
-
-    <file>.webp        1600x900, softened: the page background behind the glass
-    <file>-thumb.webp  480x270, sharp: the picture on a theme's button
-    themes.json        each theme's name, photographs and their credits
+Reads crates/plex-app/assets/backdrop/SOURCES.md and the JPEG it names for
+Aurora, and writes site/assets/themes/aurora.webp: 1600x900, softened, the
+picture behind the glass on every section.
 
 Run it again whenever the app's bundled photographs change. Needs Pillow.
 """
-import json
 import re
 from pathlib import Path
 
@@ -19,18 +15,6 @@ from PIL import Image, ImageFilter
 REPO = Path(__file__).resolve().parents[2]
 SOURCE = REPO / "crates/plex-app/assets/backdrop"
 OUT = REPO / "site/assets/themes"
-# The order and grouping of the app's theme list (theme_art/theme.rs).
-GROUPS = {
-    "Aurora": ("aurora", "Aurora", "default"),
-    "Fantasy": ("fantasy", "Fantasy", "genre"), "SciFi": ("scifi", "Science fiction", "genre"),
-    "Epic": ("epic", "Epic", "genre"), "Horror": ("horror", "Horror", "genre"),
-    "Western": ("western", "Western", "genre"), "Adventure": ("adventure", "Adventure", "genre"),
-    "Christmas": ("christmas", "Christmas", "festival"), "Halloween": ("halloween", "Halloween", "festival"),
-    "Winter": ("winter", "Winter", "season"), "Spring": ("spring", "Spring", "season"),
-    "Summer": ("summer", "Summer", "season"), "Autumn": ("autumn", "Autumn", "season"),
-}
-
-
 def rows():
     for line in (SOURCE / "SOURCES.md").read_text().splitlines():
         cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
@@ -43,21 +27,11 @@ def rows():
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    themes = {}
-    for row in rows():
-        key, name, group = GROUPS[row["theme"]]
-        stem = Path(row["file"]).stem
-        with Image.open(SOURCE / row["file"]) as photo:
-            photo = photo.convert("RGB")
-            photo.resize((1600, 900), Image.LANCZOS).filter(ImageFilter.GaussianBlur(3)).save(
-                OUT / f"{stem}.webp", "WEBP", quality=62, method=6)
-            photo.resize((480, 270), Image.LANCZOS).save(OUT / f"{stem}-thumb.webp", "WEBP", quality=74, method=6)
-        theme = themes.setdefault(key, {"key": key, "name": name, "group": group, "photos": []})
-        theme["photos"].append({"image": stem, "title": row["title"], "author": row["author"],
-                                "licence": row["licence"], "licence_url": row["licence_url"], "source": row["source"]})
-    ordered = [themes[key] for key, _, _ in GROUPS.values() if key in themes]
-    (OUT / "themes.json").write_text(json.dumps(ordered, indent=1, ensure_ascii=False) + "\n")
-    print(f"{len(ordered)} themes, {sum(len(t['photos']) for t in ordered)} photographs -> {OUT}")
+    row = next(row for row in rows() if row["theme"] == "Aurora")
+    with Image.open(SOURCE / row["file"]) as photo:
+        photo.convert("RGB").resize((1600, 900), Image.LANCZOS).filter(ImageFilter.GaussianBlur(3)).save(
+            OUT / "aurora.webp", "WEBP", quality=62, method=6)
+    print(f"aurora.webp -> {OUT}")
 
 
 if __name__ == "__main__":

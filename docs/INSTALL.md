@@ -2,10 +2,7 @@
 
 Packages are on the [Releases](https://github.com/Ch3w3y/chewvy/releases)
 page. Each release carries `SHA256SUMS` with the SHA-256 of every package.
-None of the packages is code-signed.
-
-[The README](../README.md#what-works-where) says how far each platform has
-been tested. Linux is the platform Chewvy is developed and used on.
+[Capabilities](CAPABILITIES.md) has the details for each platform.
 
 ## Linux
 

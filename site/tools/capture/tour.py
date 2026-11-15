@@ -58,9 +58,9 @@ TILES = ("automatic", "aurora", "fantasy", "scifi", "epic", "horror", "western",
 LIBRARY_ART_SWITCH = (976, 757)
 # The theme behind every other capture. Automatic would change them with the date.
 BASE_THEME = "aurora"
-# The themes that get a capture of their own, shown behind the Films grid.
-THEME_SHOTS = ("fantasy", "scifi", "epic", "horror", "western", "adventure",
-               "christmas", "halloween", "winter", "spring", "summer", "autumn")
+# The themes that get a capture of their own, shown behind the Films grid. The
+# site no longer shows them; add keys here to capture them again.
+THEME_SHOTS = ()
 
 
 class App:

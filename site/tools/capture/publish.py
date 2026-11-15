@@ -3,9 +3,10 @@
 
     publish.py SHOTS_DIR [--site-only]
 
-For each SHOTS_DIR/<name>.ppm it writes site/assets/shots/<name>.webp at the
-captured size, <name>-1600.webp and <name>-960.webp, and docs/media/<name>.jpg
-at 1600 px wide. A theme-<key> capture becomes one 960 px image for the site. home also gets a JPEG for link previews, and five screens
+For each SHOTS_DIR/<name>.ppm it writes docs/media/<name>.jpg at 1600 px wide.
+The screens the site shows (SITE_SHOTS) also get site/assets/shots/<name>.webp
+at the captured size, <name>-1600.webp and <name>-960.webp. home also gets a
+JPEG for link previews, and five screens
 become docs/media/chewvy-tour.webp, the animation at the top of the README.
 Needs Pillow.
 """
@@ -17,6 +18,8 @@ from PIL import Image
 REPO = Path(__file__).resolve().parents[3]
 SITE = REPO / "site/assets/shots"
 DOCS = REPO / "docs/media"
+# The captures index.html shows; the rest are for the docs only.
+SITE_SHOTS = {"home", "library"}
 
 
 def main(shots, docs=True):
@@ -29,16 +32,13 @@ def main(shots, docs=True):
         name = source.stem
         with Image.open(source) as full:
             full = full.convert("RGB")
-            if name.startswith("theme-"):
-                # One of twelve near-identical grids: the site shows them small.
-                full.resize((960, round(full.height * 960 / full.width)), Image.LANCZOS).save(
-                    SITE / f"{name}-960.webp", "WEBP", quality=78, method=6)
-                print(f"{name}: 960 px")
-                continue
-            full.save(SITE / f"{name}.webp", "WEBP", quality=82, method=6)
+            on_site = name in SITE_SHOTS
+            if on_site:
+                full.save(SITE / f"{name}.webp", "WEBP", quality=82, method=6)
             for width in (1600, 960):
                 small = full.resize((width, round(full.height * width / full.width)), Image.LANCZOS)
-                small.save(SITE / f"{name}-{width}.webp", "WEBP", quality=80, method=6)
+                if on_site:
+                    small.save(SITE / f"{name}-{width}.webp", "WEBP", quality=80, method=6)
                 if width == 1600 and docs:
                     small.save(DOCS / f"{name}.jpg", "JPEG", quality=86, optimize=True, progressive=True)
                 if width == 1600 and name == "home":

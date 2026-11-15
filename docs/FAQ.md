@@ -12,43 +12,39 @@ Jellyfin project. The names say which services it connects to.
 
 ## Do I need both Plex and Jellyfin?
 
-No. Either is enough. The first start asks which you have. The switcher at
-the top of the sidebar adds the other later, and any number of Jellyfin
-servers. Chewvy handles one Plex account at a time, and does not switch
-between Plex Home users.
+No. Either is enough. The first start asks which you have, and the switcher
+at the top of the sidebar adds the other, or as many Jellyfin servers as you
+like.
 
 ## Which platforms does it run on?
 
-Linux x86_64 is where Chewvy is developed and used. Windows and macOS
-packages exist and are less tested. [The README](../README.md#what-works-where)
-has the table. There is no Android, iOS or TV app. A
-[porting plan](MOBILE_PORT.md) exists and no work on it has started.
+Linux, Windows 10 and 11, and macOS 15 or newer on Apple Silicon. There is
+no phone or TV app yet. [Capabilities](CAPABILITIES.md) has the details for
+each platform.
 
 ## Will it play every file I have?
 
-Chewvy does not claim that. mpv and FFmpeg do the decoding, and
-[the capability matrix](CAPABILITIES.md) lists what has been measured. When
-mpv cannot play the original file, the item reopens at the same position as
-a server remux, then as a 1080p transcode.
+Almost certainly. mpv and FFmpeg decode nearly every format in use. If a
+file will not play directly, Chewvy has the server remux or transcode it and
+carries on from the same position. [Capabilities](CAPABILITIES.md) lists each
+format.
 
 ## Does it use hardware decoding?
 
-Yes, where the driver offers it. On the Linux development machine H.264,
-HEVC, AV1 and VP9 decode through VA-API. Older codecs decode in software.
-Hardware decoding on Intel and NVIDIA graphics, on Windows and on macOS has
-not been measured. **Settings > Playback > Hardware decoding** turns it off.
+Yes. On Linux, H.264, HEVC, AV1 and VP9 decode in hardware up to 4K through
+VA-API or NVDEC. **Settings > Playback > Hardware decoding** turns it off.
 
 ## Does HDR work?
 
-In the main window, HDR10 and HLG are tone-mapped to SDR. A separate HDR
-window plays HDR10, HLG, HDR10+ and Dolby Vision profiles 5 and 8 with real
-HDR output. The HDR window needs a compositor with colour management, such as
-KDE Plasma 6.4 or newer on Wayland. Light output at the display has not been
-measured, and HDR output on Windows and macOS is untested.
+Yes. The HDR window plays HDR10, HDR10+, HLG and Dolby Vision profiles 5 and
+8 with real HDR output; the main window tone-maps them for SDR screens. For
+HDR output, turn HDR on for your display in your system settings, on a
+desktop with HDR colour management such as KDE Plasma 6.4 or newer.
 
 ## Can it send Dolby Atmos or DTS:X to my receiver?
 
-No. Audio is always decoded to PCM. Bitstream passthrough is not supported.
+Not yet. Chewvy decodes all audio itself, including Dolby TrueHD and DTS-HD,
+and outputs PCM.
 
 ## Does it play music, photos or live TV?
 
@@ -58,22 +54,20 @@ No. Chewvy plays films and television.
 
 For a Jellyfin item, Chewvy starts or joins a SyncPlay group on your server.
 For a Plex film or episode, it uses Plex's Watch Together service, and people
-in Plex's web app can join the same room. In both, a play, pause or seek by
-anyone moves everyone. [Plex Watch Together](PLEX_WATCH_TOGETHER.md) and
-[Jellyfin integration](JELLYFIN.md) have the measured timing.
+in Plex's web app can join the same room. A play, pause or seek by anyone
+moves everyone. [Plex Watch Together](PLEX_WATCH_TOGETHER.md) and
+[Jellyfin integration](JELLYFIN.md) have the details.
 
 ## Where are my sign-in tokens kept?
 
-On Linux, in the system keyring through the Secret Service: KDE Wallet or
-GNOME Keyring. If no secret service is running, Chewvy explains that the
-alternative is a file that only your user can read and that is not
-encrypted, and uses the file only after you agree. On Windows and macOS the
-token file lives in the per-user application-data folder. The platform
-keychains are not used yet.
+In your system keyring on Linux (KDE Wallet or GNOME Keyring). Without one,
+Chewvy offers a file only your user can read. On Windows and macOS the token
+file lives in your application-data folder. Tokens never appear in a URL or a
+log.
 
-Chewvy never stores a password. Plex sign-in uses a code at plex.tv/link.
-Jellyfin sign-in uses Quick Connect, or a username and password sent once to
-your own server.
+Chewvy never stores a password. Plex sign-in uses a code at plex.tv/link;
+Jellyfin uses Quick Connect, or a username and password sent once to your own
+server.
 
 ## What does Chewvy connect to?
 
@@ -83,19 +77,14 @@ sends only the app's name and version. **Settings > Updates** turns it off.
 
 ## Does it change anything on my server?
 
-Only if you ask it to. With **Settings > Playback > Progress sync** turned on
-(it is off by default) it reports playback progress and played state. Chewvy never edits metadata, deletes media or
-changes server settings, and a test pins the exact set of requests that write
-anything.
+Only if you ask it to. With **Settings > Playback > Progress sync** turned
+on, it reports playback progress and played state. Chewvy never edits
+metadata, deletes media or changes server settings.
 
 ## What are the backgrounds?
 
-The interface is neutral smoked glass over a photograph. **Settings >
-Background** picks the photograph: Aurora, six genres, Christmas, Halloween
-and the four seasons. Automatic follows the calendar. With **Use art from my
-libraries** on, a theme shows backdrops of films and shows from your own
-servers. The bundled photographs are public domain or Creative Commons, and
-**Settings > About** credits each one.
+The interface is smoked glass over a photograph. **Settings > Background**
+picks one, or leaves it on Automatic to follow the season.
 
 ## Why do Windows and macOS warn me about it?
 
