@@ -61,8 +61,8 @@ file and checks its hash. No film file is part of this repository or of the webs
 | Glass Half (2015) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Glass_Half_-_Blender_Open_Movie-full_movie.webm) | (CC) Blender Studio \| studio.blender.org | SHA-1 matches Commons |
 | Sita Sings the Blues (2008) | [CC0](http://creativecommons.org/publicdomain/zero/1.0/deed.en) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Sita_Sings_the_Blues.webm) | Nina Paley | SHA-1 matches Commons |
 | His Girl Friday (1940) | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:His_Girl_Friday_%281940%29.webm) | Howard Hawks | SHA-1 matches Commons |
-| Night of the Living Dead (1968) | not downloaded when this file was written | | |
-| Nosferatu (1922) | not downloaded when this file was written | | |
+| Night of the Living Dead (1968) | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Night_of_the_Living_Dead_%281968%29.webm) | George A. Romero | SHA-1 matches Commons |
+| Nosferatu (1922) | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Nosferatu_%281922%29.webm) | F. W. Murnau / Henrik Galeen | SHA-1 matches Commons |
 | The General (1926) | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:The_General_%281926%29.webm) | Clyde Bruckman, Buster Keaton, direction; Al Boasberg, Clyde Bruckman, Buster Keaton, Charles Henry Smith, Paul Gerard Smith, writing credits | SHA-1 matches Commons |
 | A Trip to the Moon (1902) | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Le_Voyage_dans_la_Lune_%281902%29.webm) | Georges Méliès | SHA-1 matches Commons |
 | Charade (1963) | Public domain | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Charade_%281963%29.webm) | Stanley Donen | SHA-1 matches Commons |
@@ -107,6 +107,8 @@ carries the film's own licence.
 | Glass Half | a frame of the film at 2:19, with the title set in Plus Jakarta Sans. | a frame of the film at 2:19 |
 | Sita Sings the Blues | a frame of the film at 35:22, with the title set in Plus Jakarta Sans. | a frame of the film at 35:22 |
 | His Girl Friday | [His Girl Friday (1940 poster).jpg](https://commons.wikimedia.org/wiki/File:His_Girl_Friday_%281940_poster%29.jpg), "Copyrighted by Columbia Pictures Corp, New York, N. Y. 1939", Public domain. Cropped to 2:3 and resized. | a frame of the film at 28:04 |
+| Night of the Living Dead | [Night Of The Living Dead (1968) - Poster.jpg](https://commons.wikimedia.org/wiki/File:Night_Of_The_Living_Dead_%281968%29_-_Poster.jpg), Unknown authorUnknown author, Public domain. Cropped to 2:3 and resized. | a frame of the film at 20:00 |
+| Nosferatu | a frame of the film at 36:57, with the title set in Plus Jakarta Sans. | a frame of the film at 36:57 |
 | The General | [The General (1926) - Movie Poster 2.png](https://commons.wikimedia.org/wiki/File:The_General_%281926%29_-_Movie_Poster_2.png), United Artists Corporation, Public domain. Cropped to 2:3 and resized. | a frame of the film at 21:06 |
 | A Trip to the Moon | [Voyage dans la Lune affiche.jpg](https://commons.wikimedia.org/wiki/File:Voyage_dans_la_Lune_affiche.jpg), Georges Méliès, Public domain. Cropped to 2:3 and resized. | a frame of the film at 6:16 |
 | Charade | [Charade (1963 poster).jpg](https://commons.wikimedia.org/wiki/File:Charade_%281963_poster%29.jpg), "Copyright © 1963 by Universal Pictures Co., Inc.", Public domain. Cropped to 2:3 and resized. | a frame of the film at 1:29:17 |

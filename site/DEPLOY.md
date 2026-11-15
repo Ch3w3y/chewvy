@@ -1,8 +1,7 @@
 # Publish the website
 
-The website is the static files in `site/`. Nothing builds it. It is not
-published yet: on 2026-11-15, `gh api repos/Ch3w3y/chewvy/pages` answered 404,
-the repository reported `has_pages: false`, and `main` was its only branch.
+The website is the static files in `site/`. Nothing builds it. It was first
+published with 0.4.0 on 2026-11-15.
 
 Publish the site when the release it describes is published, not before. The
 page links to the newest release's packages, so a visitor must be able to
@@ -34,32 +33,18 @@ download what the page shows.
 
 ## Publish with GitHub Actions (recommended)
 
-1. Copy the workflow into place and commit it:
+The workflow is `.github/workflows/pages.yml`, and Pages is set to build from
+GitHub Actions (done on 2026-11-15 for 0.4.0).
 
-   ```sh
-   cp site/deploy/pages.yml .github/workflows/pages.yml
-   git add .github/workflows/pages.yml
-   git commit -m "Publish the website with GitHub Pages"
-   git push
-   ```
-
-2. Turn Pages on with GitHub Actions as its source. In the repository on
-   GitHub, open **Settings > Pages** and set **Source** to **GitHub Actions**.
-   The same from a terminal:
-
-   ```sh
-   gh api -X POST repos/Ch3w3y/chewvy/pages -f build_type=workflow
-   ```
-
-3. Start the workflow:
+1. Push the change to `main`.
+2. Start the workflow:
 
    ```sh
    gh workflow run pages.yml
    gh run watch
    ```
 
-The site is then at <https://ch3w3y.github.io/chewvy/>. To update it later,
-push the change to `main` and start the workflow again.
+The site is then at <https://ch3w3y.github.io/chewvy/>.
 
 The workflow runs on a GitHub-hosted runner, as the `macos` workflow does. It
 is started by hand only and has no `pull_request` trigger. The `release` and

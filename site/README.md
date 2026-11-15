@@ -26,7 +26,6 @@ Then open <http://127.0.0.1:8765/>.
 | `tools/capture/` | The headless session, the tour through the app's screens, and the image export |
 | `tools/photos.py` | Remakes `assets/themes/` from `crates/plex-app/assets/backdrop/` |
 | `tools/check-links.py` | Checks every link and image reference |
-| `deploy/pages.yml` | The proposed GitHub Pages workflow |
 
 ## Change the words
 

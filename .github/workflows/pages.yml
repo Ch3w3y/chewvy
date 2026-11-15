@@ -2,9 +2,6 @@ name: pages
 
 # Publishes site/ to GitHub Pages.
 #
-# This file is a proposal. It does nothing until it is copied to
-# .github/workflows/pages.yml: see site/DEPLOY.md.
-#
 # It is started by hand, so that the site changes only when a maintainer says
 # the release it describes is published. It runs on a GitHub-hosted runner and
 # has no pull_request trigger.
